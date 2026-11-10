@@ -2,6 +2,8 @@
 set -e
 
 echo "=== STARTING DEXHUB SERVICES ==="
+echo "Configured environment keys:"
+env | awk -F= '{print $1}' | grep -E "DATABASE|AUTH|URL|WEBAUTHN|SECRET|KEY|PORT" || echo "None found"
 
 echo "Starting DexHub API on port 3001..."
 (

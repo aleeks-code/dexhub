@@ -7,6 +7,39 @@ import { AppModule } from './app.module'
 import { JsonLogger } from './common/logger/json-logger'
 import { runMigrations } from './db/migrate'
 
+// Normalize environment variables: trim keys/values, remove quotes, handle aliases
+for (const [key, val] of Object.entries(process.env)) {
+  const trimmedKey = key.trim()
+  if (trimmedKey !== key && val !== undefined) {
+    process.env[trimmedKey] = val
+  }
+}
+
+if (!process.env['DATABASE_URL']) {
+  process.env['DATABASE_URL'] =
+    process.env['POSTGRES_URL'] ||
+    process.env['DATABASE_URI'] ||
+    process.env['DB_URL'] ||
+    process.env['POSTGRESQL_URL'] ||
+    process.env['NEON_DATABASE_URL']
+}
+
+if (process.env['DATABASE_URL']) {
+  process.env['DATABASE_URL'] = process.env['DATABASE_URL']!.replace(/^["']|["']$/g, '').trim()
+}
+
+if (!process.env['BETTER_AUTH_SECRET'] && process.env['AUTH_SECRET']) {
+  process.env['BETTER_AUTH_SECRET'] = process.env['AUTH_SECRET']
+}
+
+if (!process.env['BETTER_AUTH_URL'] && process.env['FRONTEND_URL']) {
+  process.env['BETTER_AUTH_URL'] = process.env['FRONTEND_URL']
+}
+
+if (!process.env['WEBAUTHN_ORIGIN'] && process.env['FRONTEND_URL']) {
+  process.env['WEBAUTHN_ORIGIN'] = process.env['FRONTEND_URL']
+}
+
 const REQUIRED_ENV: Array<{ key: string; hint: string }> = [
   {
     key: 'DATABASE_URL',
@@ -40,8 +73,11 @@ const REQUIRED_ENV: Array<{ key: string; hint: string }> = [
 
 for (const { key, hint } of REQUIRED_ENV) {
   if (!process.env[key]) {
+    const detected = Object.keys(process.env)
+      .filter((k) => /DATABASE|POSTGRES|AUTH|URL|WEBAUTHN|SECRET|KEY/i.test(k))
+      .join(', ')
     process.stderr.write(
-      `\n[FATAL] Missing required environment variable: ${key}\n  Hint: ${hint}\n\n`,
+      `\n[FATAL] Missing required environment variable: ${key}\n  Hint: ${hint}\n  Detected related env keys in process.env: [${detected || 'none'}]\n\n`,
     )
     process.exit(1)
   }
