@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { startRegistration } from '@simplewebauthn/browser'
 import { Button } from '@dexhub/ui'
@@ -43,6 +43,16 @@ export function SetupWizard() {
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+
+  useEffect(() => {
+    apiGet('/api/v1/setup/status')
+      .then((res) => {
+        if (res?.data?.setupNeeded === false) {
+          router.replace('/login')
+        }
+      })
+      .catch(() => {})
+  }, [router])
 
   async function handleAccount(e: React.FormEvent) {
     e.preventDefault()
