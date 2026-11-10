@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "idx_changelog_release_versione_unique" ON "changelog_release" USING btree ("versione");

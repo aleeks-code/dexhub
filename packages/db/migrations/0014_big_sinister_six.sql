@@ -1,0 +1,1 @@
+ALTER TYPE "public"."worklog_entry_kind" ADD VALUE 'permesso_non_retribuito';

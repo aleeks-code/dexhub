@@ -1,0 +1,195 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1782606195637,
+      "tag": "0000_careless_firedrake",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1751160000000,
+      "tag": "0001_user_invites",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751200000000,
+      "tag": "0002_recovery_code_encrypted",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1751250000000,
+      "tag": "0003_invite_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1751300000000,
+      "tag": "0004_tasks_module",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1751350000000,
+      "tag": "0005_tasks_v1",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782911982890,
+      "tag": "0006_kind_magus",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782918303374,
+      "tag": "0007_magical_iron_monger",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782943324489,
+      "tag": "0008_slimy_clint_barton",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1783025831328,
+      "tag": "0009_fuzzy_triton",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783356766248,
+      "tag": "0010_neat_banshee",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783415438042,
+      "tag": "0011_watery_mockingbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1783420304303,
+      "tag": "0012_chilly_korath",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1783457551774,
+      "tag": "0013_ancient_madelyne_pryor",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1783505524625,
+      "tag": "0014_big_sinister_six",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1783636283955,
+      "tag": "0015_bouncy_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1783780221064,
+      "tag": "0016_medical_earthquake",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1783851820834,
+      "tag": "0017_greedy_logan",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1783867730742,
+      "tag": "0018_sturdy_frightful_four",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1783890819430,
+      "tag": "0019_strong_rumiko_fujikawa",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1784032810283,
+      "tag": "0020_naive_spirit",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1784054640695,
+      "tag": "0021_natural_marvel_zombies",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1784296690309,
+      "tag": "0022_clammy_clea",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1784563862900,
+      "tag": "0023_silly_squirrel_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1784583385240,
+      "tag": "0024_delete_orphan_changelog_module_registry",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1784716766854,
+      "tag": "0025_delete_task_lists",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1789036609239,
+      "tag": "0026_tasks_assignee_section_invites",
+      "breakpoints": true
+    }
+  ]
+}

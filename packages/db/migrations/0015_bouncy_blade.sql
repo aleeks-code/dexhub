@@ -1,0 +1,1 @@
+ALTER TABLE "worklog_user_fiscal_config" ADD COLUMN "contributi_inps_override" numeric(6, 5);

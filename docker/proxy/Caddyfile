@@ -1,0 +1,50 @@
+{
+	email {$CADDY_EMAIL:admin@example.com}
+	log {
+		output file /var/log/caddy/access.log
+		format json
+	}
+}
+
+# HTTP — scarica la CA e reindirizza tutto il resto a HTTPS
+# Accessibile anche via IP: http://192.168.1.6/caddy-ca.crt
+:80 {
+	handle /caddy-ca.crt {
+		header Content-Type "application/x-x509-ca-cert"
+		header Content-Disposition "attachment; filename=\"DexHub-CA.crt\""
+		root * /data/caddy/pki/authorities/local
+		rewrite * /root.crt
+		file_server
+	}
+
+	handle {
+		redir https://{host}{uri} permanent
+	}
+}
+
+# HTTPS — blocco esplicito solo porta 443, nessun conflitto con :80
+https://{$DOMAIN:localhost} {
+	tls internal
+
+	header {
+		X-Frame-Options DENY
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://flagcdn.com; font-src 'self' data:; connect-src 'self';"
+		-Server
+		-X-Powered-By
+		-Via
+	}
+
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

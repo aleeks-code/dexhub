@@ -1,0 +1,40 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: hsl(207 84% 11%);
+  overflow: hidden;
+}
+
+.glow {
+  position: absolute;
+  top: -160px;
+  right: -120px;
+  width: 560px;
+  height: 560px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(47, 230, 160, 0.14), transparent 62%);
+  animation: glowdrift 14s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes glowdrift {
+  0% { transform: translate(-8%, -4%) scale(1); }
+  50% { transform: translate(6%, 5%) scale(1.12); }
+  100% { transform: translate(-8%, -4%) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow {
+    animation: none;
+  }
+}
+
+.cardWrap {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}

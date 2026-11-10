@@ -1,0 +1,42 @@
+{
+  "name": "@dexhub/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dexhub/debts": "workspace:*",
+    "@dexhub/loans": "workspace:*",
+    "@dexhub/notes": "workspace:*",
+    "@dexhub/pizza": "workspace:*",
+    "@dexhub/sdk": "workspace:*",
+    "@dexhub/subscriptions": "workspace:*",
+    "@dexhub/tasks": "workspace:*",
+    "@dexhub/ui": "workspace:*",
+    "@dexhub/worklog": "workspace:*",
+    "@simplewebauthn/browser": "^13.3.0",
+    "@tanstack/react-query": "^5.64.1",
+    "better-auth": "^1.6.22",
+    "geist": "^1.3.1",
+    "lucide-react": "^0.474.0",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "unpdf": "^2.1.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@dexhub/config": "workspace:*",
+    "@tailwindcss/postcss": "^4.0.6",
+    "@types/node": "^22.10.6",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "tailwindcss": "^4.0.6",
+    "typescript": "^5.7.2"
+  }
+}

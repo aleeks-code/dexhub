@@ -1,0 +1,1 @@
+ALTER TABLE "worklog_user_fiscal_config" ADD COLUMN "mensilita" integer DEFAULT 13 NOT NULL;

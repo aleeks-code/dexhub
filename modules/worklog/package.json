@@ -1,0 +1,31 @@
+{
+  "name": "@dexhub/worklog",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@dexhub/sdk": "workspace:*",
+    "@dexhub/ui": "workspace:*",
+    "@dexhub/worklog-engine": "workspace:*",
+    "lucide-react": "^0.474.0"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "next": ">=15",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@dexhub/config": "workspace:*",
+    "@types/react": "^19.0.7",
+    "next": "^15.1.6",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.0"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    { "path": "apps/api" },
+    { "path": "apps/web" },
+    { "path": "packages/db" },
+    { "path": "packages/sdk" },
+    { "path": "packages/ui" },
+    { "path": "packages/worklog-engine" },
+    { "path": "modules/debts" },
+    { "path": "modules/loans" },
+    { "path": "modules/notes" },
+    { "path": "modules/pizza" },
+    { "path": "modules/tasks" },
+    { "path": "modules/worklog" }
+  ]
+}

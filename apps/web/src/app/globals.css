@@ -1,0 +1,276 @@
+@import "tailwindcss";
+@source "../../../../modules/**/*.{tsx,ts}";
+@source "../../../../packages/ui/src/**/*.{tsx,ts}";
+
+/* =========================================================
+   STATIC DESIGN TOKENS — resolved at build time
+   ========================================================= */
+@theme {
+  /* Fonts */
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+
+  /* Border radius scale */
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Z-index scale */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-popover: 500;
+  --z-toast: 600;
+  --z-tooltip: 700;
+
+  /* Layout */
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 56px;
+  --topbar-height: 56px;
+  --mobile-nav-height: 56px;
+  --grid-cols: 12;
+  --grid-gap: 1rem;
+  --content-max-width: 1400px;
+
+  /* Easing */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* =========================================================
+   DYNAMIC COLOR TOKENS — resolved at runtime via CSS vars
+   ========================================================= */
+@theme inline {
+  /* Backgrounds */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-overlay: var(--surface-overlay);
+
+  /* Brand */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-muted: var(--primary-muted);
+  --color-primary-foreground: var(--primary-foreground);
+
+  /* Text */
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-text-inverted: var(--text-inverted);
+
+  /* Borders */
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  /* Semantic */
+  --color-error: var(--error);
+  --color-error-muted: var(--error-muted);
+  --color-warning: var(--warning);
+  --color-warning-muted: var(--warning-muted);
+  --color-success: var(--success);
+  --color-success-muted: var(--success-muted);
+  --color-info: var(--info);
+  --color-info-muted: var(--info-muted);
+  --color-orange: var(--orange);
+  --color-orange-muted: var(--orange-muted);
+  --color-violet: var(--violet);
+  --color-violet-muted: var(--violet-muted);
+  --color-pink: var(--pink);
+  --color-pink-muted: var(--pink-muted);
+  --color-neutral: var(--neutral);
+  --color-neutral-muted: var(--neutral-muted);
+  --color-cyan: var(--cyan);
+  --color-cyan-muted: var(--cyan-muted);
+  --color-overlay-subtle: var(--overlay-subtle);
+}
+
+/* =========================================================
+   DARK MODE (default — no class needed)
+   ========================================================= */
+:root {
+  color-scheme: dark;
+
+  /* Brand — Teal (dexhub-mark.png, #33C9B4) */
+  --primary: hsl(172 60% 49%);
+  --primary-hover: hsl(172 60% 54%);
+  --primary-muted: hsl(172 60% 49% / 0.15);
+  --primary-foreground: hsl(174 40% 10%);
+
+  /* Backgrounds */
+  --bg: hsl(222 16% 7%);
+  --surface: hsl(222 14% 10%);
+  --surface-raised: hsl(222 12% 13%);
+  --surface-overlay: hsl(222 14% 10% / 0.95);
+
+  /* Text */
+  --text: hsl(222 8% 94%);
+  --text-muted: hsl(222 6% 60%);
+  --text-subtle: hsl(222 5% 40%);
+  --text-inverted: hsl(222 16% 7%);
+
+  /* Borders */
+  --border: hsl(222 10% 18%);
+  --border-strong: hsl(222 10% 28%);
+
+  /* Semantic */
+  --error: hsl(0 72% 58%);
+  --error-muted: hsl(0 72% 58% / 0.15);
+  --warning: hsl(38 92% 60%);
+  --warning-muted: hsl(38 92% 60% / 0.15);
+  --success: hsl(142 70% 50%);
+  --success-muted: hsl(142 70% 50% / 0.15);
+  --info: hsl(210 85% 60%);
+  --info-muted: hsl(210 85% 60% / 0.15);
+  --orange: hsl(22 90% 58%);
+  --orange-muted: hsl(22 90% 58% / 0.15);
+  --violet: hsl(266 82% 66%);
+  --violet-muted: hsl(266 82% 66% / 0.15);
+  --pink: hsl(330 78% 64%);
+  --pink-muted: hsl(330 78% 64% / 0.15);
+  --neutral: hsl(222 10% 72%);
+  --neutral-muted: hsl(222 10% 72% / 0.15);
+  --cyan: hsl(190 85% 55%);
+  --cyan-muted: hsl(190 85% 55% / 0.15);
+  --overlay-subtle: hsl(0 0% 100% / 0.035);
+
+  /* Home "Panoramica" — palette propria della pagina (design deliberato, vedi handoff §7).
+     I valori dark sono IDENTICI agli hex hardcoded rimossi il 2026-09-10: il tema scuro
+     non cambia di un pixel, il light smette di essere illeggibile.
+     --home-ink e --home-line sono triplette rgb: si usano come rgb(var(--home-ink) / .35). */
+  --home-ink: 233 231 240;
+  --home-ink-strong: #F5F3FA;
+  --home-card-title: #F2F0F8;
+  --home-card-bg: #131218;
+  --home-line: 255 255 255;
+  --home-accent: 51 201 180;
+  --home-card-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* =========================================================
+   LIGHT MODE — applied via .light class on <html>
+   ========================================================= */
+.light {
+  color-scheme: light;
+
+  --primary: hsl(172 60% 39%);
+  --primary-hover: hsl(172 60% 32%);
+  --primary-muted: hsl(172 60% 39% / 0.12);
+  --primary-foreground: hsl(174 40% 10%);
+
+  --bg: hsl(0 0% 100%);
+  --surface: hsl(220 14% 97%);
+  --surface-raised: hsl(220 12% 94%);
+  --surface-overlay: hsl(0 0% 100% / 0.95);
+
+  --text: hsl(222 16% 10%);
+  --text-muted: hsl(222 8% 46%);
+  --text-subtle: hsl(222 6% 64%);
+  --text-inverted: hsl(0 0% 100%);
+
+  --border: hsl(220 13% 88%);
+  --border-strong: hsl(220 13% 76%);
+
+  --error: hsl(0 72% 48%);
+  --error-muted: hsl(0 72% 48% / 0.1);
+  --warning: hsl(38 92% 45%);
+  --warning-muted: hsl(38 92% 45% / 0.1);
+  --success: hsl(142 60% 38%);
+  --success-muted: hsl(142 60% 38% / 0.1);
+  --info: hsl(210 80% 48%);
+  --info-muted: hsl(210 80% 48% / 0.1);
+  --orange: hsl(22 85% 45%);
+  --orange-muted: hsl(22 85% 45% / 0.1);
+  --violet: hsl(266 70% 48%);
+  --violet-muted: hsl(266 70% 48% / 0.1);
+  --pink: hsl(330 68% 46%);
+  --pink-muted: hsl(330 68% 46% / 0.1);
+  --neutral: hsl(222 10% 32%);
+  --neutral-muted: hsl(222 10% 32% / 0.1);
+  --cyan: hsl(190 85% 38%);
+  --cyan-muted: hsl(190 85% 38% / 0.1);
+  --overlay-subtle: hsl(0 0% 0% / 0.035);
+
+  /* Home — controparti light (l'inchiostro si scurisce, l'overlay passa a nero) */
+  --home-ink: 32 28 45;
+  --home-ink-strong: #15121F;
+  --home-card-title: #15121F;
+  --home-card-bg: hsl(220 14% 97%);
+  --home-line: 0 0 0;
+  --home-accent: 40 159 143;
+  --home-card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================================
+   BASE STYLES
+   ========================================================= */
+* {
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background-color: var(--primary-muted);
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-subtle);
+}
+
+/* User Settings: Compact Density */
+.compact-mode {
+  --grid-gap: 0.65rem;
+}
+
+/* User Settings: Reduced Motion */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
