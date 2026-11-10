@@ -100,7 +100,7 @@ export class PasskeyAuthController {
       verification = await verifyAuthenticationResponse({
         response: credential as Parameters<typeof verifyAuthenticationResponse>[0]['response'],
         expectedChallenge: challenge,
-        expectedOrigin: ORIGIN,
+        expectedOrigin: [ORIGIN, 'https://dexhub.it', 'https://www.dexhub.it'].filter(Boolean),
         expectedRPID: RP_ID,
         requireUserVerification: false,
         credential: {

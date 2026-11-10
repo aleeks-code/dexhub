@@ -52,8 +52,22 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1')
 
+  const frontendUrl = process.env['FRONTEND_URL'] ?? 'http://localhost:3000'
+  const allowedOrigins = [
+    frontendUrl,
+    'https://dexhub.it',
+    'https://www.dexhub.it',
+    'http://localhost:3000',
+  ].filter(Boolean)
+
   app.enableCors({
-    origin: process.env['FRONTEND_URL'] ?? 'http://localhost:3000',
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.some((o) => origin.startsWith(o))) {
+        cb(null, true)
+      } else {
+        cb(null, false)
+      }
+    },
     credentials: true,
   })
 
