@@ -112,7 +112,7 @@ export class PasskeyManageController {
       verification = await verifyRegistrationResponse({
         response: credential as Parameters<typeof verifyRegistrationResponse>[0]['response'],
         expectedChallenge: challenge,
-        expectedOrigin: ORIGIN,
+        expectedOrigin: [ORIGIN, 'https://dexhub.it', 'https://www.dexhub.it'].filter(Boolean),
         expectedRPID: RP_ID,
         requireUserVerification: false,
       })

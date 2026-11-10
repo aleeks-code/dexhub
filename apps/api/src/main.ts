@@ -17,6 +17,7 @@ for (const [key, val] of Object.entries(process.env)) {
 
 if (!process.env['DATABASE_URL']) {
   process.env['DATABASE_URL'] =
+    process.env['DATEBASE_URL'] ||
     process.env['POSTGRES_URL'] ||
     process.env['DATABASE_URI'] ||
     process.env['DB_URL'] ||
