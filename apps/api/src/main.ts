@@ -97,4 +97,7 @@ async function bootstrap() {
   logger.log(`API running on http://0.0.0.0:${port}`, 'Bootstrap')
 }
 
-bootstrap()
+bootstrap().catch((err) => {
+  process.stderr.write(`\n[FATAL BOOTSTRAP ERROR] ${err?.stack || err}\n\n`)
+  process.exit(1)
+})
