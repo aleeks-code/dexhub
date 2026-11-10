@@ -47,12 +47,25 @@ export class JsonLogger implements LoggerService {
   }
 
   error(message: unknown, ...optionalParams: unknown[]): void {
-    const context = this.extractContext(optionalParams)
-    // NestJS passes stack trace as second arg for errors
-    const trace =
-      optionalParams.length > 1 && typeof optionalParams[0] === 'string'
-        ? optionalParams[0]
-        : undefined
+    let context: string | undefined
+    let trace: string | undefined
+
+    for (const param of optionalParams) {
+      if (typeof param === 'string') {
+        if (param.includes('\n') || param.startsWith('Error:') || param.length > 80) {
+          trace = param
+        } else if (!context) {
+          context = param
+        }
+      }
+    }
+
+    if (message instanceof Error) {
+      if (!trace && message.stack) trace = message.stack
+      this.write('error', message.message || message.name || 'Error', context, trace)
+      return
+    }
+
     this.write('error', message, context, trace)
   }
 
@@ -78,7 +91,28 @@ export class JsonLogger implements LoggerService {
   }
 
   private write(level: LogEntry['level'], message: unknown, context?: string, trace?: string): void {
-    const text = typeof message === 'string' ? message : JSON.stringify(message)
+    let text: string
+    if (typeof message === 'string') {
+      text = message
+    } else if (message instanceof Error) {
+      text = message.message || message.name || 'Error'
+      if (!trace && message.stack) trace = message.stack
+    } else if (typeof message === 'object' && message !== null) {
+      try {
+        const errorLike = message as { message?: unknown; stack?: unknown }
+        if (typeof errorLike.message === 'string') {
+          text = errorLike.message
+          if (!trace && typeof errorLike.stack === 'string') trace = errorLike.stack
+        } else {
+          text = JSON.stringify(message, Object.getOwnPropertyNames(message))
+        }
+      } catch {
+        text = String(message)
+      }
+    } else {
+      text = String(message)
+    }
+
     const entry: Record<string, unknown> = {
       timestamp: new Date().toISOString(),
       level,
@@ -96,5 +130,11 @@ export class JsonLogger implements LoggerService {
     })
 
     process.stdout.write(JSON.stringify(entry) + '\n')
+    if (level === 'error' || level === 'fatal') {
+      process.stderr.write(`[${level.toUpperCase()}] [${entry['context']}] ${text}\n`)
+      if (trace) {
+        process.stderr.write(`${trace}\n`)
+      }
+    }
   }
 }

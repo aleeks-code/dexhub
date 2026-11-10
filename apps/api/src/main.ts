@@ -9,24 +9,32 @@ import { runMigrations } from './db/migrate'
 
 const REQUIRED_ENV: Array<{ key: string; hint: string }> = [
   {
+    key: 'DATABASE_URL',
+    hint: 'PostgreSQL connection string, e.g. postgresql://user:pass@ep-xyz.neon.tech/neondb?sslmode=require',
+  },
+  {
+    key: 'BETTER_AUTH_SECRET',
+    hint: 'Secret key for Better Auth (min 32 chars), e.g. openssl rand -hex 32',
+  },
+  {
     key: 'RECOVERY_CODE_ENCRYPTION_KEY',
     hint: 'Generate with: openssl rand -hex 32',
   },
   {
     key: 'FRONTEND_URL',
-    hint: 'Public URL of the web app, e.g. https://dexhub.app',
+    hint: 'Public URL of the web app, e.g. https://www.dexhub.it',
   },
   {
     key: 'BETTER_AUTH_URL',
-    hint: 'Same as FRONTEND_URL (used by Better Auth for session cookies), e.g. https://dexhub.app',
+    hint: 'Same as FRONTEND_URL (used by Better Auth for session cookies), e.g. https://www.dexhub.it',
   },
   {
     key: 'WEBAUTHN_RP_ID',
-    hint: 'Hostname only (no scheme/port), e.g. dexhub.app',
+    hint: 'Hostname only (no scheme/port), e.g. dexhub.it',
   },
   {
     key: 'WEBAUTHN_ORIGIN',
-    hint: 'Full origin URL of the web app, e.g. https://dexhub.app',
+    hint: 'Full origin URL of the web app, e.g. https://www.dexhub.it',
   },
 ]
 
@@ -42,6 +50,20 @@ for (const { key, hint } of REQUIRED_ENV) {
 async function bootstrap() {
   const logger = new JsonLogger()
 
+  logger.log('Starting DexHub API bootstrap...', 'Bootstrap')
+
+  // Run database migrations before initializing Nest modules so all tables exist
+  logger.log('Applying database migrations...', 'Bootstrap')
+  try {
+    await runMigrations()
+    logger.log('Database migrations applied successfully', 'Bootstrap')
+  } catch (err: any) {
+    logger.error('Database migration failed', err?.stack || err, 'Bootstrap')
+    process.stderr.write(`\n[FATAL MIGRATION ERROR] ${err?.stack || err}\n\n`)
+    process.exit(1)
+  }
+
+  logger.log('Creating Nest application...', 'Bootstrap')
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({ trustProxy: true, bodyLimit: 10 * 1024 * 1024 }),
@@ -88,9 +110,6 @@ async function bootstrap() {
     JsonLogger.pushLog(entry)
     process.stdout.write(JSON.stringify(entry) + '\n')
   })
-
-  await runMigrations()
-  logger.log('Database migrations applied', 'Bootstrap')
 
   const port = parseInt(process.env['PORT'] ?? '3001', 10)
   await app.listen(port, '0.0.0.0')
