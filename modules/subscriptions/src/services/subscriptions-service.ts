@@ -9,99 +9,38 @@ export function initSubscriptionsService(ctx: ModuleContext): void {
   _ctx = ctx
 }
 
-function getInitialDemoData(): Subscription[] {
-  const now = new Date()
-  const addDays = (n: number) => {
-    const d = new Date(now)
-    d.setDate(d.getDate() + n)
-    return d.toISOString().slice(0, 10)
-  }
-
-  return [
-    {
-      id: 'sub-netflix',
-      name: 'Netflix Standard',
-      category: 'streaming',
-      cost: 13.99,
-      cycle: 'mensile',
-      nextRenewalDate: addDays(4),
-      paymentMethod: 'Mastercard •••• 4242',
-      status: 'attivo',
-      color: '#E50914',
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-    },
-    {
-      id: 'sub-spotify',
-      name: 'Spotify Premium',
-      category: 'streaming',
-      cost: 10.99,
-      cycle: 'mensile',
-      nextRenewalDate: addDays(12),
-      paymentMethod: 'PayPal',
-      status: 'attivo',
-      color: '#1DB954',
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-    },
-    {
-      id: 'sub-icloud',
-      name: 'iCloud+ 200 GB',
-      category: 'software',
-      cost: 2.99,
-      cycle: 'mensile',
-      nextRenewalDate: addDays(18),
-      paymentMethod: 'Apple Pay',
-      status: 'attivo',
-      color: '#0071e3',
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-    },
-    {
-      id: 'sub-prime',
-      name: 'Amazon Prime',
-      category: 'utilities',
-      cost: 49.90,
-      cycle: 'annuale',
-      nextRenewalDate: addDays(45),
-      paymentMethod: 'Visa •••• 8812',
-      status: 'attivo',
-      color: '#FF9900',
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-    },
-    {
-      id: 'sub-gym',
-      name: 'Abbonamento Palestra',
-      category: 'fitness',
-      cost: 45.0,
-      cycle: 'mensile',
-      nextRenewalDate: addDays(7),
-      paymentMethod: 'Addebito SEPA',
-      status: 'attivo',
-      color: '#10B981',
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-    },
-  ]
-}
-
 function getStored(): Subscription[] {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
       const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) return JSON.parse(raw) as Subscription[]
-      const demo = getInitialDemoData()
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(demo))
-      return demo
+      if (raw) {
+        const parsed = JSON.parse(raw) as Subscription[]
+        if (Array.isArray(parsed)) {
+          // If demo subscriptions were previously injected automatically, clean them up
+          const cleaned = parsed.filter(
+            (i) =>
+              !i.id.startsWith('sub-netflix') &&
+              !i.id.startsWith('sub-spotify') &&
+              !i.id.startsWith('sub-icloud') &&
+              !i.id.startsWith('sub-prime') &&
+              !i.id.startsWith('sub-gym'),
+          )
+          if (cleaned.length !== parsed.length) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned))
+          }
+          return cleaned
+        }
+      }
+      return []
     }
     const mem = _memoryStore[STORAGE_KEY]
-    if (mem) return JSON.parse(mem) as Subscription[]
-    const demo = getInitialDemoData()
-    _memoryStore[STORAGE_KEY] = JSON.stringify(demo)
-    return demo
+    if (mem) {
+      const parsed = JSON.parse(mem) as Subscription[]
+      return Array.isArray(parsed) ? parsed : []
+    }
+    return []
   } catch {
-    return getInitialDemoData()
+    return []
   }
 }
 

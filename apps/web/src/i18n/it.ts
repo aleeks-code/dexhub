@@ -188,7 +188,7 @@ export const it: Translations = {
   },
   admin: {
     section: 'Amministrazione',
-    back: '← Indietro',
+    back: 'Indietro',
     index: {
       title: 'Amministrazione',
       subtitle: 'Gestisci utenti e controllo degli accessi globale',

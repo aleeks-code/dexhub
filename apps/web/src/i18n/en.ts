@@ -186,7 +186,7 @@ export const en = {
   },
   admin: {
     section: 'Administration',
-    back: '← Back',
+    back: 'Back',
     index: {
       title: 'Administration',
       subtitle: 'Manage users and global access control',
