@@ -37,6 +37,7 @@ WORKDIR /app
 COPY --from=builder /prod/api /app/api
 COPY --from=builder /app/apps/api/dist /app/api/dist
 COPY packages/db/migrations /app/api/node_modules/@dexhub/db/migrations
+COPY packages/db/migrations /app/packages/db/migrations
 
 # Copy Web (Next.js standalone)
 COPY --from=builder /app/apps/web/.next/standalone /app/web
