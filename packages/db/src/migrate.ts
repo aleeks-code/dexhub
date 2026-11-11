@@ -43,6 +43,11 @@ export async function runMigrations(): Promise<void> {
     await migrate(db, { migrationsFolder })
     process.stdout.write('[Migrate] All migrations successfully applied\n')
   } finally {
+    try {
+      await sql`ALTER TABLE IF EXISTS "invite_requests" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp with time zone;`
+    } catch (e) {
+      process.stderr.write(`[Migrate] Schema sync note: ${e}\n`)
+    }
     await sql.end()
   }
 }

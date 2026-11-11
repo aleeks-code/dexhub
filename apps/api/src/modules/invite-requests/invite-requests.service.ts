@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common'
 import {
   and,
@@ -13,19 +14,30 @@ import {
   getClient,
   inviteRequests,
   isNull,
+  sql,
   type InviteRequest,
 } from '@dexhub/db'
 import { AdminUsersService } from '../admin/admin-users.service'
 import { MailService } from '../mail/mail.service'
 
 @Injectable()
-export class InviteRequestsService {
+export class InviteRequestsService implements OnModuleInit {
   private readonly logger = new Logger(InviteRequestsService.name)
 
   constructor(
     private readonly adminUsers: AdminUsersService,
     private readonly mailService: MailService,
   ) {}
+
+  async onModuleInit(): Promise<void> {
+    try {
+      await this.db.execute(
+        sql`ALTER TABLE IF EXISTS "invite_requests" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp with time zone;`,
+      )
+    } catch (err) {
+      this.logger.warn('Could not auto-ensure deleted_at column on invite_requests', err)
+    }
+  }
 
   private get db() {
     return getClient()
@@ -52,7 +64,6 @@ export class InviteRequestsService {
         and(
           eq(inviteRequests.email, cleanEmail),
           eq(inviteRequests.status, 'pending'),
-          isNull(inviteRequests.deletedAt),
         ),
       )
       .limit(1)
