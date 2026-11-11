@@ -395,6 +395,9 @@ importers:
       react:
         specifier: ^19.0.0
         version: 19.2.7
+      unpdf:
+        specifier: ^2.1.0
+        version: 2.1.0
     devDependencies:
       '@dexhub/config':
         specifier: workspace:*

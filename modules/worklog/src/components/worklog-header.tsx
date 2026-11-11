@@ -18,6 +18,7 @@ import {
   Sparkles,
   Printer,
   X,
+  FileUp,
 } from 'lucide-react'
 import { Button } from '@dexhub/ui'
 import { IconTooltip } from './icon-tooltip'
@@ -111,6 +112,7 @@ interface WorklogHeaderProps {
   onSearchClear: () => void
 
   // More options
+  onImportCedolino?: () => void
   onOpenWizard?: () => void
   onPrint?: () => void
   onExport: (format: 'csv' | 'json') => void
@@ -141,6 +143,7 @@ export function WorklogHeader({
   searchQuery,
   onSearchChange,
   onSearchClear,
+  onImportCedolino,
   onOpenWizard,
   onPrint,
   onExport,
@@ -339,6 +342,18 @@ export function WorklogHeader({
                 </Button>
               )}
 
+              {onImportCedolino && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onImportCedolino}
+                  className="h-8 gap-1.5 text-xs font-medium border-border bg-surface-raised/40 hover:bg-surface-raised cursor-pointer"
+                >
+                  <FileUp size={13} className="text-primary" />
+                  <span className="hidden md:inline">Importa cedolino</span>
+                </Button>
+              )}
+
               <Button
                 variant={selectionMode ? 'outline' : 'ghost'}
                 size="sm"
@@ -400,6 +415,13 @@ export function WorklogHeader({
                           />
                           <div className="my-1 border-t border-border" />
                         </>
+                      )}
+                      {onImportCedolino && (
+                        <MenuItem
+                          icon={<FileUp size={14} className="text-primary" />}
+                          label="Importa cedolino (PDF)"
+                          onClick={() => runAndClose(onImportCedolino)}
+                        />
                       )}
                       {onPrint && (
                         <MenuItem

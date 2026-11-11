@@ -19,5 +19,7 @@ const worklogModule: DexHubModule = {
 
 export default worklogModule
 export * from './services/worklog-api'
+export * from './engine/cedolino-parser'
+export * from './engine/cedolino-importer'
 
 

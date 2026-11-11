@@ -14,7 +14,8 @@
     "@dexhub/sdk": "workspace:*",
     "@dexhub/ui": "workspace:*",
     "@dexhub/worklog-engine": "workspace:*",
-    "lucide-react": "^0.474.0"
+    "lucide-react": "^0.474.0",
+    "unpdf": "^2.1.0"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.0.0",

@@ -16,8 +16,10 @@ import {
   useUpsertDay,
   useEnsureHolidayDay,
   useDeleteDay,
+  useUpdateNettoReale,
   worklogApi,
   type EntryInput,
+  type UpsertDayInput,
   type ContractConfig,
 } from '../services/worklog-api'
 import { getItalianHolidays, isItalianHoliday, getItalianHolidayName } from '../utils/holidays'
@@ -29,6 +31,7 @@ import { TemplatesPanel } from '../components/templates-panel'
 import { TrashPanel } from '../components/trash-panel'
 import { BulkModal } from '../components/bulk-modal'
 import { SettingsPanel } from '../components/settings-panel'
+import { CedolinoImportModal } from '../components/cedolino-import-modal'
 import { WorklogHeader, type ToolbarPanel } from '../components/worklog-header'
 import { WorklogSetupWizard } from '../components/worklog-setup-wizard'
 import { IconTooltip } from '../components/icon-tooltip'
@@ -53,12 +56,6 @@ function monthRange(month: string): { from: string; to: string } {
   const [y, m] = parseYYYYMM(month)
   const lastDay = new Date(y, m, 0).getDate()
   return { from: `${month}-01`, to: `${month}-${String(lastDay).padStart(2, '0')}` }
-}
-
-const MONTH_STORAGE_KEY = 'dexhub-worklog-month'
-
-function persistMonth(m: string) {
-  localStorage.setItem(MONTH_STORAGE_KEY, m)
 }
 
 function addMonths(yyyymm: string, delta: number): string {
@@ -107,11 +104,9 @@ type Panel = 'templates' | 'trash' | null
 
 export default function WorklogPage() {
   const t = useWorklogT()
+  // Cartellino starts always on the current month upon returning/mounting
   const [month, setMonth] = useState(todayYYYYMM)
-  useEffect(() => {
-    const stored = localStorage.getItem(MONTH_STORAGE_KEY)
-    if (stored && /^\d{4}-(0[1-9]|1[0-2])$/.test(stored)) setMonth(stored)
-  }, [])
+  const [showCedolinoImport, setShowCedolinoImport] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [panel, setPanel] = useState<Panel>(null)
   const [showSettings, setShowSettings] = useState(false)
@@ -163,6 +158,7 @@ export default function WorklogPage() {
   const upsertDay = useUpsertDay()
   const deleteDay = useDeleteDay()
   const ensureHolidayDay = useEnsureHolidayDay()
+  const updateNettoReale = useUpdateNettoReale()
 
   const defaultHours = contract?.oreGiornaliereStandard ?? 8
   const workdays = contract?.giorniLavorativiSettimana ?? [1, 2, 3, 4, 5]
@@ -255,7 +251,6 @@ export default function WorklogPage() {
   function handleMonthChange(delta: number) {
     const next = addMonths(month, delta)
     setMonth(next)
-    persistMonth(next)
   }
 
   function toggleSelectionMode() {
@@ -403,6 +398,20 @@ export default function WorklogPage() {
     }
   }
 
+  async function handleApplyCedolinoDays(
+    targetMonth: string,
+    daysToSave: UpsertDayInput[],
+    nettoVal: number | null,
+  ) {
+    await Promise.all(
+      daysToSave.map((dayInput) => upsertDay.mutateAsync(dayInput)),
+    )
+    if (nettoVal !== null && !isNaN(nettoVal) && nettoVal > 0) {
+      await updateNettoReale.mutateAsync({ mese: targetMonth, netto: nettoVal })
+    }
+    setMonth(targetMonth)
+  }
+
   function handlePrint() {
     window.print()
   }
@@ -455,12 +464,10 @@ export default function WorklogPage() {
           onMonthChange={handleMonthChange}
           onMonthSelect={(m) => {
             setMonth(m)
-            persistMonth(m)
           }}
           onToday={() => {
             const m = todayYYYYMM()
             setMonth(m)
-            persistMonth(m)
           }}
           onOpenSettings={() => setShowSettings(true)}
           contract={contract}
@@ -486,6 +493,7 @@ export default function WorklogPage() {
             setShowSearch(false)
           }}
           onOpenWizard={() => setForceShowWizard(true)}
+          onImportCedolino={() => setShowCedolinoImport(true)}
           onPrint={handlePrint}
           onExport={handleExport}
           onOpenPanel={(panel: ToolbarPanel) => setPanel(panel)}
@@ -700,6 +708,16 @@ export default function WorklogPage() {
           }}
         />
       )}
+
+      <CedolinoImportModal
+        isOpen={showCedolinoImport}
+        onClose={() => setShowCedolinoImport(false)}
+        t={t}
+        existingDays={days}
+        standardDailyHours={defaultHours}
+        workdays={workdays}
+        onApplyDays={handleApplyCedolinoDays}
+      />
       </div>
 
       {/* ── Official Printable Timesheet Sheet (A4 print layout) ── */}
