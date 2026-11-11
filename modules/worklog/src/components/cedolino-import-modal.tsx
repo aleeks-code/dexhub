@@ -26,6 +26,7 @@ import type { WorklogDay } from '../services/worklog-api'
 import {
   extractCedolinoFromPdfBuffer,
   type CedolinoParsedData,
+  type CedolinoRetribuzione,
 } from '../engine/cedolino-parser'
 import {
   generateDaysFromCedolino,
@@ -43,6 +44,7 @@ interface Props {
     month: string,
     days: ReturnType<typeof generateDaysFromCedolino>['daysToSave'],
     netto: number | null,
+    retribuzione?: CedolinoRetribuzione | null,
   ) => Promise<void>
 }
 
@@ -81,6 +83,7 @@ export function CedolinoImportModal({
     rol: null,
   })
   const [datiDipendente, setDatiDipendente] = useState<CedolinoParsedData['datiDipendente']>()
+  const [retribuzione, setRetribuzione] = useState<CedolinoRetribuzione | null>(null)
   const [showPreviewList, setShowPreviewList] = useState(false)
 
   // Computed generated schedule based on currently edited values - always called at top level
@@ -152,6 +155,7 @@ export function CedolinoImportModal({
     setOreNotturno('0')
     setPastiMensa('0')
     setOverwriteExisting(true)
+    setRetribuzione(null)
     setShowPreviewList(false)
   }
 
@@ -194,6 +198,7 @@ export function CedolinoImportModal({
       setPastiMensa(String(parsed.pastiMensa))
       setResidui(parsed.residui)
       setDatiDipendente(parsed.datiDipendente)
+      setRetribuzione(parsed.retribuzione ?? null)
 
       setStep('review')
     } catch (err: unknown) {
@@ -215,6 +220,7 @@ export function CedolinoImportModal({
         month,
         importResult.daysToSave,
         parsedNetto !== null && !isNaN(parsedNetto) ? parsedNetto : null,
+        retribuzione,
       )
       handleClose()
     } catch (err: unknown) {
@@ -527,6 +533,28 @@ export function CedolinoImportModal({
                       ROL: <strong className="text-text">{residui.rol.toFixed(2)} h</strong>
                     </span>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Retribuzione fissa rilevata nel cedolino */}
+            {retribuzione && (
+              <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 flex items-start gap-2.5 text-xs">
+                <Briefcase size={16} className="text-primary shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-text">
+                      Retribuzione di fatto rilevata: {retribuzione.importo.toFixed(2)} €
+                    </p>
+                    <span className="text-[10px] font-medium text-primary bg-primary/20 px-1.5 py-0.2 rounded">
+                      Configura stima
+                    </span>
+                  </div>
+                  <p className="text-text-muted text-[11px]">
+                    Paga base: {retribuzione.minimoTabellare?.toFixed(2) ?? '—'} €
+                    {retribuzione.premioProduzioneFisso ? ` • Premio prod.: ${retribuzione.premioProduzioneFisso.toFixed(2)} €` : ''}
+                    {retribuzione.scattiAnzianita ? ` • Scatti anz.: ${retribuzione.scattiAnzianita.toFixed(2)} €` : ''}
+                  </p>
                 </div>
               </div>
             )}

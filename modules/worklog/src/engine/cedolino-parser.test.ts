@@ -48,6 +48,12 @@ describe('cedolino-parser', () => {
       expect(data.residui.ferie).toBe(-47.99)
       expect(data.residui.permessi).toBe(9.99)
       expect(data.residui.rol).toBe(12.0)
+
+      // Retribuzione
+      expect(data.retribuzione?.importo).toBe(2296.56)
+      expect(data.retribuzione?.minimoTabellare).toBe(2023.27)
+      expect(data.retribuzione?.premioProduzioneFisso).toBe(248.24)
+      expect(data.retribuzione?.scattiAnzianita).toBe(25.05)
     })
   })
 

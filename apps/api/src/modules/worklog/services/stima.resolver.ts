@@ -1,5 +1,6 @@
 import {
   and,
+  asc,
   desc,
   eq,
   getClient,
@@ -160,7 +161,7 @@ export async function resolveStima(
   }
 
   // ── 3. Retribuzione — MAX(decorrenza) WHERE decorrenza <= targetMonth ────────
-  const [retrib] = await db
+  let [retrib] = await db
     .select()
     .from(worklogRetribuzione)
     .where(
@@ -171,6 +172,21 @@ export async function resolveStima(
     )
     .orderBy(desc(worklogRetribuzione.decorrenza))
     .limit(1)
+
+  // Fallback: se il targetMonth precede la prima decorrenza salvata, usa la prima
+  // retribuzione disponibile dell'utente (la più vecchia) invece di bloccare la stima
+  if (!retrib) {
+    const [earliestRetrib] = await db
+      .select()
+      .from(worklogRetribuzione)
+      .where(eq(worklogRetribuzione.userId, userId))
+      .orderBy(asc(worklogRetribuzione.decorrenza))
+      .limit(1)
+
+    if (earliestRetrib) {
+      retrib = earliestRetrib
+    }
+  }
 
   if (!retrib) {
     return { ok: false, reason: 'no_retribuzione', warnings }

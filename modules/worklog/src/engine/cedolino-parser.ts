@@ -19,6 +19,14 @@ export interface CedolinoResidui {
   rol: number | null
 }
 
+export interface CedolinoRetribuzione {
+  importo: number
+  minimoTabellare: number | null
+  premioProduzioneFisso: number | null
+  scattiAnzianita: number | null
+  superminimo: number | null
+}
+
 export interface CedolinoParsedData {
   mese: string | null       // 'YYYY-MM'
   meseNome?: string         // e.g. 'Settembre 2026'
@@ -29,6 +37,7 @@ export interface CedolinoParsedData {
     ccnl?: string
     qualifica?: string
   }
+  retribuzione?: CedolinoRetribuzione | null
   ore: CedolinoHoursBreakdown
   pastiMensa: number
   residui: CedolinoResidui
@@ -270,6 +279,52 @@ export async function extractCedolinoFromPdfBuffer(
     nomeDipendente = nomeMatch[1]!.trim()
   }
 
+  // ── 5. Retribuzione Fissa (Paga Base, Premio Prod, Scatti) ───────────────
+  let retribuzioneEstretta: CedolinoRetribuzione | null = null
+
+  // In TeamSystem: riga "PAGA BASE PREM.PROD. SC. ANZ." seguita da riga numerica
+  const pbIndex = lines.findIndex((l) => /PAGA\s*BASE/i.test(l))
+  if (pbIndex !== -1 && pbIndex + 1 < lines.length) {
+    const nextLine = lines[pbIndex + 1]!.trim()
+    const nums = nextLine.split(/\s+/).map((s) => parseItalianNumber(s))
+    const n0 = nums[0]
+    const n1 = nums[1]
+    const n2 = nums[2]
+    if (typeof n0 === 'number' && n0 > 0) {
+      const minimo = n0
+      const premio = typeof n1 === 'number' ? n1 : 0
+      const scatti = typeof n2 === 'number' ? n2 : 0
+      const totale = Math.round((minimo + premio + scatti) * 100) / 100
+
+      retribuzioneEstretta = {
+        importo: totale,
+        minimoTabellare: minimo,
+        premioProduzioneFisso: premio,
+        scattiAnzianita: scatti,
+        superminimo: 0,
+      }
+    }
+  }
+
+  // Fallback pattern generico
+  if (!retribuzioneEstretta) {
+    const retribBaseMatch = fullText.match(
+      /(?:RETRIBUZIONE\s+(?:BASE|DI\s+FATTO|LORDA|MENSILE))[\s\S]{0,50}?([0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})/i,
+    )
+    if (retribBaseMatch) {
+      const val = parseItalianNumber(retribBaseMatch[1]!)
+      if (val !== null && val > 0) {
+        retribuzioneEstretta = {
+          importo: val,
+          minimoTabellare: val,
+          premioProduzioneFisso: null,
+          scattiAnzianita: null,
+          superminimo: null,
+        }
+      }
+    }
+  }
+
   return {
     mese: detectedMese,
     meseNome: detectedMeseNome,
@@ -278,6 +333,7 @@ export async function extractCedolinoFromPdfBuffer(
       nome: nomeDipendente,
       azienda,
     },
+    retribuzione: retribuzioneEstretta,
     ore: {
       ordinarie,
       ferie,

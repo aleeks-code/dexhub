@@ -17,6 +17,7 @@ import {
   useEnsureHolidayDay,
   useDeleteDay,
   useUpdateNettoReale,
+  useCreateRetribuzione,
   worklogApi,
   type EntryInput,
   type UpsertDayInput,
@@ -32,6 +33,7 @@ import { TrashPanel } from '../components/trash-panel'
 import { BulkModal } from '../components/bulk-modal'
 import { SettingsPanel } from '../components/settings-panel'
 import { CedolinoImportModal } from '../components/cedolino-import-modal'
+import type { CedolinoRetribuzione } from '../engine/cedolino-parser'
 import { WorklogHeader, type ToolbarPanel } from '../components/worklog-header'
 import { WorklogSetupWizard } from '../components/worklog-setup-wizard'
 import { IconTooltip } from '../components/icon-tooltip'
@@ -159,6 +161,7 @@ export default function WorklogPage() {
   const deleteDay = useDeleteDay()
   const ensureHolidayDay = useEnsureHolidayDay()
   const updateNettoReale = useUpdateNettoReale()
+  const createRetribuzione = useCreateRetribuzione()
 
   const defaultHours = contract?.oreGiornaliereStandard ?? 8
   const workdays = contract?.giorniLavorativiSettimana ?? [1, 2, 3, 4, 5]
@@ -402,12 +405,25 @@ export default function WorklogPage() {
     targetMonth: string,
     daysToSave: UpsertDayInput[],
     nettoVal: number | null,
+    retribuzione?: CedolinoRetribuzione | null,
   ) {
     await Promise.all(
       daysToSave.map((dayInput) => upsertDay.mutateAsync(dayInput)),
     )
     if (nettoVal !== null && !isNaN(nettoVal) && nettoVal > 0) {
       await updateNettoReale.mutateAsync({ mese: targetMonth, netto: nettoVal })
+    }
+    if (retribuzione && !retribuzioni.some((r) => r.decorrenza === targetMonth)) {
+      await createRetribuzione.mutateAsync({
+        decorrenza: targetMonth,
+        tipo: 'monthly',
+        importo: retribuzione.importo,
+        minimoTabellare: retribuzione.minimoTabellare,
+        premioProduzioneFisso: retribuzione.premioProduzioneFisso,
+        scattiAnzianita: retribuzione.scattiAnzianita,
+        superminimo: retribuzione.superminimo ?? 0,
+        note: `Importato da cedolino ${targetMonth}`,
+      })
     }
     setMonth(targetMonth)
   }
