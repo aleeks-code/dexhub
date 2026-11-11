@@ -3,13 +3,13 @@
  * Funzioni matematiche pure, deterministiche, senza I/O né dipendenze esterne.
  */
 
-export type ValutazioneScostamento = 'excellent' | 'moderate' | 'significant'
+export type ValutazioneScostamento = 'excellent' | 'moderate' | 'significant' | 'uncommunicated'
 export type VersoScostamento = 'overestimate' | 'underestimate' | 'exact'
 
 export interface ScostamentoResult {
   delta: number // NettoStimato - NettoReale (positivo: sovrastima, negativo: sottostima)
   deltaAbs: number // |Delta|
-  scostamentoPerc: number // (|Delta| / NettoReale) * 100 (gestisce nettoReale === 0)
+  scostamentoPerc: number // (|Delta| / NettoReale) * 100 (0 se non comunicato)
   valutazione: ValutazioneScostamento
   verso: VersoScostamento
 }
@@ -24,7 +24,7 @@ export interface MetricheConfronto {
   mae: number | null // Mean Absolute Error in €
   mape: number | null // Mean Absolute Percentage Error in %
   bias: number | null // Mean Bias in € (positivo = sovrastima media, negativo = sottostima media)
-  mesiValidi: number // Numero di mesi con entrambi i valori presenti
+  mesiValidi: number // Numero di mesi con entrambi i valori presenti e > 0
   totaleMesi: number // Totale mesi osservati (es. 12)
 }
 
@@ -35,6 +35,9 @@ function r2(val: number): number {
 /**
  * Valuta lo scostamento puntuale tra stima e busta paga reale.
  *
+ * Se il netto reale non è impostato, è nullo o è pari a zero, non calcola
+ * alcuno scostamento e restituisce la valutazione 'uncommunicated' ("Netto non ancora comunicato").
+ *
  * Formule:
  * - Delta = NettoStimato - NettoReale
  * - Scostamento % = (|Delta| / NettoReale) * 100
@@ -44,16 +47,23 @@ function r2(val: number): number {
  * - <= 5%: moderate
  * - > 5%: significant
  */
-export function valutaScostamento(nettoStimato: number, nettoReale: number): ScostamentoResult {
+export function valutaScostamento(
+  nettoStimato: number,
+  nettoReale: number | null | undefined,
+): ScostamentoResult {
+  if (nettoReale === null || nettoReale === undefined || nettoReale <= 0) {
+    return {
+      delta: 0,
+      deltaAbs: 0,
+      scostamentoPerc: 0,
+      valutazione: 'uncommunicated',
+      verso: 'exact',
+    }
+  }
+
   const delta = r2(nettoStimato - nettoReale)
   const deltaAbs = r2(Math.abs(delta))
-
-  let scostamentoPerc = 0
-  if (nettoReale > 0) {
-    scostamentoPerc = r2((deltaAbs / nettoReale) * 100)
-  } else if (deltaAbs > 0) {
-    scostamentoPerc = 100
-  }
+  const scostamentoPerc = r2((deltaAbs / nettoReale) * 100)
 
   let valutazione: ValutazioneScostamento = 'significant'
   if (scostamentoPerc <= 1) {
@@ -80,13 +90,14 @@ export function valutaScostamento(nettoStimato: number, nettoReale: number): Sco
 
 /**
  * Calcola le metriche statistiche aggregate (MAE, MAPE, Bias) su un insieme di mesi.
- * Include esclusivamente i mesi con sia nettoStimato che nettoReale validi e numerici.
+ * Include esclusivamente i mesi con sia nettoStimato che nettoReale validi, numerici e > 0.
  */
 export function calcolaMetricheConfronto(mesi: MeseConfrontoInput[]): MetricheConfronto {
   const validi = mesi.filter(
     (m): m is { mese: string; nettoStimato: number; nettoReale: number } =>
       m.nettoStimato !== null &&
       m.nettoReale !== null &&
+      m.nettoReale > 0 &&
       !Number.isNaN(m.nettoStimato) &&
       !Number.isNaN(m.nettoReale),
   )
@@ -105,21 +116,17 @@ export function calcolaMetricheConfronto(mesi: MeseConfrontoInput[]): MetricheCo
   let sumDelta = 0
   let sumDeltaAbs = 0
   let sumPerc = 0
-  let countPerc = 0
 
   for (const m of validi) {
     const sc = valutaScostamento(m.nettoStimato, m.nettoReale)
     sumDelta += sc.delta
     sumDeltaAbs += sc.deltaAbs
-    if (m.nettoReale > 0) {
-      sumPerc += sc.scostamentoPerc
-      countPerc++
-    }
+    sumPerc += sc.scostamentoPerc
   }
 
   const mae = r2(sumDeltaAbs / n)
   const bias = r2(sumDelta / n)
-  const mape = countPerc > 0 ? r2(sumPerc / countPerc) : null
+  const mape = r2(sumPerc / n)
 
   return {
     mae,

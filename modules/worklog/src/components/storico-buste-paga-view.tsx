@@ -279,7 +279,7 @@ export function StoricoBustePagaView({ initialYear, t, onSelectMonth }: Props) {
 
                   {/* Scarto Delta e Scostamento % */}
                   <td className="px-3 py-3 tabular-nums">
-                    {sc ? (
+                    {sc && sc.valutazione !== 'uncommunicated' ? (
                       <div className="flex flex-col">
                         <span className={`font-semibold ${sc.delta > 0 ? 'text-warning' : sc.delta < 0 ? 'text-primary' : 'text-emerald-400'}`}>
                           {sc.delta > 0 ? `+${formatEur(sc.delta, t.locale)}` : formatEur(sc.delta, t.locale)}
@@ -295,7 +295,7 @@ export function StoricoBustePagaView({ initialYear, t, onSelectMonth }: Props) {
 
                   {/* Badge Valutazione */}
                   <td className="px-3 py-3">
-                    {sc ? (
+                    {sc && sc.valutazione !== 'uncommunicated' ? (
                       <span
                         className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold border ${
                           sc.valutazione === 'excellent'
@@ -311,8 +311,12 @@ export function StoricoBustePagaView({ initialYear, t, onSelectMonth }: Props) {
                             ? t.nettoRealeConfig.moderate
                             : t.nettoRealeConfig.significant}
                       </span>
-                    ) : (
+                    ) : item.nettoReale !== null && item.nettoReale > 0 ? (
                       <span className="text-text-muted text-[11px]">—</span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-md border border-border bg-surface-raised/60 px-2 py-0.5 text-[10px] font-medium text-text-muted">
+                        {t.nettoRealeConfig.uncommunicated}
+                      </span>
                     )}
                   </td>
 

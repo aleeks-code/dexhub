@@ -53,17 +53,18 @@ describe('valutaScostamento', () => {
     expect(res.verso).toBe('overestimate')
   })
 
-  it('gestisce nettoReale pari a 0 senza divisione per zero', () => {
-    const resZeroDiff = valutaScostamento(0, 0)
-    expect(resZeroDiff.delta).toBe(0)
-    expect(resZeroDiff.scostamentoPerc).toBe(0)
-    expect(resZeroDiff.verso).toBe('exact')
+  it('gestisce nettoReale non impostato, nullo o pari a 0 come uncommunicated', () => {
+    const resZero = valutaScostamento(2145.2, 0)
+    expect(resZero.delta).toBe(0)
+    expect(resZero.scostamentoPerc).toBe(0)
+    expect(resZero.valutazione).toBe('uncommunicated')
+    expect(resZero.verso).toBe('exact')
 
-    const resNonZero = valutaScostamento(500, 0)
-    expect(resNonZero.delta).toBe(500)
-    expect(resNonZero.scostamentoPerc).toBe(100)
-    expect(resNonZero.valutazione).toBe('significant')
-    expect(resNonZero.verso).toBe('overestimate')
+    const resNull = valutaScostamento(2145.2, null)
+    expect(resNull.valutazione).toBe('uncommunicated')
+
+    const resUndefined = valutaScostamento(2145.2, undefined)
+    expect(resUndefined.valutazione).toBe('uncommunicated')
   })
 })
 

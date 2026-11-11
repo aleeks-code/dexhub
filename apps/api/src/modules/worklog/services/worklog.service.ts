@@ -1222,7 +1222,7 @@ export class WorklogService {
       const stimaDisponibile = nettoStimato !== null
 
       const scostamento =
-        nettoStimato !== null && nettoReale !== null
+        nettoStimato !== null && nettoReale !== null && nettoReale > 0
           ? valutaScostamento(nettoStimato, nettoReale)
           : null
 

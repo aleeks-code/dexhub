@@ -313,7 +313,7 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                     </Button>
                   </div>
                 </div>
-              ) : data.nettoReale !== null && data.scarto !== null ? (
+              ) : data.nettoReale !== null && data.nettoReale > 0 && data.scarto !== null && data.valutazione !== 'uncommunicated' ? (
                 /* ── Stato Confrontato ── */
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
@@ -326,14 +326,18 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                           : data.valutazione === 'moderate'
                             ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                            : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                            : data.valutazione === 'significant'
+                              ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                              : 'bg-surface-raised text-text-muted border-border'
                       }`}
                     >
                       {data.valutazione === 'excellent'
                         ? t.nettoRealeConfig.excellent
                         : data.valutazione === 'moderate'
                           ? t.nettoRealeConfig.moderate
-                          : t.nettoRealeConfig.significant}
+                          : data.valutazione === 'significant'
+                            ? t.nettoRealeConfig.significant
+                            : t.nettoRealeConfig.uncommunicated}
                     </span>
                   </div>
 
@@ -436,20 +440,20 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                   </div>
                 </div>
               ) : (
-                /* ── Stato Non Inserito ── */
+                /* ── Stato Non Inserito / Netto Non Ancora Comunicato ── */
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                       {t.nettoRealeConfig.title}
                     </span>
                     <span className="inline-flex items-center rounded-md border border-border bg-surface-raised px-2 py-0.5 text-[10px] font-medium text-text-muted">
-                      {t.nettoRealeConfig.toVerify}
+                      {t.nettoRealeConfig.uncommunicated}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <p className="text-xs font-medium text-text">{t.nettoRealeConfig.notYetInserted}</p>
+                      <p className="text-xs font-medium text-text">{t.nettoRealeConfig.uncommunicated}</p>
                       <p className="text-[11px] text-text-muted opacity-80">{t.nettoRealeConfig.enterAmountPrompt}</p>
                     </div>
                   </div>

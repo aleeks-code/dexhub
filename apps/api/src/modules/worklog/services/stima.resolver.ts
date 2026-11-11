@@ -485,13 +485,13 @@ export async function resolveStima(
 
   // Scarto stima vs reale — calcolato con engine puro valutaScostamento.
   // Se è presente uno snapshot immutabile di quel periodo, confronta con lo snapshot,
-  // altrimenti con la stima corrente.
+  // altrimenti con la stima corrente. Se il netto reale è null o <= 0, valutazione = 'uncommunicated'.
   const comparisonEstimate = stimaNettoSnapshot ?? output.netto
-  const sc = nettoReale !== null ? valutaScostamento(comparisonEstimate, nettoReale) : null
-  const scarto = sc ? sc.delta : null
-  const scostamentoPerc = sc ? sc.scostamentoPerc : null
-  const valutazione = sc ? sc.valutazione : null
-  const verso = sc ? sc.verso : null
+  const sc = nettoReale !== null && nettoReale > 0 ? valutaScostamento(comparisonEstimate, nettoReale) : null
+  const scarto = sc && sc.valutazione !== 'uncommunicated' ? sc.delta : null
+  const scostamentoPerc = sc && sc.valutazione !== 'uncommunicated' ? sc.scostamentoPerc : null
+  const valutazione = sc ? sc.valutazione : 'uncommunicated'
+  const verso = sc && sc.valutazione !== 'uncommunicated' ? sc.verso : null
 
   // Fase 4B — addizionali regionali/comunali, dato PREVISIONALE/CONSOLIDATO, mai sottratto dal
   // netto qui (vedi output sopra, `computeNetto` non le vede). previousYearSnapshot è sempre
