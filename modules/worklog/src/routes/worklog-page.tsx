@@ -709,15 +709,17 @@ export default function WorklogPage() {
         />
       )}
 
-      <CedolinoImportModal
-        isOpen={showCedolinoImport}
-        onClose={() => setShowCedolinoImport(false)}
-        t={t}
-        existingDays={days}
-        standardDailyHours={defaultHours}
-        workdays={workdays}
-        onApplyDays={handleApplyCedolinoDays}
-      />
+      {showCedolinoImport && (
+        <CedolinoImportModal
+          isOpen={showCedolinoImport}
+          onClose={() => setShowCedolinoImport(false)}
+          t={t}
+          existingDays={days}
+          standardDailyHours={defaultHours}
+          workdays={workdays}
+          onApplyDays={handleApplyCedolinoDays}
+        />
+      )}
       </div>
 
       {/* ── Official Printable Timesheet Sheet (A4 print layout) ── */}

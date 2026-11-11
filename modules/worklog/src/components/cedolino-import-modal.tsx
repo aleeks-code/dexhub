@@ -83,6 +83,55 @@ export function CedolinoImportModal({
   const [datiDipendente, setDatiDipendente] = useState<CedolinoParsedData['datiDipendente']>()
   const [showPreviewList, setShowPreviewList] = useState(false)
 
+  // Computed generated schedule based on currently edited values - always called at top level
+  const importResult = useMemo(() => {
+    if (!month || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return null
+
+    const ord = parseFloat(oreOrdinarie) || 0
+    const fer = parseFloat(oreFerie) || 0
+    const per = parseFloat(orePermessi) || 0
+    const cong = parseFloat(oreCongedo) || 0
+    const mal = parseFloat(oreMalattia) || 0
+    const cig = parseFloat(oreCig) || 0
+    const nott = parseFloat(oreNotturno) || 0
+    const pasti = parseInt(pastiMensa, 10) || 0
+
+    return generateDaysFromCedolino({
+      month,
+      ore: {
+        ordinarie: ord,
+        ferie: fer,
+        permessi: per,
+        congedo: cong,
+        malattia: mal,
+        cig: cig,
+        straordinario: 0,
+        notturno: nott,
+        pomeridiano: 0,
+        altreAssenze: 0,
+      },
+      pastiMensa: pasti,
+      standardDailyHours,
+      workdays,
+      existingDays,
+      overwriteExisting,
+    })
+  }, [
+    month,
+    oreOrdinarie,
+    oreFerie,
+    orePermessi,
+    oreCongedo,
+    oreMalattia,
+    oreCig,
+    oreNotturno,
+    pastiMensa,
+    standardDailyHours,
+    workdays,
+    existingDays,
+    overwriteExisting,
+  ])
+
   if (!isOpen) return null
 
   function resetState() {
@@ -154,55 +203,6 @@ export function CedolinoImportModal({
       setIsParsing(false)
     }
   }
-
-  // Computed generated schedule based on currently edited values
-  const importResult = useMemo(() => {
-    if (!month || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return null
-
-    const ord = parseFloat(oreOrdinarie) || 0
-    const fer = parseFloat(oreFerie) || 0
-    const per = parseFloat(orePermessi) || 0
-    const cong = parseFloat(oreCongedo) || 0
-    const mal = parseFloat(oreMalattia) || 0
-    const cig = parseFloat(oreCig) || 0
-    const nott = parseFloat(oreNotturno) || 0
-    const pasti = parseInt(pastiMensa, 10) || 0
-
-    return generateDaysFromCedolino({
-      month,
-      ore: {
-        ordinarie: ord,
-        ferie: fer,
-        permessi: per,
-        congedo: cong,
-        malattia: mal,
-        cig: cig,
-        straordinario: 0,
-        notturno: nott,
-        pomeridiano: 0,
-        altreAssenze: 0,
-      },
-      pastiMensa: pasti,
-      standardDailyHours,
-      workdays,
-      existingDays,
-      overwriteExisting,
-    })
-  }, [
-    month,
-    oreOrdinarie,
-    oreFerie,
-    orePermessi,
-    oreCongedo,
-    oreMalattia,
-    oreCig,
-    oreNotturno,
-    pastiMensa,
-    standardDailyHours,
-    workdays,
-    existingDays,
-    overwriteExisting,
-  ])
 
   async function handleConfirmApply() {
     if (!importResult || importResult.daysToSave.length === 0) return
