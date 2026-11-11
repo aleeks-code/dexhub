@@ -11,8 +11,9 @@ interface NavProps {
 
 const LINKS = [
   { href: '#moduli', label: 'Moduli' },
-  { href: '#perche', label: 'I Principi' },
-  { href: '#chi', label: 'Chi c’è dietro' },
+  { href: '#perche', label: 'Confronto' },
+  { href: '#chi', label: 'La Storia' },
+  { href: '#faq', label: 'FAQ' },
 ]
 
 export function Nav({ onOpenLogin }: NavProps) {

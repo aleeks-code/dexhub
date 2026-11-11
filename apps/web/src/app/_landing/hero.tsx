@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckSquare, Clock, FileText } from 'lucide-react'
+import { CheckSquare, Clock, FileText, WalletCards } from 'lucide-react'
 import styles from './landing.module.css'
 
 interface HeroProps {
   onOpenLogin?: () => void
 }
 
-type TabKey = 'note' | 'tasks' | 'worklog'
+type TabKey = 'worklog' | 'finanze' | 'tasks' | 'note'
 
 export function Hero({ onOpenLogin }: HeroProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('worklog')
@@ -18,13 +18,12 @@ export function Hero({ onOpenLogin }: HeroProps) {
       <div className={styles.heroGlow} aria-hidden="true" />
       <div className={`${styles.container} ${styles.heroGrid}`}>
         <div>
-          <div className={styles.heroEyebrow}>Beta privata &middot; Self-hosted</div>
+          <div className={styles.heroEyebrow}>Software personale indipendente &middot; Self-hosted & Cloud-free</div>
           <h1 className={styles.heroHeadline}>
-            Il tuo spazio personale, <span className={styles.heroAccent}>senza intermediari.</span>
+            Basta fogli Excel rotti e <span className={styles.heroAccent}>dieci abbonamenti diversi.</span>
           </h1>
           <p className={`${styles.heroSubline} ${styles.measure}`}>
-            DexHub unisce note, gestione attività e conteggio ore con stima stipendio in un’unica web app modulare.
-            I tuoi dati rimangono sul tuo server, senza cloud di terzi né abbonamenti.
+            DexHub è il tuo hub personale per cartellino con stima stipendio netto CCNL, gestione prestiti e debiti, note e to-do. Veloce, privato, installato sul tuo server o computer.
           </p>
           <div className={styles.heroActions}>
             <a href="#invito" className={styles.btnPrimary}>Richiedi un invito</a>
@@ -37,7 +36,7 @@ export function Hero({ onOpenLogin }: HeroProps) {
             )}
           </div>
           <div className={styles.heroMicro}>
-            Self-hosted con Docker &middot; Nessun tracciamento &middot; Motore di calcolo locale
+            🔒 Zero cloud di terzi &middot; ⚡ Accesso biometrico con Passkey &middot; 💰 Nessun canone mensile
           </div>
         </div>
 
@@ -53,12 +52,22 @@ export function Hero({ onOpenLogin }: HeroProps) {
               <button
                 type="button"
                 role="tab"
-                aria-selected={activeTab === 'note'}
-                className={`${styles.previewTab} ${activeTab === 'note' ? styles.previewTabActive : ''}`}
-                onClick={() => setActiveTab('note')}
+                aria-selected={activeTab === 'worklog'}
+                className={`${styles.previewTab} ${activeTab === 'worklog' ? styles.previewTabActive : ''}`}
+                onClick={() => setActiveTab('worklog')}
               >
-                <FileText size={13} aria-hidden="true" />
-                <span>Note</span>
+                <Clock size={13} aria-hidden="true" />
+                <span>Cartellino</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'finanze'}
+                className={`${styles.previewTab} ${activeTab === 'finanze' ? styles.previewTabActive : ''}`}
+                onClick={() => setActiveTab('finanze')}
+              >
+                <WalletCards size={13} aria-hidden="true" />
+                <span>Finanze</span>
               </button>
               <button
                 type="button"
@@ -73,80 +82,29 @@ export function Hero({ onOpenLogin }: HeroProps) {
               <button
                 type="button"
                 role="tab"
-                aria-selected={activeTab === 'worklog'}
-                className={`${styles.previewTab} ${activeTab === 'worklog' ? styles.previewTabActive : ''}`}
-                onClick={() => setActiveTab('worklog')}
+                aria-selected={activeTab === 'note'}
+                className={`${styles.previewTab} ${activeTab === 'note' ? styles.previewTabActive : ''}`}
+                onClick={() => setActiveTab('note')}
               >
-                <Clock size={13} aria-hidden="true" />
-                <span>Cartellino</span>
+                <FileText size={13} aria-hidden="true" />
+                <span>Note</span>
               </button>
             </div>
           </div>
 
           <div className={styles.previewBody}>
-            {activeTab === 'note' && (
-              <div className={styles.previewNote}>
-                <div className={styles.previewNoteHeader}>
-                  <span className={styles.previewNoteTitle}>Appunti di lavoro — Q4</span>
-                  <span className={styles.previewBadge}>Markdown</span>
-                </div>
-                <p className={styles.previewNoteBody}>
-                  • Verifica quadratura ore e maggiorazioni CCNL Metalmeccanico.<br />
-                  • Configurazione reverse proxy Caddy e certificato TLS interno.<br />
-                  • Pianificazione backup crittografati AES-256 su storage locale.
-                </p>
-                <div className={styles.previewTags}>
-                  <span className={styles.previewTag}>#personale</span>
-                  <span className={styles.previewTag}>#infrastruttura</span>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'tasks' && (
-              <div className={styles.previewTasks}>
-                <div className={styles.previewTaskItem}>
-                  <div className={styles.previewTaskLeft}>
-                    <span className={styles.previewCheckDone}>✓</span>
-                    <span className={styles.previewTaskDone}>Deploy container monorepo DexHub</span>
-                  </div>
-                  <span className={styles.previewPriorityDone}>Completato</span>
-                </div>
-                <div className={styles.previewTaskItem}>
-                  <div className={styles.previewTaskLeft}>
-                    <span className={styles.previewCheckDone}>✓</span>
-                    <span className={styles.previewTaskDone}>Aggiornamento record DNS nip.io</span>
-                  </div>
-                  <span className={styles.previewPriorityDone}>Completato</span>
-                </div>
-                <div className={styles.previewTaskItem}>
-                  <div className={styles.previewTaskLeft}>
-                    <span className={styles.previewCheckPending} />
-                    <span className={styles.previewTaskText}>Verifica conguaglio e addizionali IRPEF</span>
-                  </div>
-                  <span className={styles.previewPriorityActive}>In corso</span>
-                </div>
-                <div className={styles.previewTaskItem}>
-                  <div className={styles.previewTaskLeft}>
-                    <span className={styles.previewCheckPending} />
-                    <span className={styles.previewTaskText}>Revisione note settimanali</span>
-                  </div>
-                  <span className={styles.previewPriorityPending}>Da fare</span>
-                </div>
-              </div>
-            )}
-
             {activeTab === 'worklog' && (
               <div className={styles.previewWorklog}>
                 <div className={styles.previewMetricGrid}>
                   <div className={styles.previewMetric}>
                     <span className={styles.previewMetricLabel}>Ore registrate (Novembre)</span>
                     <span className={styles.previewMetricValue}>168h</span>
-                    <span className={styles.previewMetricSub}>160h ordinarie + 8h straordinario</span>
+                    <span className={styles.previewMetricSub}>160h ordinarie + 8h straordinario 25%</span>
                   </div>
                   <div className={styles.previewMetric}>
                     <span className={styles.previewMetricLabel}>Stima netto calcolato</span>
-                    <span className={styles.previewMetricValueHighlight}>€ 2.140,00</span>
-                    <span className={styles.previewMetricSub}>CCNL Metalmeccanico &middot; Liv. B1</span>
+                    <span className={styles.previewMetricValueHighlight}>€ 2.140,50</span>
+                    <span className={styles.previewMetricSub}>CCNL Metalmeccanico &middot; Livello B1</span>
                   </div>
                 </div>
 
@@ -156,8 +114,94 @@ export function Hero({ onOpenLogin }: HeroProps) {
                   </div>
                   <div className={styles.previewWorklogStatus} style={{ marginTop: 8 }}>
                     <span>Avanzamento mese: 21 gg lavorati</span>
-                    <span>100% in regola</span>
+                    <span style={{ color: '#2dd4bf' }}>Storno CIG & trattenute calcolate</span>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'finanze' && (
+              <div className={styles.previewWorklog}>
+                <div className={styles.previewMetricGrid}>
+                  <div className={styles.previewMetric}>
+                    <span className={styles.previewMetricLabel}>Rata prestito auto</span>
+                    <span className={styles.previewMetricValueHighlight}>€ 248,50 / m</span>
+                    <span className={styles.previewMetricSub}>Ammortamento francese &middot; 4,20% TAN</span>
+                  </div>
+                  <div className={styles.previewMetric}>
+                    <span className={styles.previewMetricLabel}>Registro Debiti / Crediti</span>
+                    <span className={styles.previewMetricValue}>+€ 45,00</span>
+                    <span className={styles.previewMetricSub}>2 crediti aperti &middot; 0 debiti scaduti</span>
+                  </div>
+                </div>
+
+                <div className={styles.previewTasks}>
+                  <div className={styles.previewTaskItem}>
+                    <div className={styles.previewTaskLeft}>
+                      <span className={styles.previewCheckDone}>€</span>
+                      <span className={styles.previewTaskText}>Cena sushi venerdì (Marco)</span>
+                    </div>
+                    <span className={styles.previewPriorityActive}>+€ 35,00 da ricevere</span>
+                  </div>
+                  <div className={styles.previewTaskItem}>
+                    <div className={styles.previewTaskLeft}>
+                      <span className={styles.previewCheckDone}>✓</span>
+                      <span className={styles.previewTaskDone}>Quota regalo compleanno Laura</span>
+                    </div>
+                    <span className={styles.previewPriorityDone}>Saldato € 20,00</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'tasks' && (
+              <div className={styles.previewTasks}>
+                <div className={styles.previewTaskItem}>
+                  <div className={styles.previewTaskLeft}>
+                    <span className={styles.previewCheckDone}>✓</span>
+                    <span className={styles.previewTaskDone}>Inviare cartellino presenze firmato</span>
+                  </div>
+                  <span className={styles.previewPriorityDone}>Completato</span>
+                </div>
+                <div className={styles.previewTaskItem}>
+                  <div className={styles.previewTaskLeft}>
+                    <span className={styles.previewCheckDone}>✓</span>
+                    <span className={styles.previewTaskDone}>Pagare rata finanziamento auto</span>
+                  </div>
+                  <span className={styles.previewPriorityDone}>Completato</span>
+                </div>
+                <div className={styles.previewTaskItem}>
+                  <div className={styles.previewTaskLeft}>
+                    <span className={styles.previewCheckPending} />
+                    <span className={styles.previewTaskText}>Verifica conguaglio IRPEF e addizionali</span>
+                  </div>
+                  <span className={styles.previewPriorityActive}>In corso</span>
+                </div>
+                <div className={styles.previewTaskItem}>
+                  <div className={styles.previewTaskLeft}>
+                    <span className={styles.previewCheckPending} />
+                    <span className={styles.previewTaskText}>Pizzata del weekend (impasto 70% idratazione)</span>
+                  </div>
+                  <span className={styles.previewPriorityPending}>Sabato</span>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'note' && (
+              <div className={styles.previewNote}>
+                <div className={styles.previewNoteHeader}>
+                  <span className={styles.previewNoteTitle}>Promemoria CCNL & Busta Paga</span>
+                  <span className={styles.previewBadge}>CCNL Metalmeccanico</span>
+                </div>
+                <p className={styles.previewNoteBody}>
+                  &bull; Straordinario diurno 25% su 8h svolte sabato 19.<br />
+                  &bull; Storno CIG orario calcolato con divisore mobile mensile.<br />
+                  &bull; Detrazioni da lavoro dipendente e addizionali applicate a conguaglio.
+                </p>
+                <div className={styles.previewTags}>
+                  <span className={styles.previewTag}>#lavoro</span>
+                  <span className={styles.previewTag}>#cedolino</span>
+                  <span className={styles.previewTag}>#personale</span>
                 </div>
               </div>
             )}
@@ -167,7 +211,7 @@ export function Hero({ onOpenLogin }: HeroProps) {
                 <span className={styles.previewLiveDot} />
                 <span>Database locale PostgreSQL</span>
               </span>
-              <span>Workspace isolato</span>
+              <span>100% self-hosted &middot; Zero telemetria</span>
             </div>
           </div>
         </div>

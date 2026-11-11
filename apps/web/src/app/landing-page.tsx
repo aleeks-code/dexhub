@@ -7,6 +7,7 @@ import { Hero } from './_landing/hero'
 import { ModuliSection } from './_landing/moduli-section'
 import { PercheSection } from './_landing/perche-section'
 import { ChiSection } from './_landing/chi-section'
+import { FaqSection } from './_landing/faq-section'
 import { InvitoSection } from './_landing/invito-section'
 import { Footer } from './_landing/footer'
 import { LoginModal } from './_landing/login-modal'
@@ -21,6 +22,7 @@ export function LandingPage() {
       <ModuliSection />
       <PercheSection />
       <ChiSection />
+      <FaqSection />
       <InvitoSection />
       <Footer />
       <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />

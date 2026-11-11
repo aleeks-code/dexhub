@@ -1,20 +1,41 @@
+import { XCircle, CheckCircle2 } from 'lucide-react'
 import styles from './landing.module.css'
 
-const PRINCIPLES = [
+const OLD_WAY = [
   {
-    number: '01',
-    title: 'Self-hosted & Sovranità dei dati',
-    desc: 'L’intera applicazione gira in container Docker sul tuo hardware (PC, home server, NAS). Nessun dato lascia la tua rete locale e non esistono database cloud condivisi.',
+    title: 'Frammentazione continua',
+    desc: 'Quattro app diverse per note, turni, prestiti e conti con gli amici. Password multiple, notifiche invadenti e interfacce slegate.',
   },
   {
-    number: '02',
-    title: 'Zero abbonamenti o tracciamento',
-    desc: 'DexHub non include telemetria, annunci o modelli a consumo. È software artigianale costruito per essere affidabile e funzionare senza dipendenze commerciali.',
+    title: 'Fogli Excel fragili',
+    desc: 'Formule artigianali da decine di colonne per calcolare le ore del cartellino e il netto in busta paga, che si rompono al primo straordinario o storno CIG.',
   },
   {
-    number: '03',
-    title: 'Motore di calcolo integrato',
-    desc: 'Il modulo cartellino integra un motore deterministico per il calcolo di contributi INPS, scaglioni IRPEF e addizionali secondo i contratti nazionali italiani (CCNL).',
+    title: 'Abbonamenti SaaS infiniti',
+    desc: 'Canoni da 8€ a 15€ al mese per ogni singolo servizio, con funzioni bloccate dietro paywall crescenti e costi che lievitano anno dopo anno.',
+  },
+  {
+    title: 'I tuoi dati venduti nel cloud',
+    desc: 'Dati lavorativi, stipendi e abitudini finanziarie archiviati su server terzi oltreoceano, spesso usati per profilazione o telemetria.',
+  },
+]
+
+const DEXHUB_WAY = [
+  {
+    title: 'Un solo hub coerente',
+    desc: 'Cartellino presenze, calcolo cedolino, debiti, prestiti, note e to-do riuniti in un’unica web app scattante, pulita e accessibile ovunque.',
+  },
+  {
+    title: 'Motore di calcolo CCNL integrato',
+    desc: 'Nessuna formula da inventare: inserisci le ore e ottieni all’istante la stima del netto basata sul CCNL Metalmeccanico reale, con contributi, scaglioni e CIG.',
+  },
+  {
+    title: 'Zero abbonamenti o paywall',
+    desc: 'Software indipendente e self-hosted. Lo installi sul tuo server o computer locale: niente canoni ricorrenti, niente costi nascosti.',
+  },
+  {
+    title: '100% Privacy & Sovranità dei dati',
+    desc: 'Zero cookie di profilazione, zero tracker di terze parti e database PostgreSQL privato. Accesso istantaneo e sicuro con Passkey biometrica.',
   },
 ]
 
@@ -22,20 +43,52 @@ export function PercheSection() {
   return (
     <section id="perche" className={styles.section}>
       <div className={styles.container}>
-        <div className={styles.sectionEyebrow}>I Principi</div>
-        <h2 className={styles.sectionTitle}>Un approccio diverso al software personale.</h2>
+        <div className={styles.sectionEyebrow}>Il Confronto</div>
+        <h2 className={styles.sectionTitle}>Perché non è il solito software.</h2>
         <p className={`${styles.sectionSubline} ${styles.measure}`}>
-          DexHub nasce per sostituire la frammentazione di decine di servizi SaaS a pagamento con un unico hub privato e trasparente.
+          Un confronto trasparente tra il caos di gestire la propria quotidianità tra decine di app diverse e la semplicità di un hub personale.
         </p>
 
-        <div className={styles.percheGrid}>
-          {PRINCIPLES.map(({ number, title, desc }) => (
-            <div key={title} className={styles.percheCard}>
-              <span className={styles.percheNumber}>{number}</span>
-              <h3 className={styles.percheTitle}>{title}</h3>
-              <p className={styles.percheDesc}>{desc}</p>
+        <div className={styles.confrontoGrid}>
+          {/* Colonna Vecchia Maniera */}
+          <div className={styles.confrontoCardOld}>
+            <div className={styles.confrontoBadgeOld}>
+              <XCircle size={13} aria-hidden="true" />
+              <span>La vecchia maniera</span>
             </div>
-          ))}
+            <h3 className={styles.confrontoHeading}>La giungla dei SaaS & fogli sparsi</h3>
+            <ul className={styles.confrontoList}>
+              {OLD_WAY.map((item) => (
+                <li key={item.title} className={styles.confrontoItem}>
+                  <XCircle size={18} className={styles.confrontoIconBad} aria-hidden="true" />
+                  <div>
+                    <strong style={{ color: '#ffffff' }}>{item.title}:</strong>{' '}
+                    <span>{item.desc}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Colonna DexHub */}
+          <div className={styles.confrontoCardNew}>
+            <div className={styles.confrontoBadgeNew}>
+              <CheckCircle2 size={13} aria-hidden="true" />
+              <span>Con DexHub</span>
+            </div>
+            <h3 className={styles.confrontoHeading}>Il nuovo standard personale</h3>
+            <ul className={styles.confrontoList}>
+              {DEXHUB_WAY.map((item) => (
+                <li key={item.title} className={styles.confrontoItem}>
+                  <CheckCircle2 size={18} className={styles.confrontoIconGood} aria-hidden="true" />
+                  <div>
+                    <strong style={{ color: '#ffffff' }}>{item.title}:</strong>{' '}
+                    <span>{item.desc}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>

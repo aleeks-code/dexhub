@@ -1,30 +1,30 @@
-import { CheckSquare, Clock, FileText, Layers } from 'lucide-react'
+import { Clock, Wallet, CheckSquare, Pizza } from 'lucide-react'
 import styles from './landing.module.css'
 
 const MODULES = [
   {
-    icon: FileText,
-    badge: '@dexhub/notes',
-    name: 'Note & Documenti',
-    desc: 'Editor pulito con supporto Markdown, tag personalizzati e organizzazione per categorie. Pensato per scrivere appunti tecnici, idee e liste senza attriti.',
+    icon: Clock,
+    badge: 'CCNL Metalmeccanico',
+    name: 'Cartellino & Stima Busta Paga',
+    desc: 'Registrazione giornaliera di ore ordinarie, straordinari al 25%/50%, storni CIG, ferie e permessi. Include il motore fiscale deterministico per la stima del netto mensile, con scaglioni IRPEF, contributi INPS e detrazioni reali.',
+  },
+  {
+    icon: Wallet,
+    badge: 'Finanze & Ammortamento',
+    name: 'Prestiti & Registro Debiti',
+    desc: 'Calcola rate e piani di ammortamento alla francese con quote capitale e interessi per mutui o finanziamenti. In più, tieni traccia di crediti e spese condivise tra amici e colleghi senza passare per fogli volanti.',
   },
   {
     icon: CheckSquare,
-    badge: '@dexhub/tasks',
-    name: 'Attività & Spazi',
-    desc: 'Gestione to-do con priorità, sotto-attività e scadenze. Supporta spazi di lavoro personali o collaborativi, condivisibili tramite codice d’accesso.',
+    badge: 'Markdown & Spazi',
+    name: 'Attività & Note Veloci',
+    desc: 'Editor essenziale in Markdown per appunti, documentazione tecnica e liste to-do con priorità, tag e scadenze. Nessun caricamento pesante: digiti, organizzi e ritrovi le informazioni in frazioni di secondo.',
   },
   {
-    icon: Clock,
-    badge: '@dexhub/worklog',
-    name: 'Cartellino & Cedolino',
-    desc: 'Registrazione giornaliera di presenze, straordinari, ferie e permessi. Include il motore economico di calcolo del netto mensile basato su CCNL reale.',
-  },
-  {
-    icon: Layers,
-    badge: 'Architettura',
-    name: 'Workspace Modulare',
-    desc: 'Ogni modulo è un package isolato e indipendente. Attivi solo gli strumenti di cui hai bisogno: l’interfaccia e il database restano puliti e veloci.',
+    icon: Pizza,
+    badge: 'Utility Quotidiana',
+    name: 'Calcolatore Impasti Pizza',
+    desc: 'Calcolo di precisione per idratazione, farina, lievito di birra e sale per pizza napoletana, teglia e prefermenti. Salva le tue ricette collaudate direttamente sul tuo dispositivo in modalità offline.',
   },
 ]
 
@@ -32,10 +32,10 @@ export function ModuliSection() {
   return (
     <section id="moduli" className={styles.section}>
       <div className={styles.container}>
-        <div className={styles.sectionEyebrow}>I Moduli</div>
-        <h2 className={styles.sectionTitle}>Strumenti concreti per ogni giorno.</h2>
+        <div className={styles.sectionEyebrow}>Cosa c’è dentro</div>
+        <h2 className={styles.sectionTitle}>Strumenti concreti per la vita e il lavoro di ogni giorno.</h2>
         <p className={`${styles.sectionSubline} ${styles.measure}`}>
-          Nessuna funzionalità superflua o menu ingombranti: solo tre workspace ben progettati per la produttività personale e professionale.
+          Nessuna funzione superflua o menu ingombranti: solo moduli pratici e focalizzati, progettati per risolvere esigenze quotidiane reali senza complicazioni.
         </p>
 
         <div className={styles.moduliGrid}>
@@ -51,6 +51,15 @@ export function ModuliSection() {
               <p className={styles.moduleDesc}>{desc}</p>
             </div>
           ))}
+        </div>
+
+        <div className={styles.moduliBanner}>
+          <div>
+            <span className={styles.moduliBannerHighlight}>Modularità reale in 1-click</span>
+            <p className={styles.moduliBannerText}>
+              Non ti serve il calcolatore impasti o non hai prestiti da tracciare? Dalle Impostazioni puoi disattivare qualsiasi modulo con un interruttore: l’interfaccia si snellisce all’istante e il sistema non carica nulla di superfluo.
+            </p>
+          </div>
         </div>
       </div>
     </section>
