@@ -1076,6 +1076,27 @@ export default function SettingsPage() {
               )}
             </div>
           </section>
+
+          {/* Cookie & Informativa Privacy */}
+          <section className="rounded-2xl border border-border bg-surface p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-bold text-text">Informativa Cookie & Privacy (GDPR)</h2>
+              </div>
+              <p className="text-xs text-text-muted mt-0.5">
+                DexHub utilizza esclusivamente cookie tecnici essenziali e storage locale per il funzionamento della piattaforma. Zero cookie di profilazione o tracciamento pubblicitario.
+              </p>
+            </div>
+
+            <Link
+              href="/cookie-policy"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface-raised px-4 py-2.5 text-xs font-semibold text-text hover:bg-surface hover:border-primary/60 transition-colors shrink-0"
+            >
+              Consulta la Cookie Policy
+              <ChevronRight className="h-3.5 w-3.5 text-text-subtle" />
+            </Link>
+          </section>
         </div>
       )}
     </div>
