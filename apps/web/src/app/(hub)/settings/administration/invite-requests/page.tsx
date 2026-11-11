@@ -58,7 +58,11 @@ function InviteModal({
   const t = useT()
   const tbu = t.admin.users
   const acceptInvite = useAcceptInviteRequest()
-  const [result, setResult] = useState<{ inviteUrl: string; emailSent: boolean } | null>(null)
+  const [result, setResult] = useState<{
+    inviteUrl: string
+    emailSent: boolean
+    emailError?: string
+  } | null>(null)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
 
@@ -66,7 +70,11 @@ function InviteModal({
     setError('')
     try {
       const res = await acceptInvite.mutateAsync(request.id)
-      setResult({ inviteUrl: res.inviteUrl, emailSent: res.emailSent })
+      setResult({
+        inviteUrl: res.inviteUrl,
+        emailSent: res.emailSent,
+        emailError: res.emailError,
+      })
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Errore durante l'accettazione dell'invito")
     }
@@ -119,10 +127,16 @@ function InviteModal({
                 <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3.5 text-amber-400">
                   <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
                   <div className="text-xs space-y-1">
-                    <p className="font-semibold text-amber-300">Invito generato (SMTP non configurato)</p>
+                    <p className="font-semibold text-amber-300">
+                      {result.emailError === 'SMTP not configured'
+                        ? 'Invito generato (SMTP non ancora configurato)'
+                        : 'Invito generato (email non recapitata)'}
+                    </p>
                     <p className="text-amber-400/90 leading-relaxed">
-                      L&apos;invito è valido, ma il server SMTP non è ancora attivo. Puoi copiare
-                      manualmente il link sottostante per inoltrarlo all&apos;utente.
+                      {result.emailError && result.emailError !== 'SMTP not configured'
+                        ? `Motivo: ${result.emailError}. `
+                        : "L'invito è valido, ma l'email automatica non è partita. "}
+                      Puoi copiare manualmente il link sottostante per inoltrarlo all&apos;utente.
                     </p>
                   </div>
                 </div>

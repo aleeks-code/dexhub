@@ -48,6 +48,9 @@ export class MailService {
           user,
           pass,
         },
+        connectionTimeout: 8000,
+        greetingTimeout: 8000,
+        socketTimeout: 10000,
       })
       this.logger.log(`Transporter SMTP configurato con successo su ${host}:${port}`)
     } catch (err) {
