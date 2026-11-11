@@ -8,6 +8,8 @@ import { listPeople, listTransactions, computePersonSummaries, computeGlobalSumm
 import { useSpaces, useTasks } from '@dexhub/tasks'
 import { useStima, useWorklogDays } from '@dexhub/worklog'
 import { listSubscriptions, calculateSubscriptionsSummary } from '@dexhub/subscriptions'
+import { useMe } from '@/core/hooks/use-me'
+import { useInviteRequests } from '@/core/hooks/use-admin'
 
 export interface DailyAlert {
   id: string
@@ -59,6 +61,14 @@ export function useDailyBriefing() {
   const tasksActive = isModuleActive('tasks')
   const worklogActive = isModuleActive('worklog')
   const subscriptionsActive = isModuleActive('subscriptions')
+
+  // Admin invite requests
+  const { data: me } = useMe()
+  const { data: inviteRequests = [] } = useInviteRequests()
+  const pendingInvites = useMemo(() => {
+    if (!me?.isAdmin) return []
+    return inviteRequests.filter((r) => r.status === 'pending' && !r.deletedAt)
+  }, [me?.isAdmin, inviteRequests])
 
   // Date utilities
   const now = new Date()
@@ -140,6 +150,26 @@ export function useDailyBriefing() {
   // Aggregate alerts
   const alerts: DailyAlert[] = useMemo(() => {
     const list: DailyAlert[] = []
+
+    // 0. Admin: Pending Invite Requests
+    if (pendingInvites.length > 0) {
+      const count = pendingInvites.length
+      list.push({
+        id: 'admin-pending-invites',
+        moduleId: 'admin',
+        moduleName: 'Amministrazione',
+        type: 'warning',
+        title: count === 1 ? '1 nuova richiesta di invito' : `${count} nuove richieste di invito`,
+        subtitle:
+          count === 1
+            ? `${pendingInvites[0]!.email} ha richiesto l'accesso a DexHub`
+            : `${count} persone in attesa di approvazione`,
+        badge: 'Invito',
+        badgeVariant: 'amber',
+        href: '/settings/administration/invite-requests',
+        actionLabel: 'Gestisci',
+      })
+    }
 
     // 1. Loans: check nextPayment
     if (loansSummary?.nextPayment) {
@@ -263,7 +293,16 @@ export function useDailyBriefing() {
     }
 
     return list
-  }, [loansSummary, todayTasks, worklogActive, isWeekday, hasLoggedToday, debtsSummary, subsSummary])
+  }, [
+    pendingInvites,
+    loansSummary,
+    todayTasks,
+    worklogActive,
+    isWeekday,
+    hasLoggedToday,
+    debtsSummary,
+    subsSummary,
+  ])
 
   // Financial synergy calculation
   const financialSynergy: FinancialSynergy = useMemo(() => {

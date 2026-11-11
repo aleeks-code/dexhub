@@ -25,6 +25,7 @@ import { TasksModule } from './modules/tasks/tasks.module'
 import { FeedbackModule } from './modules/feedback/feedback.module'
 import { WorklogModule } from './modules/worklog/worklog.module'
 import { ChangelogModule } from './modules/changelog/changelog.module'
+import { MailModule } from './modules/mail/mail.module'
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ChangelogModule } from './modules/changelog/changelog.module'
       },
     ]),
     ScheduleModule.forRoot(),
+    MailModule,
     AuthModule,
     AuditModule,
     HealthModule,

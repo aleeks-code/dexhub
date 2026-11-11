@@ -148,6 +148,48 @@ export function useInviteRequests() {
   })
 }
 
+export interface AcceptInviteResponse {
+  token: string
+  inviteUrl: string
+  emailSent: boolean
+  emailError?: string
+}
+
+export interface RejectInviteResponse {
+  id: string
+  status: 'dismissed'
+  emailSent: boolean
+  emailError?: string
+}
+
+export function useAcceptInviteRequest() {
+  const qc = useQueryClient()
+  return useMutation<AcceptInviteResponse, Error, string>({
+    mutationFn: (id) =>
+      apiFetch(`/invite-requests/${id}/accept`, {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'invite-requests'] })
+      qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+    },
+  })
+}
+
+export function useRejectInviteRequest() {
+  const qc = useQueryClient()
+  return useMutation<RejectInviteResponse, Error, { id: string; sendEmail?: boolean }>({
+    mutationFn: ({ id, sendEmail = true }) =>
+      apiFetch(`/invite-requests/${id}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ sendEmail }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'invite-requests'] })
+    },
+  })
+}
+
 export function useUpdateInviteRequestStatus() {
   const qc = useQueryClient()
   return useMutation<{ id: string; status: string }, Error, { id: string; status: 'pending' | 'invited' | 'dismissed' }>({

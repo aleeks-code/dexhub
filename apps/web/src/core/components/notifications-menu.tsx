@@ -12,11 +12,14 @@ import {
   Wallet,
   Repeat,
   AlertTriangle,
+  MailPlus,
 } from 'lucide-react'
 import { useDailyBriefing, type DailyAlert } from '@/core/hooks/use-daily-briefing'
 
 function getAlertIcon(moduleId: string) {
   switch (moduleId) {
+    case 'admin':
+      return MailPlus
     case 'loans':
       return Landmark
     case 'tasks':

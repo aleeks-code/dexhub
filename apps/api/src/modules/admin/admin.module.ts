@@ -24,5 +24,6 @@ import { BroadcastController } from './broadcast.controller'
     BroadcastController,
   ],
   providers: [AdminUsersService],
+  exports: [AdminUsersService],
 })
 export class AdminModule {}

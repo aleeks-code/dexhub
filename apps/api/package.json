@@ -15,16 +15,17 @@
     "@dexhub/db": "workspace:*",
     "@dexhub/sdk": "workspace:*",
     "@dexhub/worklog-engine": "workspace:*",
-    "@nestjs/common": "^11.0.4",
     "@fastify/helmet": "^13.0.1",
+    "@nestjs/common": "^11.0.4",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.4",
-    "@nestjs/throttler": "^6.4.0",
     "@nestjs/platform-fastify": "^11.0.4",
     "@nestjs/schedule": "^5.0.0",
+    "@nestjs/throttler": "^6.4.0",
     "@simplewebauthn/server": "^13.3.2",
     "better-auth": "^1.6.22",
     "fastify": "^5.2.1",
+    "nodemailer": "^10.5.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "zod": "^3.24.1"
@@ -34,6 +35,7 @@
     "@nestjs/cli": "^11.0.2",
     "@nestjs/schematics": "^11.0.1",
     "@types/node": "^22.10.6",
+    "@types/nodemailer": "^8.0.2",
     "typescript": "^5.7.2"
   }
 }

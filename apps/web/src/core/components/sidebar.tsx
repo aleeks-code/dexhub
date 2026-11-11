@@ -12,6 +12,7 @@ import { useVisibleModules } from '@/core/hooks/use-modules'
 import { resolveModuleIcon } from '@/core/utils/module-icons'
 import { NotificationsMenu } from './notifications-menu'
 import { useMe } from '@/core/hooks/use-me'
+import { useInviteRequests } from '@/core/hooks/use-admin'
 import { useT } from '@/i18n'
 
 const API = process.env['NEXT_PUBLIC_API_URL'] ?? ''
@@ -60,6 +61,10 @@ export function Sidebar() {
   }
   const { data: modules, isLoading } = useVisibleModules()
   const visibleModules = (modules ?? []).filter((mod) => mod.enabled)
+  const { data: inviteRequests } = useInviteRequests()
+  const pendingInvitesCount = me?.isAdmin
+    ? (inviteRequests?.filter((r) => r.status === 'pending' && !r.deletedAt).length ?? 0)
+    : 0
 
   useEffect(() => {
     if (!accountMenuOpen) return
@@ -184,7 +189,7 @@ export function Sidebar() {
                     <Link
                       href={item.href}
                       className={cn(
-                        'flex items-center gap-3 rounded-md px-2 py-2 text-sm font-medium transition-colors',
+                        'relative flex items-center gap-3 rounded-md px-2 py-2 text-sm font-medium transition-colors',
                         active
                           ? 'bg-primary-muted text-primary'
                           : 'text-text-muted hover:bg-surface-raised hover:text-text',
@@ -192,9 +197,21 @@ export function Sidebar() {
                       )}
                       title={sidebarCollapsed ? item.label : undefined}
                     >
-                      {!sidebarCollapsed && <NavDot active={active} />}
+                      {!sidebarCollapsed && <NavDot active={active} warning={pendingInvitesCount > 0} />}
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!sidebarCollapsed && <span>{item.label}</span>}
+                      {!sidebarCollapsed && (
+                        <>
+                          <span className="truncate">{item.label}</span>
+                          {pendingInvitesCount > 0 && (
+                            <span className="ml-auto rounded-full bg-warning/20 px-1.5 py-0.5 text-[10px] font-bold text-warning">
+                              {pendingInvitesCount}
+                            </span>
+                          )}
+                        </>
+                      )}
+                      {sidebarCollapsed && pendingInvitesCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-warning" />
+                      )}
                     </Link>
                   </li>
                 )
