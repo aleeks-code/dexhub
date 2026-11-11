@@ -514,6 +514,7 @@ export class WorklogService {
       oreGiornaliereStandard: parseHours(row.oreGiornaliereStandard),
       oreLavorativeSettimanali: parseHours(row.oreLavorativeSettimanali),
       giorniLavorativiSettimana: row.giorniLavorativiSettimana,
+      regimeOrario: row.regimeOrario ?? null,
       saldoAllaData: row.saldoAllaData ?? null,
       ferieResidueOreIniziali: row.ferieResidueOreIniziali != null ? parseHours(row.ferieResidueOreIniziali) : null,
       permessiResiduiOreIniziali: row.permessiResiduiOreIniziali != null ? parseHours(row.permessiResiduiOreIniziali) : null,
@@ -528,6 +529,7 @@ export class WorklogService {
       oreGiornaliereStandard: String(dto.oreGiornaliereStandard),
       oreLavorativeSettimanali: String(dto.oreLavorativeSettimanali),
       giorniLavorativiSettimana: dto.giorniLavorativiSettimana,
+      regimeOrario: dto.regimeOrario ?? null,
       saldoAllaData: dto.saldoAllaData ?? null,
       ferieResidueOreIniziali: dto.ferieResidueOreIniziali != null ? String(dto.ferieResidueOreIniziali) : null,
       permessiResiduiOreIniziali: dto.permessiResiduiOreIniziali != null ? String(dto.permessiResiduiOreIniziali) : null,
@@ -605,7 +607,17 @@ export class WorklogService {
 
   async getCcnlList() {
     return this.db
-      .select({ id: worklogCcnlProfile.id, nome: worklogCcnlProfile.nome })
+      .select({
+        id: worklogCcnlProfile.id,
+        nome: worklogCcnlProfile.nome,
+        divisoreOrario: worklogCcnlProfile.divisoreOrario,
+        orarioSettimanale: worklogCcnlProfile.orarioSettimanale,
+        maggiorazioni: worklogCcnlProfile.maggiorazioni,
+        limitiStraordinario: worklogCcnlProfile.limitiStraordinario,
+        defaultRolOreAnno: worklogCcnlProfile.defaultRolOreAnno,
+        defaultExFestivitaOreAnno: worklogCcnlProfile.defaultExFestivitaOreAnno,
+        validoFino: worklogCcnlProfile.validoFino,
+      })
       .from(worklogCcnlProfile)
       .orderBy(asc(worklogCcnlProfile.nome))
   }

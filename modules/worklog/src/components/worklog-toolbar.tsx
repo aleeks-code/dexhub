@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react'
 import {
   CheckSquare, Search, MoreHorizontal, Download, LayoutTemplate,
-  ArchiveRestore, Trash2,
+  ArchiveRestore, Trash2, Sparkles,
 } from 'lucide-react'
 import { Button } from '@dexhub/ui'
 import { IconTooltip } from './icon-tooltip'
@@ -22,6 +22,7 @@ interface Props {
   onExport: (format: 'csv' | 'json') => void
   onOpenPanel: (panel: ToolbarPanel) => void
   onDeleteMonth: () => void
+  onOpenWizard?: () => void
 }
 
 function Divider() {
@@ -57,7 +58,7 @@ function MenuItem({
 
 export function WorklogToolbar({
   t, onWeekFill, weekFillPending, selectionMode, onToggleSelectionMode,
-  showSearch, onToggleSearch, onExport, onOpenPanel, onDeleteMonth,
+  showSearch, onToggleSearch, onExport, onOpenPanel, onDeleteMonth, onOpenWizard,
 }: Props) {
   const [showMore, setShowMore] = useState(false)
 
@@ -96,6 +97,16 @@ export function WorklogToolbar({
           <>
             <div className="fixed inset-0 z-10" onClick={() => setShowMore(false)} />
             <div className="absolute left-0 top-9 z-20 min-w-[220px] rounded-lg border border-border bg-bg py-1 shadow-lg">
+              {onOpenWizard && (
+                <>
+                  <MenuItem
+                    icon={<Sparkles size={14} className="text-primary" />}
+                    label="Configurazione Guidata"
+                    onClick={() => runAndClose(onOpenWizard)}
+                  />
+                  <div className="my-1 border-t border-border" />
+                </>
+              )}
               <MenuItem
                 icon={<Download size={14} />}
                 label={`${t.export.title} ${t.export.csv}`}

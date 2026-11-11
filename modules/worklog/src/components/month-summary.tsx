@@ -88,43 +88,59 @@ export function MonthSummary({ summary, oreNotturne, orePomeridiane, t }: Props)
   ].filter((s) => s.value > 0)
 
   const hasResidui = summary.residuiFerie !== null || summary.residuiPermessi !== null
+  const progressPct = summary.giorniLavorabiliMese > 0
+    ? Math.min(100, Math.round((summary.giorniRegistrati / summary.giorniLavorabiliMese) * 100))
+    : 100
 
   return (
-    <div className="rounded-xl border border-border bg-surface-raised p-4 space-y-4">
-      <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider">
-        {t.summary.title}
-      </h3>
+    <div className="rounded-xl border border-border bg-surface-raised p-4 space-y-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider">
+          {t.summary.title}
+        </h3>
+        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+          {progressPct}% completato
+        </span>
+      </div>
 
-      <div className="flex items-center gap-3">
-        <div className="text-3xl font-bold text-text">{summary.daysWorked}</div>
-        <div className="text-sm text-text-muted">{t.summary.daysWorked}</div>
-        <div className="ml-auto text-right">
-          <div className="text-2xl font-bold text-text">
-            {summary.totaleRegistrate.toFixed(1)}{t.hours}
+      {/* Main KPI Row */}
+      <div className="grid grid-cols-2 gap-3 rounded-lg border border-border/80 bg-surface/60 p-3">
+        <div>
+          <div className="text-xs text-text-muted font-medium">{t.summary.daysWorked}</div>
+          <div className="flex items-baseline gap-1 mt-0.5">
+            <span className="text-2xl font-bold text-text">{summary.daysWorked}</span>
+            <span className="text-xs text-text-subtle">/ {summary.giorniLavorabiliMese} gg</span>
           </div>
-          <div className="text-xs text-text-muted">
-            {t.summary.registered}
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-text-muted font-medium">{t.summary.registered}</div>
+          <div className="text-2xl font-bold text-primary mt-0.5">
+            {summary.totaleRegistrate.toFixed(1)}<span className="text-sm font-medium text-text-muted ml-0.5">{t.hours}</span>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="text-3xl font-bold text-text">{summary.giorniLavorabiliMese}</div>
-        <div className="text-sm text-text-muted">{t.summary.workableDays}</div>
-      </div>
-
-      <div className="space-y-1">
-        <div className="text-sm text-text-muted">
-          {t.summary.completeness
-            .replace('{registered}', String(summary.giorniRegistrati))
-            .replace('{workable}', String(summary.giorniLavorabiliMese))}
+      {/* Progress Bar & Gaps Notice */}
+      <div className="space-y-1.5">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-surface border border-border/60">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-300"
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
-        {summary.giorniConBuco > 0 && (
-          <div className="flex items-center gap-1.5 text-xs text-warning">
-            <AlertTriangle size={12} className="shrink-0" />
-            {t.summary.gapsWarning.replace('{count}', String(summary.giorniConBuco))}
-          </div>
-        )}
+        <div className="flex items-center justify-between text-xs text-text-muted">
+          <span>
+            {t.summary.completeness
+              .replace('{registered}', String(summary.giorniRegistrati))
+              .replace('{workable}', String(summary.giorniLavorabiliMese))}
+          </span>
+          {summary.giorniConBuco > 0 && (
+            <span className="flex items-center gap-1 font-medium text-warning">
+              <AlertTriangle size={11} className="shrink-0" />
+              {t.summary.gapsWarning.replace('{count}', String(summary.giorniConBuco))}
+            </span>
+          )}
+        </div>
       </div>
 
       {registrazioniStats.length > 0 && (
@@ -137,7 +153,7 @@ export function MonthSummary({ summary, oreNotturne, orePomeridiane, t }: Props)
         <div className="space-y-1.5 border-t border-border pt-3">
           {dettagliStats.map((s) => <StatRow key={s.label} item={s} />)}
           {summary.mensaAttiva && (
-            <StatRow item={{ label: t.summary.mensa, value: summary.numeroPasti, display: String(summary.numeroPasti), color: 'text-primary', icon: Utensils }} />
+            <StatRow item={{ label: t.summary.mensa, value: summary.numeroPasti, display: `${summary.numeroPasti} pasti`, color: 'text-primary', icon: Utensils }} />
           )}
         </div>
       )}

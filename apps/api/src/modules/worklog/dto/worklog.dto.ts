@@ -21,6 +21,7 @@ export class UpdateContractDto {
   oreGiornaliereStandard!: number
   oreLavorativeSettimanali!: number
   giorniLavorativiSettimana!: number[]
+  regimeOrario?: 'giornaliero' | 'turnista' | null
   // Balance anchor (all optional — not configured until user sets them)
   saldoAllaData?: string | null          // 'YYYY-MM-DD'
   ferieResidueOreIniziali?: number | null

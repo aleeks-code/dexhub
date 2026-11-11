@@ -9,6 +9,8 @@ import {
   useMonthlySummary,
   useStima,
   useWorklogContract,
+  useFiscalConfig,
+  useRetribuzione,
   useWorklogTemplates,
   useWorklogSearch,
   useUpsertDay,
@@ -28,6 +30,7 @@ import { TrashPanel } from '../components/trash-panel'
 import { BulkModal } from '../components/bulk-modal'
 import { SettingsPanel } from '../components/settings-panel'
 import { WorklogToolbar, type ToolbarPanel } from '../components/worklog-toolbar'
+import { WorklogSetupWizard } from '../components/worklog-setup-wizard'
 import { IconTooltip } from '../components/icon-tooltip'
 import { MonthYearPicker } from '../components/month-year-picker'
 
@@ -140,9 +143,22 @@ export default function WorklogPage() {
   // zero richiesta di rete in più. Solo per esporre oreNotturne/orePomeridiane a MonthSummary,
   // niente ricalcolo motore duplicato lato backend (vedi discussione Diff 16A Step 2).
   const { data: stimaData } = useStima(month)
-  const { data: contract } = useWorklogContract()
+  const { data: contract, isLoading: isLoadingContract } = useWorklogContract()
+  const { data: fiscalData, isLoading: isLoadingFiscal } = useFiscalConfig()
+  const { data: retribuzioni = [], isLoading: isLoadingRetribuzione } = useRetribuzione()
   const { data: templates = [] } = useWorklogTemplates()
   const { data: searchResults = [] } = useWorklogSearch(searchQuery)
+
+  const [forceShowWizard, setForceShowWizard] = useState(false)
+
+  const isProfileLoading = isLoadingContract || isLoadingFiscal || isLoadingRetribuzione
+  // A cartellino is considered fully configured when contract, ccnl and compensation exist
+  const isConfigured = Boolean(
+    contract &&
+    fiscalData?.config?.ccnlId &&
+    retribuzioni &&
+    retribuzioni.length > 0
+  )
 
   const upsertDay = useUpsertDay()
   const deleteDay = useDeleteDay()
@@ -159,27 +175,23 @@ export default function WorklogPage() {
   const daysMap = useMemo(() => new Map(days.map((d) => [d.date, d])), [days])
 
   // Festivi (Fix C / C-bis): auto-registra 'holiday' sui giorni festivi del mese visibile SENZA
-  // click utente. `daysMap` filtra solo un'ottimizzazione (salta le date già attive, evita
-  // POST inutili) — la vera garanzia è server-side: `ensureHolidayDay` è create-only (mai
-  // upsertDay qui), quindi un festivo cestinato apposta o con dati reali non viene mai
-  // ri-creato/sovrascritto anche se il client non sa distinguerlo da "mai toccato".
-  // Solo lun-ven (dow 1-5): un festivo di sabato/domenica non è mai un giorno pagato/lavorabile
-  // — stesso Mon-Fri hardcoded di getWorkingDays (motore), non il workdays configurabile da contratto.
+  // click utente. Solo se il profilo è configurato.
   const missingHolidayDates = useMemo(() => {
-    if (isLoading) return []
+    if (isLoading || !isConfigured) return []
     return Array.from(holidays).filter((d) => {
       if (d < from || d > to || daysMap.has(d)) return false
       const dow = new Date(d + 'T00:00:00').getDay()
       return dow >= 1 && dow <= 5
     })
-  }, [isLoading, holidays, from, to, daysMap])
+  }, [isLoading, isConfigured, holidays, from, to, daysMap])
 
   useEffect(() => {
+    if (!isConfigured) return
     for (const date of missingHolidayDates) {
       ensureHolidayDay.mutateAsync({ date, hours: defaultHours })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [missingHolidayDates])
+  }, [missingHolidayDates, isConfigured])
 
   const daysWithEntriesCount = useMemo(
     () => selectedDatesArr.filter((date) => {
@@ -341,6 +353,35 @@ export default function WorklogPage() {
 
   const displayDays = showSearch && searchQuery.length >= 2 ? searchResults : days
 
+  if (isProfileLoading) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <p className="text-sm font-medium text-text-muted">{t.loading}</p>
+      </div>
+    )
+  }
+
+  if (!isConfigured || forceShowWizard) {
+    return (
+      <div className="px-4 py-6">
+        <WorklogSetupWizard
+          initialContract={contract}
+          initialCcnlId={fiscalData?.config?.ccnlId}
+          currentMonth={month}
+          isConfigured={isConfigured}
+          t={t}
+          onComplete={() => {
+            setForceShowWizard(false)
+          }}
+          onCancel={() => {
+            setForceShowWizard(false)
+          }}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="px-4 py-6">
       {/* Header — band 1: identity */}
@@ -371,6 +412,7 @@ export default function WorklogPage() {
           onExport={handleExport}
           onOpenPanel={(panel: ToolbarPanel) => setPanel(panel)}
           onDeleteMonth={() => setShowDeleteMonth(true)}
+          onOpenWizard={() => setForceShowWizard(true)}
         />
       </div>
 
@@ -645,7 +687,16 @@ export default function WorklogPage() {
         <TrashPanel t={t} locale={t.locale} onClose={() => setPanel(null)} />
       )}
       {showSettings && (
-        <SettingsPanel contract={contract ?? DEFAULT_CONTRACT} month={month} t={t} onClose={() => setShowSettings(false)} />
+        <SettingsPanel
+          contract={contract ?? DEFAULT_CONTRACT}
+          month={month}
+          t={t}
+          onClose={() => setShowSettings(false)}
+          onOpenWizard={() => {
+            setShowSettings(false)
+            setForceShowWizard(true)
+          }}
+        />
       )}
     </div>
   )

@@ -36,6 +36,7 @@ async function main() {
 
   try {
     await seedCcnlMetalmeccanica(db)
+    await seedCcnlCommercio(db)
     await seedFiscal2026(db)
     await seedChangelog(db)
     console.log('Seed complete.')
@@ -130,6 +131,79 @@ async function seedCcnlMetalmeccanica(db: DB) {
     })
 
   console.log('  ✓ ccnl: metalmeccanica-industria')
+}
+
+// ---------------------------------------------------------------------------
+// CCNL Commercio e Terziario (Confcommercio)
+// ---------------------------------------------------------------------------
+async function seedCcnlCommercio(db: DB) {
+  const maggiorazioni: CcnlMaggiorazioni = {
+    straordinarioDiurnoFeriale: 0.15,
+    straordinarioNotturno: 0.50,
+    straordinarioFestivo: 0.30,
+    straordinarioFestivoNotturno: 0.60,
+    notturnoOrdinarioInTurno: 0.15,
+    pomeridianoInTurno: 0.05,
+  }
+
+  const limitiStraordinario: CcnlLimitiStraordinario = {
+    oreGiornoMax: 2,
+    oreSettimanaMax: 8,
+    oreAnnoMax: 200,
+    oreAnnoMaxConAccordo: 250,
+  }
+
+  const bancaOre: CcnlBancaOre = {
+    maggiorazioneConfluita: 0.50,
+  }
+
+  const turniStandard: CcnlTurnoStandard = {
+    mattino: { inizio: '06:00' },
+    pomeriggio: { inizio: '14:00' },
+    notte: { inizio: '22:00' },
+  }
+
+  const fasceMaggiorate: CcnlFasceMaggiorate = {
+    notturnoOrdinarioInTurno: { da: '22:00', a: '06:00', percentuale: 0.15 },
+    pomeridianoInTurno: { da: '18:00', a: '22:00', percentuale: 0.10 },
+  }
+
+  const row = {
+    id: 'commercio-terziario',
+    nome: 'CCNL Commercio e Terziario (Confcommercio)',
+    divisoreOrario: '168',
+    orarioSettimanale: '40',
+    maggiorazioni,
+    limitiStraordinario,
+    bancaOre,
+    turniStandard,
+    fasceMaggiorate,
+    defaultRolOreAnno: '56',
+    defaultExFestivitaOreAnno: '32',
+    validoFino: '2027-03-31',
+  }
+
+  await db
+    .insert(worklogCcnlProfile)
+    .values(row)
+    .onConflictDoUpdate({
+      target: worklogCcnlProfile.id,
+      set: {
+        nome: row.nome,
+        divisoreOrario: row.divisoreOrario,
+        orarioSettimanale: row.orarioSettimanale,
+        maggiorazioni: row.maggiorazioni,
+        limitiStraordinario: row.limitiStraordinario,
+        bancaOre: row.bancaOre,
+        turniStandard: row.turniStandard,
+        fasceMaggiorate: row.fasceMaggiorate,
+        defaultRolOreAnno: row.defaultRolOreAnno,
+        defaultExFestivitaOreAnno: row.defaultExFestivitaOreAnno,
+        validoFino: row.validoFino,
+      },
+    })
+
+  console.log('  ✓ ccnl: commercio-terziario')
 }
 
 // ---------------------------------------------------------------------------

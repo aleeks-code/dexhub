@@ -96,6 +96,7 @@ export interface ContractConfig {
   oreGiornaliereStandard: number
   oreLavorativeSettimanali: number
   giorniLavorativiSettimana: number[]
+  regimeOrario?: 'giornaliero' | 'turnista' | null
   saldoAllaData: string | null
   ferieResidueOreIniziali: number | null
   permessiResiduiOreIniziali: number | null
@@ -121,6 +122,19 @@ export interface CreateTemplateInput {
 export interface CcnlOption {
   id: string
   nome: string
+  divisoreOrario?: string | number
+  orarioSettimanale?: string | number
+  maggiorazioni?: {
+    straordinarioDiurnoFeriale?: number
+    straordinarioNotturno?: number
+    straordinarioFestivo?: number
+    straordinarioFestivoNotturno?: number
+    notturnoOrdinarioInTurno?: number
+    pomeridianoInTurno?: number
+  }
+  defaultRolOreAnno?: string | number
+  defaultExFestivitaOreAnno?: string | number
+  validoFino?: string | null
 }
 
 // ─── Fiscal config ────────────────────────────────────────────────────────────

@@ -211,6 +211,13 @@
       "when": 1794358000000,
       "tag": "0029_user_module_preferences_in_overview",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794359000000,
+      "tag": "0030_seed_worklog_ccnl_and_fiscal",
+      "breakpoints": true
     }
   ]
 }

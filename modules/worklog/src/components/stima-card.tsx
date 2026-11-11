@@ -291,17 +291,32 @@ function ChainRow({
   prominent?: boolean
   valueClass?: string
 }) {
+  if (prominent) {
+    return (
+      <div className="mt-2 rounded-xl border border-primary/25 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-3 shadow-sm">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-bold text-text">
+            {label}
+          </span>
+          <span className="tabular-nums text-xl font-extrabold text-primary">
+            {value}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       {dividerAbove && <div className="my-1 border-t border-border" />}
-      <div className="flex items-baseline justify-between gap-2 text-sm">
-        <span className={prominent ? 'font-semibold text-text' : 'text-text-muted'}>
+      <div className="flex items-baseline justify-between gap-2 text-xs sm:text-sm">
+        <span className="text-text-muted">
           {label}
         </span>
         <span
           className={[
-            'tabular-nums',
-            prominent ? 'text-base font-bold text-text' : (valueClass ?? 'font-medium text-text'),
+            'tabular-nums font-medium',
+            valueClass ?? 'text-text',
           ].join(' ')}
         >
           {value}

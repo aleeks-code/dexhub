@@ -78,14 +78,21 @@ export function FiscalConfigPanel({ t, onClose }: Props) {
         ? t.fiscalConfig.saved
         : t.fiscalConfig.save
 
+  const selectedCcnl = ccnlList.find((c) => c.id === ccnlId)
+
   return (
     <div className="flex flex-col gap-4">
       {/* CCNL */}
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <label className="text-xs font-medium text-text-muted">{t.fiscalConfig.ccnl}</label>
         <select
           value={ccnlId}
-          onChange={(e) => setCcnlId(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value
+            setCcnlId(val)
+            if (val === 'metalmeccanica-industria') setMensilita(13)
+            if (val === 'commercio-terziario') setMensilita(14)
+          }}
           className="w-full rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-text focus:border-primary focus:outline-none [&>option]:bg-surface [&>option]:text-text"
         >
           <option value="">{t.fiscalConfig.ccnlPh}</option>
@@ -95,6 +102,32 @@ export function FiscalConfigPanel({ t, onClose }: Props) {
             </option>
           ))}
         </select>
+
+        {selectedCcnl && (
+          <div className="rounded-lg border border-border/80 bg-surface/70 p-2.5 text-xs text-text-muted space-y-1">
+            <div className="flex items-center justify-between font-medium text-text">
+              <span>{selectedCcnl.nome}</span>
+              {selectedCcnl.divisoreOrario && (
+                <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
+                  Divisore {selectedCcnl.divisoreOrario}h
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
+              {selectedCcnl.orarioSettimanale && <span>Orario: {selectedCcnl.orarioSettimanale}h/sett.</span>}
+              {selectedCcnl.defaultRolOreAnno && <span>ROL: {selectedCcnl.defaultRolOreAnno}h/anno</span>}
+              {selectedCcnl.maggiorazioni?.straordinarioDiurnoFeriale && (
+                <span>Straord. diurno: +{(selectedCcnl.maggiorazioni.straordinarioDiurnoFeriale * 100).toFixed(0)}%</span>
+              )}
+              {selectedCcnl.maggiorazioni?.straordinarioNotturno && (
+                <span>Straord. notturno: +{(selectedCcnl.maggiorazioni.straordinarioNotturno * 100).toFixed(0)}%</span>
+              )}
+              {selectedCcnl.maggiorazioni?.straordinarioFestivo && (
+                <span>Straord. festivo: +{(selectedCcnl.maggiorazioni.straordinarioFestivo * 100).toFixed(0)}%</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Tipo contratto */}

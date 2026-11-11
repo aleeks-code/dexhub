@@ -25,9 +25,10 @@ interface Props {
   month: string  // 'YYYY-MM' — mese navigato, default del form variabili flat
   t: WorklogTranslations
   onClose: () => void
+  onOpenWizard?: () => void
 }
 
-export function SettingsPanel({ contract, month, t, onClose }: Props) {
+export function SettingsPanel({ contract, month, t, onClose, onOpenWizard }: Props) {
   const [tab, setTab] = useState<SettingsTab>('contract')
 
   const tabs: { key: SettingsTab; label: string; icon: LucideIcon }[] = [
@@ -47,7 +48,21 @@ export function SettingsPanel({ contract, month, t, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-lg rounded-xl border border-border bg-bg shadow-xl">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <h2 className="text-sm font-semibold text-text">{t.settings.title}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-semibold text-text">{t.settings.title}</h2>
+            {onOpenWizard && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose()
+                  onOpenWizard()
+                }}
+                className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+              >
+                <span>Configurazione Guidata</span>
+              </button>
+            )}
+          </div>
           <button type="button" onClick={onClose} className="rounded p-1 text-text-muted hover:bg-surface hover:text-text">
             <X size={16} />
           </button>
