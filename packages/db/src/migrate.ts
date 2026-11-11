@@ -45,6 +45,7 @@ export async function runMigrations(): Promise<void> {
   } finally {
     try {
       await sql`ALTER TABLE IF EXISTS "invite_requests" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp with time zone;`
+      await sql`ALTER TABLE IF EXISTS "user_module_preferences" ADD COLUMN IF NOT EXISTS "in_overview" boolean DEFAULT false NOT NULL;`
       await sql`
         CREATE TABLE IF NOT EXISTS "feedbacks" (
           "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

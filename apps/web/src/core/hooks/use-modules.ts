@@ -17,6 +17,7 @@ export interface ApiModule {
 export interface ModulePreference {
   moduleId: string
   enabled: boolean
+  inOverview: boolean
 }
 
 async function fetchModules(): Promise<ApiModule[]> {
@@ -52,11 +53,19 @@ export function useMyModulePreferences() {
 export function useSetModulePreference() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ moduleId, enabled }: { moduleId: string; enabled: boolean }) => {
+    mutationFn: async ({
+      moduleId,
+      enabled,
+      inOverview,
+    }: {
+      moduleId: string
+      enabled?: boolean
+      inOverview?: boolean
+    }) => {
       const res = await fetch(`${API}/api/v1/me/modules/${moduleId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled }),
+        body: JSON.stringify({ enabled, inOverview }),
         credentials: 'include',
       })
       if (!res.ok) {
@@ -94,23 +103,30 @@ export function useSetModuleStatus() {
 export interface VisibleModule extends ApiModule {
   maintenance: boolean
   enabled: boolean
+  inOverview: boolean
 }
 
 /**
- * Fonte neutra: tutti i moduli reali con flag maintenance/enabled.
+ * Fonte neutra: tutti i moduli reali con flag maintenance/enabled/inOverview.
  * NON applica regole di visibilità — ogni superficie filtra secondo le proprie regole.
- * Contrapposto a useActiveModules (solo utilizzabili).
  */
 export function useVisibleModules() {
   const { data: modules, isLoading: modulesLoading, ...modulesRest } = useModules()
   const { data: preferences, isLoading: preferencesLoading, ...preferencesRest } = useMyModulePreferences()
 
-  const enabledIds = new Set((preferences ?? []).filter((p) => p.enabled).map((p) => p.moduleId))
-  const data: VisibleModule[] = (modules ?? []).map((m) => ({
-    ...m,
-    maintenance: m.status !== 'active',
-    enabled: enabledIds.has(m.id),
-  }))
+  const prefMap = new Map((preferences ?? []).map((p) => [p.moduleId, p]))
+
+  const data: VisibleModule[] = (modules ?? []).map((m) => {
+    const pref = prefMap.get(m.id)
+    const enabled = pref ? pref.enabled : false
+    const inOverview = pref ? (pref.inOverview && enabled) : false
+    return {
+      ...m,
+      maintenance: m.status !== 'active',
+      enabled,
+      inOverview,
+    }
+  })
 
   return {
     ...modulesRest,
@@ -123,9 +139,6 @@ export function useVisibleModules() {
 
 /**
  * Risolve moduleId → stato manutenzione dalla fonte neutra useVisibleModules.
- * Consumato da route (ModuleRenderer) e Home (widget). Nessuna logica di presentazione.
- * Modulo non trovato nella lista (id inesistente) → maintenance:false: "non esiste" non è
- * "in manutenzione", quel caso resta di competenza del chiamante (es. "Route not found").
  */
 export function useModuleMaintenance(moduleId: string): { maintenance: boolean; isLoading: boolean } {
   const { data: modules, isLoading } = useVisibleModules()
@@ -133,15 +146,38 @@ export function useModuleMaintenance(moduleId: string): { maintenance: boolean; 
   return { maintenance: mod?.maintenance ?? false, isLoading }
 }
 
-// "Modulo attivo" = status globale 'active' AND preferenza utente enabled === true.
-// Nessuna preferenza per un modulo = escluso (opt-in esplicito, non opt-out).
-// Unica fonte di verità per questa regola in tutto apps/web — non duplicarla altrove.
+/**
+ * Modulo attivo = status globale 'active' AND preferenza utente enabled === true.
+ * Nessuna preferenza per un modulo = disattivato di default (opt-in esplicito).
+ */
 export function useActiveModules() {
   const { data: modules, isLoading: modulesLoading, ...modulesRest } = useModules()
   const { data: preferences, isLoading: preferencesLoading, ...preferencesRest } = useMyModulePreferences()
 
   const enabledIds = new Set((preferences ?? []).filter((p) => p.enabled).map((p) => p.moduleId))
   const data = (modules ?? []).filter((m) => m.status === 'active' && enabledIds.has(m.id))
+
+  return {
+    ...modulesRest,
+    data,
+    isLoading: modulesLoading || preferencesLoading,
+    isError: modulesRest.isError || preferencesRest.isError,
+    error: modulesRest.error ?? preferencesRest.error,
+  }
+}
+
+/**
+ * Moduli per la Panoramica (Home):
+ * Modulo globale 'active' AND enabled === true AND inOverview === true.
+ */
+export function useOverviewModules() {
+  const { data: modules, isLoading: modulesLoading, ...modulesRest } = useModules()
+  const { data: preferences, isLoading: preferencesLoading, ...preferencesRest } = useMyModulePreferences()
+
+  const overviewIds = new Set(
+    (preferences ?? []).filter((p) => p.enabled && p.inOverview).map((p) => p.moduleId),
+  )
+  const data = (modules ?? []).filter((m) => m.status === 'active' && overviewIds.has(m.id))
 
   return {
     ...modulesRest,

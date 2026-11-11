@@ -204,6 +204,13 @@
       "when": 1794357000000,
       "tag": "0028_feedbacks_table",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794358000000,
+      "tag": "0029_user_module_preferences_in_overview",
+      "breakpoints": true
     }
   ]
 }

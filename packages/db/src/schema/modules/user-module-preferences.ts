@@ -11,7 +11,8 @@ export const userModulePreferences = pgTable(
     moduleId: varchar('module_id', { length: 50 })
       .notNull()
       .references(() => moduleRegistry.id, { onDelete: 'cascade' }),
-    enabled: boolean('enabled').notNull().default(true),
+    enabled: boolean('enabled').notNull().default(false),
+    inOverview: boolean('in_overview').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

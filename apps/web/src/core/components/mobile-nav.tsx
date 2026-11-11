@@ -49,15 +49,9 @@ export function MobileNav() {
   }
 
   const isHomeActive = pathname === '/home'
-  const isLoansActive = pathname === '/loans' || pathname.startsWith('/loans/')
-  const isDebtsActive = pathname === '/debts' || pathname.startsWith('/debts/')
   const isSettingsActive = pathname === '/settings' || pathname.startsWith('/settings/')
-
-  const isOtherActive =
-    !isHomeActive &&
-    !isLoansActive &&
-    !isDebtsActive &&
-    !isSettingsActive
+  const isModulesCatalogActive = pathname === '/modules'
+  const topActiveModules = activeModules.slice(0, 2)
 
   return (
     <>
@@ -214,29 +208,39 @@ export function MobileNav() {
           <span>Home</span>
         </Link>
 
-        {/* 2. Finanziamenti */}
-        <Link
-          href="/loans"
-          className={cn(
-            'flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-semibold transition-colors',
-            isLoansActive ? 'text-primary font-bold' : 'text-text-subtle hover:text-text',
-          )}
-        >
-          <Building2 className="h-4.5 w-4.5" />
-          <span className="truncate max-w-[4.5rem]">Finanziamenti</span>
-        </Link>
+        {/* 2 & 3. Dynamic Active Modules OR Catalogo */}
+        {topActiveModules.length > 0
+          ? topActiveModules.map((mod) => {
+              const ModIcon = resolveModuleIcon(mod.manifest.icon as string | undefined)
+              const isModActive = pathname === `/${mod.id}` || pathname.startsWith(`/${mod.id}/`)
+              return (
+                <Link
+                  key={mod.id}
+                  href={`/${mod.id}`}
+                  className={cn(
+                    'flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-semibold transition-colors',
+                    isModActive ? 'text-primary font-bold' : 'text-text-subtle hover:text-text',
+                  )}
+                >
+                  <ModIcon className="h-4.5 w-4.5" />
+                  <span className="truncate max-w-[4.8rem]">{mod.name}</span>
+                </Link>
+              )
+            })
+          : null}
 
-        {/* 3. Debiti */}
-        <Link
-          href="/debts"
-          className={cn(
-            'flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-semibold transition-colors',
-            isDebtsActive ? 'text-primary font-bold' : 'text-text-subtle hover:text-text',
-          )}
-        >
-          <CreditCard className="h-4.5 w-4.5" />
-          <span>Debiti</span>
-        </Link>
+        {topActiveModules.length < 2 && (
+          <Link
+            href="/modules"
+            className={cn(
+              'flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-semibold transition-colors',
+              isModulesCatalogActive ? 'text-primary font-bold' : 'text-text-subtle hover:text-text',
+            )}
+          >
+            <LayoutGrid className="h-4.5 w-4.5" />
+            <span>Catalogo</span>
+          </Link>
+        )}
 
         {/* 4. Impostazioni */}
         <Link
@@ -256,7 +260,7 @@ export function MobileNav() {
           onClick={() => setDrawerOpen((v) => !v)}
           className={cn(
             'flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-semibold transition-colors cursor-pointer',
-            drawerOpen || isOtherActive ? 'text-primary font-bold' : 'text-text-subtle hover:text-text',
+            drawerOpen ? 'text-primary font-bold' : 'text-text-subtle hover:text-text',
           )}
           aria-label="Tutti i Moduli"
         >

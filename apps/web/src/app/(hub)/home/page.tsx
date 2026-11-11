@@ -53,6 +53,7 @@ export default function HomePage() {
   const greeting = greetingFor(now?.getHours() ?? 12, t)
   const name = me?.name || me?.email.split('@')[0] || ''
   const enabledModules = (modules ?? []).filter((m) => m.enabled)
+  const overviewModules = enabledModules.filter((m) => m.inOverview)
   // "Moduli attivi" nel saluto = realmente utilizzabili ora (enabled && non in manutenzione),
   // stessa semantica di prima (useActiveModules) anche se la card resta visibile in manutenzione.
   const moduleCount = enabledModules.filter((m) => !m.maintenance).length
@@ -66,7 +67,7 @@ export default function HomePage() {
       ? t.dashboard.activeModulesOne
       : t.dashboard.activeModulesOther.replace('{n}', String(moduleCount))
 
-  const ordered = [...enabledModules].sort((a, b) => {
+  const ordered = [...overviewModules].sort((a, b) => {
     const oa = (a.manifest.navOrder as number | undefined) ?? Infinity
     const ob = (b.manifest.navOrder as number | undefined) ?? Infinity
     if (oa !== ob) return oa - ob
@@ -149,37 +150,48 @@ export default function HomePage() {
       </div>
 
       {/* Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gridAutoRows: 'minmax(200px, auto)', gap: 14 }}>
-        {ordered.map((mod) => {
-          const registered = moduleRegistry.get(mod.id)
-          const widget = registered?.manifest.widgets?.[0]
-          const lifecycle = registered?.manifest.lifecycle ?? 'active'
-          const Icon = resolveModuleIcon(mod.manifest.icon as string | undefined)
-          const description = mod.manifest.description as string | undefined
-          return (
-            <ModuleCard
-              key={mod.id}
-              moduleId={mod.id}
-              name={mod.name}
-              icon={Icon}
-              lifecycle={lifecycle}
-              maintenance={mod.maintenance}
-              description={description}
-              t={t}
-            >
-              {mod.maintenance ? (
-                <NeutralBody variant="maintenance" t={t} />
-              ) : widget ? (
-                <WidgetErrorBoundary fallback={<NeutralBody variant="error" t={t} />}>
-                  <LazyMount component={widget.component} size={widget.defaultSize} moduleId={mod.id} />
-                </WidgetErrorBoundary>
-              ) : (
-                <NeutralBody variant="no-preview" t={t} />
-              )}
-            </ModuleCard>
-          )
-        })}
-      </div>
+      {ordered.length > 0 ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gridAutoRows: 'minmax(200px, auto)', gap: 14 }}>
+          {ordered.map((mod) => {
+            const registered = moduleRegistry.get(mod.id)
+            const widget = registered?.manifest.widgets?.[0]
+            const lifecycle = registered?.manifest.lifecycle ?? 'active'
+            const Icon = resolveModuleIcon(mod.manifest.icon as string | undefined)
+            const description = mod.manifest.description as string | undefined
+            return (
+              <ModuleCard
+                key={mod.id}
+                moduleId={mod.id}
+                name={mod.name}
+                icon={Icon}
+                lifecycle={lifecycle}
+                maintenance={mod.maintenance}
+                description={description}
+                t={t}
+              >
+                {mod.maintenance ? (
+                  <NeutralBody variant="maintenance" t={t} />
+                ) : widget ? (
+                  <WidgetErrorBoundary fallback={<NeutralBody variant="error" t={t} />}>
+                    <LazyMount component={widget.component} size={widget.defaultSize} moduleId={mod.id} />
+                  </WidgetErrorBoundary>
+                ) : (
+                  <NeutralBody variant="no-preview" t={t} />
+                )}
+              </ModuleCard>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-border/80 p-8 text-center bg-surface/30 my-2">
+          <p className="text-sm font-semibold text-text">Nessun modulo impostato nella Panoramica</p>
+          <p className="text-xs text-text-muted mt-1.5 max-w-sm mx-auto leading-relaxed">
+            {moduleCount > 0
+              ? 'I tuoi moduli sono attivi, ma nessuno di essi è configurato per essere mostrato nella Panoramica. Puoi aggiungerli con lo switch dedicato dal Catalogo Moduli.'
+              : 'I moduli sono disattivati di default. Vai nel Catalogo Moduli per attivare quelli che ti servono e decidere se visualizzarli nella Panoramica.'}
+          </p>
+        </div>
+      )}
 
       {/* Catalog bar */}
       <Link
