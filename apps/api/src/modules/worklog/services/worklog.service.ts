@@ -486,6 +486,8 @@ export class WorklogService {
       oreFestivi: h('holiday'),
       orePermessoNonRetribuito: h('permesso_non_retribuito'),
       oreCig: h('cig'),
+      oreCongedoParentale80: h('congedo_parentale_80'),
+      oreCongedoParentale30: h('congedo_parentale_30'),
       totaleRegistrate: kindRows.reduce((sum, r) => sum + parseHours(r.totalHours), 0),
       oreRestanti: 0,
       // Residui (null = not configured)

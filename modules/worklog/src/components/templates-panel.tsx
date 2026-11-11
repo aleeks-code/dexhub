@@ -16,7 +16,8 @@ import type { WorklogTranslations } from '../i18n'
 import { KIND_COLOR } from '../utils/kind-colors'
 
 const ALL_KINDS: EntryKind[] = [
-  'work', 'overtime', 'vacation', 'leave', 'sick', 'holiday', 'permesso_non_retribuito',
+  'work', 'overtime', 'vacation', 'leave', 'sick', 'holiday', 'cig', 'permesso_non_retribuito',
+  'congedo_parentale_80', 'congedo_parentale_30',
 ]
 
 interface Props {

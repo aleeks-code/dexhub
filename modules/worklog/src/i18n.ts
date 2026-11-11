@@ -27,6 +27,8 @@ const translations = {
       holiday: 'Public holiday',
       cig: 'CIG (solidarity)',
       permesso_non_retribuito: 'Unpaid leave',
+      congedo_parentale_80: 'Parental leave 80%',
+      congedo_parentale_30: 'Parental leave 30%',
     },
     summary: {
       title: 'Monthly summary',
@@ -39,6 +41,8 @@ const translations = {
       sick: 'Sick',
       holiday: 'Holiday',
       permessoNonRetribuito: 'Unpaid leave',
+      congedoParentale80: 'Parental leave 80%',
+      congedoParentale30: 'Parental leave 30%',
       cig: 'CIG',
       mensa: 'Canteen',
       registered: 'Registered hours',
@@ -350,6 +354,8 @@ const translations = {
       // Detail rows (collapsed or secondary)
       calcParams: 'Calculation parameters',
       stornoCig: 'CIG deduction',
+      stornoCongedo: 'Parental leave deduction',
+      indennitaCongedo: 'Parental leave indemnity (INPS)',
       ralLordo: 'Gross annual salary (RAL)',
       ralLordoNote: 'Fixed salary only',
       ralLordoInfo: 'RAL includes fixed salary (base pay, seniority increments, personal allowance, fixed production bonus). It excludes overtime, variable bonuses and shift premiums.',
@@ -511,6 +517,8 @@ const translations = {
       holiday: 'Festivo',
       cig: 'CIG (solidarietà)',
       permesso_non_retribuito: 'Permesso non retribuito',
+      congedo_parentale_80: 'Congedo parentale 80%',
+      congedo_parentale_30: 'Congedo parentale 30%',
     },
     summary: {
       title: 'Riepilogo mensile',
@@ -523,6 +531,8 @@ const translations = {
       sick: 'Malattia',
       holiday: 'Festivi',
       permessoNonRetribuito: 'Permesso non retribuito',
+      congedoParentale80: 'Congedo parentale 80%',
+      congedoParentale30: 'Congedo parentale 30%',
       cig: 'CIG',
       mensa: 'Mensa',
       registered: 'Ore registrate',
@@ -834,6 +844,8 @@ const translations = {
       // Righe di dettaglio
       calcParams: 'Parametri di calcolo',
       stornoCig: 'Storno CIG',
+      stornoCongedo: 'Storno congedo parentale',
+      indennitaCongedo: 'Indennità INPS congedo',
       ralLordo: 'RAL lordo',
       ralLordoNote: 'Solo retribuzione fissa',
       ralLordoInfo: 'Il RAL comprende la retribuzione fissa (minimo, superminimo, scatti, premio produzione). Esclude straordinari, premi variabili e maggiorazioni.',

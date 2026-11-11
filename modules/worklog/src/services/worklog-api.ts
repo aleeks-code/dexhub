@@ -29,6 +29,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export type EntryKind =
   | 'work' | 'overtime' | 'vacation' | 'leave'
   | 'sick' | 'holiday' | 'cig' | 'permesso_non_retribuito'
+  | 'congedo_parentale_80' | 'congedo_parentale_30'
 
 export interface EntryModifiers {
   notturno?: boolean
@@ -89,6 +90,8 @@ export interface MonthlySummary {
   oreFestivi: number
   orePermessoNonRetribuito: number
   oreCig: number
+  oreCongedoParentale80?: number
+  oreCongedoParentale30?: number
   oreRestanti: number
   totaleRegistrate: number
   // null when balance anchor not configured
@@ -346,6 +349,10 @@ export interface StimaOutput {
   beneficioCuneo: number
   stornoCig: number
   integrazioneSolidarieta: number
+  stornoCongedoParentale: number
+  indennitaCongedoParentale: number
+  oreCongedoParentale80: number
+  oreCongedoParentale30: number
   trattenutaSindacale: number
   trattenutaMensa: number
   trattenutaAddizionali: number

@@ -217,6 +217,13 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                 valueClass="text-success"
               />
             )}
+            {data.stima.indennitaCongedoParentale > 0 && (
+              <ChainRow
+                label={t.stima.indennitaCongedo}
+                value={`+ ${formatEur(data.stima.indennitaCongedoParentale, locale)}`}
+                valueClass="text-success"
+              />
+            )}
             {data.stima.trattenutaSindacale > 0 && (
               <ChainRow
                 label={data.sindacatoNome ?? t.stima.trattenutaSindacale}
@@ -503,6 +510,12 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                   <DetailRow
                     label={t.stima.stornoCig}
                     value={`− ${formatEur(data.stima.stornoCig, locale)}`}
+                  />
+                )}
+                {data.stima.stornoCongedoParentale > 0 && (
+                  <DetailRow
+                    label={t.stima.stornoCongedo}
+                    value={`− ${formatEur(data.stima.stornoCongedoParentale, locale)}`}
                   />
                 )}
                 <DetailRow

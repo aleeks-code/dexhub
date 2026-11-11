@@ -10,4 +10,6 @@ export const KIND_COLOR: Record<EntryKind, { dot: string; text: string }> = {
   holiday: { dot: 'bg-pink', text: 'text-pink' },
   cig: { dot: 'bg-error', text: 'text-error' },
   permesso_non_retribuito: { dot: 'bg-cyan', text: 'text-cyan' },
+  congedo_parentale_80: { dot: 'bg-teal-400', text: 'text-teal-400' },
+  congedo_parentale_30: { dot: 'bg-indigo-400', text: 'text-indigo-400' },
 }

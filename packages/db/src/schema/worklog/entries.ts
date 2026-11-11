@@ -12,6 +12,8 @@ export const worklogEntryKindEnum = pgEnum('worklog_entry_kind', [
   'recovery',
   'cig',
   'permesso_non_retribuito',
+  'congedo_parentale_80',
+  'congedo_parentale_30',
 ])
 
 // 'rest'/'recovery' morti (mai realmente rimossi dall'enum Postgres, sostituiti da

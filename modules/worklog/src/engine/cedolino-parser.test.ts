@@ -40,6 +40,8 @@ describe('cedolino-parser', () => {
       expect(data.ore.ferie).toBe(24)
       expect(data.ore.permessi).toBe(24) // 16h PAR individ. + 8h PAR aziend.
       expect(data.ore.congedo).toBe(32) // 4 giorni congedo parentale x 8h
+      expect(data.ore.congedo80).toBe(32)
+      expect(data.ore.congedo30).toBe(0)
       expect(data.ore.notturno).toBe(24) // 24h magg. nott.
       expect(data.pastiMensa).toBe(13)
       expect(data.ore.altreAssenze).toBe(1) // 1h assemblea sindacale
@@ -66,6 +68,8 @@ describe('cedolino-parser', () => {
           ferie: 24,
           permessi: 24,
           congedo: 32,
+          congedo80: 32,
+          congedo30: 0,
           malattia: 0,
           cig: 0,
           straordinario: 0,
@@ -83,8 +87,16 @@ describe('cedolino-parser', () => {
       expect(result.stats.giorniFerie).toBe(3)
       expect(result.stats.giorniPermesso).toBe(3)
       expect(result.stats.giorniCongedo).toBe(4)
+      expect(result.stats.giorniCongedo80).toBe(4)
+      expect(result.stats.giorniCongedo30).toBe(0)
       expect(result.stats.pastiAssegnati).toBe(12) // all 12 work days get meals
       expect(result.stats.totaleOreRegistrate).toBe(176.5)
+
+      // Check congedo parentale 80% days
+      const congedoDays = result.daysToSave.filter(
+        (d) => d.entries[0]?.kind === 'congedo_parentale_80',
+      )
+      expect(congedoDays.length).toBe(4)
 
       // Check night shifts on the first 3 work days
       const workDaysWithNight = result.daysToSave.filter(

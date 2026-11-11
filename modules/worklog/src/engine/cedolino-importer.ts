@@ -37,6 +37,8 @@ export interface CedolinoImportResult {
     giorniMalattia: number
     giorniCig: number
     giorniCongedo: number
+    giorniCongedo80: number
+    giorniCongedo30: number
     totaleOreRegistrate: number
     pastiAssegnati: number
   }
@@ -88,9 +90,10 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
   const nPermessi = Math.round(ore.permessi / std)
   const nMalattia = Math.round(ore.malattia / std)
   const nCig = Math.round(ore.cig / std)
-  const nCongedo = Math.round(ore.congedo / std)
+  const nCongedo80 = Math.round((ore.congedo80 ?? (ore.congedo || 0)) / std)
+  const nCongedo30 = Math.round((ore.congedo30 ?? 0) / std)
 
-  const totalAbsenceDays = nFerie + nPermessi + nMalattia + nCig + nCongedo
+  const totalAbsenceDays = nFerie + nPermessi + nMalattia + nCig + nCongedo80 + nCongedo30
 
   // Target work days
   let nWorkDays = Math.max(0, workingDates.length - totalAbsenceDays)
@@ -110,7 +113,7 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
       : 0
 
   // 3. Plan schedule across workingDates
-  type SlotKind = 'work' | 'malattia' | 'cig' | 'congedo' | 'permessi' | 'ferie'
+  type SlotKind = 'work' | 'malattia' | 'cig' | 'congedo80' | 'congedo30' | 'permessi' | 'ferie'
   const plan: Array<{
     date: string
     kind: SlotKind
@@ -166,12 +169,21 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
   }
 
   // D. Congedo days
-  for (let i = 0; i < nCongedo && cursor < workingDates.length; i++) {
+  for (let i = 0; i < nCongedo80 && cursor < workingDates.length; i++) {
     plan.push({
       date: workingDates[cursor]!,
-      kind: 'congedo',
+      kind: 'congedo80',
       hours: std,
-      note: 'Congedo parentale',
+      note: 'Congedo parentale 80%',
+    })
+    cursor++
+  }
+  for (let i = 0; i < nCongedo30 && cursor < workingDates.length; i++) {
+    plan.push({
+      date: workingDates[cursor]!,
+      kind: 'congedo30',
+      hours: std,
+      note: 'Congedo parentale 30%',
     })
     cursor++
   }
@@ -235,6 +247,8 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
   let totOre = 0
   let countPasti = 0
 
+  let countCongedo80 = 0
+  let countCongedo30 = 0
   for (const item of plan) {
     if (!overwriteExisting && existingMap.has(item.date)) {
       const existing = existingMap.get(item.date)!
@@ -262,10 +276,15 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
         label = 'Permesso / PAR'
         countPermesso++
         break
-      case 'congedo':
-        entryKind = 'leave'
-        label = 'Congedo'
-        countCongedo++
+      case 'congedo80':
+        entryKind = 'congedo_parentale_80'
+        label = 'Congedo parentale 80%'
+        countCongedo80++
+        break
+      case 'congedo30':
+        entryKind = 'congedo_parentale_30'
+        label = 'Congedo parentale 30%'
+        countCongedo30++
         break
       case 'malattia':
         entryKind = 'sick'
@@ -335,7 +354,9 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
       giorniPermesso: countPermesso,
       giorniMalattia: countMalattia,
       giorniCig: countCig,
-      giorniCongedo: countCongedo,
+      giorniCongedo: countCongedo80 + countCongedo30,
+      giorniCongedo80: countCongedo80,
+      giorniCongedo30: countCongedo30,
       totaleOreRegistrate: Math.round(totOre * 10) / 10,
       pastiAssegnati: countPasti,
     },

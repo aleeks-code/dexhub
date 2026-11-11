@@ -30,6 +30,10 @@ function getKindLabel(kind: EntryKind, t: WorklogTranslations): string {
       return 'CIG'
     case 'permesso_non_retribuito':
       return 'Non retrib.'
+    case 'congedo_parentale_80':
+      return 'Congedo 80%'
+    case 'congedo_parentale_30':
+      return 'Congedo 30%'
     case 'holiday':
       return 'Festivo'
     case 'overtime':
@@ -51,6 +55,10 @@ function getSpecialKindBadgeClass(kind: EntryKind): string {
       return 'bg-error/10 text-error border-error/25'
     case 'permesso_non_retribuito':
       return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/25'
+    case 'congedo_parentale_80':
+      return 'bg-teal-500/10 text-teal-400 border-teal-500/25'
+    case 'congedo_parentale_30':
+      return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/25'
     case 'holiday':
       return 'bg-pink-500/10 text-pink-400 border-pink-500/25'
     default:

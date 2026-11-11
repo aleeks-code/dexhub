@@ -1155,3 +1155,55 @@ describe('marginalRate – boundary at 28000 and 50000', () => {
   it('rc = 50000 → 33%', () => expect(marginalRate(50000, sc)).toBe(0.33))
   it('rc = 50000.01 → 43%', () => expect(marginalRate(50000.01, sc)).toBe(0.43))
 })
+
+// ─── Congedo parentale 80% e 30% ──────────────────────────────────────────────
+
+describe('Congedo parentale 80% e 30%', () => {
+  const baseInput: StimaInput = {
+    retribuzioneFissaComponenti: fissaBucket(2296.56),
+    mensilita: 13,
+    giorniPagatiEffettivi: 22,
+    giorniLavorabiliMese: 22,
+    tariffaOraria: 2296.56 / 173,
+    ore: [],
+    entriesOrdinarieMaggiorate: [],
+    maggiorazioni: MAGGIORAZIONI_METALMECCANICA,
+    variabiliFlat: 0,
+    oreCig: 0,
+    giorniFerialiMese: 22,
+    coefficienteSolidarieta: 0,
+    orePermessoNonRetribuito: 0,
+    divisoreOrario: 173,
+    coefficienteSindacale: 0,
+    coefficienteCometa: 0,
+    minimoTabellareReale: null,
+    numeroPasti: 0,
+    importoMensa: 0,
+    addizionaleRegionale: 0,
+    addizionaleComunale: 0,
+    accontoComunale: 0,
+    ...TURNI_E_FASCE,
+    ...FISCAL_2026,
+  }
+
+  it('8h congedo parentale 80%: storno = 106.20, indennita = 84.96, INPS solo su lordo ridotto', () => {
+    const out = stimaBustaPaga({ ...baseInput, oreCongedoParentale80: 8 })
+    // tariffa = 2296.56 / 173 = 13.27491 -> 8h = 106.20
+    expect(out.stornoCongedoParentale).toBe(106.20)
+    expect(out.indennitaCongedoParentale).toBe(84.96) // 106.20 * 0.80 = 84.96
+    expect(out.lordo).toBe(2296.56 - 106.20) // 2190.36
+    // Contributi INPS calcolati su lordo (2190.36 * 0.0919 = 201.29), NON sull'indennità
+    expect(out.contributiInps).toBe(Math.round(2190.36 * 0.0919 * 100) / 100)
+    // Imponibile IRPEF include l'indennità: (lordo - inps) + indennità
+    expect(out.imponibileIrpefMensile).toBe(
+      Math.round((2190.36 - out.contributiInps + 84.96) * 100) / 100,
+    )
+  })
+
+  it('8h congedo parentale 30%: storno = 106.20, indennita = 31.86', () => {
+    const out = stimaBustaPaga({ ...baseInput, oreCongedoParentale30: 8 })
+    expect(out.stornoCongedoParentale).toBe(106.20)
+    expect(out.indennitaCongedoParentale).toBe(31.86) // 106.20 * 0.30 = 31.86
+    expect(out.lordo).toBe(2190.36)
+  })
+})

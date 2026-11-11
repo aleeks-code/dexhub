@@ -6,7 +6,9 @@ export interface CedolinoHoursBreakdown {
   permessi: number          // ROL + PAR + permessi retribuiti
   malattia: number
   cig: number
-  congedo: number           // Congedo parentale o straordinario (in ore)
+  congedo: number           // Totale congedo parentale o straordinario (in ore)
+  congedo80: number         // Congedo parentale indennizzato 80% (in ore)
+  congedo30: number         // Congedo parentale indennizzato 30% (in ore)
   straordinario: number
   notturno: number
   pomeridiano: number
@@ -187,8 +189,10 @@ export async function extractCedolinoFromPdfBuffer(
   let permessi = 0
   let malattia = 0
   let cig = 0
-  let congedoDays = 0
-  let congedoOre = 0
+  let congedo80Days = 0
+  let congedo80Ore = 0
+  let congedo30Days = 0
+  let congedo30Ore = 0
   let straordinario = 0
   let notturno = 0
   let pomeridiano = 0
@@ -223,10 +227,19 @@ export async function extractCedolinoFromPdfBuffer(
       cig += qty
     } else if (desc.includes('CONG') || desc.includes('MATERN') || desc.includes('PATERN')) {
       // In Italian payslips (like TeamSystem 9814 CONG.PARENTALE), qty is usually in days (1.00, 2.00)
-      if (qty <= 15) {
-        congedoDays += qty
+      const is30 = desc.includes('30%') || desc.includes(' 30')
+      if (is30) {
+        if (qty <= 15) {
+          congedo30Days += qty
+        } else {
+          congedo30Ore += qty
+        }
       } else {
-        congedoOre += qty
+        if (qty <= 15) {
+          congedo80Days += qty
+        } else {
+          congedo80Ore += qty
+        }
       }
     } else if (desc.includes('PASTI') || desc.includes('MENSA')) {
       if (!desc.includes('PAUSA') && !desc.includes('INDENNITA')) {
@@ -340,7 +353,9 @@ export async function extractCedolinoFromPdfBuffer(
       permessi,
       malattia,
       cig,
-      congedo: congedoOre + congedoDays * 8,
+      congedo: (congedo80Ore + congedo80Days * 8) + (congedo30Ore + congedo30Days * 8),
+      congedo80: congedo80Ore + congedo80Days * 8,
+      congedo30: congedo30Ore + congedo30Days * 8,
       straordinario,
       notturno,
       pomeridiano,

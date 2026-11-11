@@ -9,6 +9,7 @@ import { IconTooltip } from './icon-tooltip'
 
 export const ALL_KINDS: EntryKind[] = [
   'work', 'overtime', 'vacation', 'leave', 'sick', 'holiday', 'cig', 'permesso_non_retribuito',
+  'congedo_parentale_80', 'congedo_parentale_30',
 ]
 
 const HOURS_WARN_THRESHOLD = 11

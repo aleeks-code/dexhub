@@ -44,6 +44,8 @@ export async function runMigrations(): Promise<void> {
     process.stdout.write('[Migrate] All migrations successfully applied\n')
   } finally {
     try {
+      await sql`ALTER TYPE "public"."worklog_entry_kind" ADD VALUE IF NOT EXISTS 'congedo_parentale_80';`
+      await sql`ALTER TYPE "public"."worklog_entry_kind" ADD VALUE IF NOT EXISTS 'congedo_parentale_30';`
       await sql`ALTER TABLE IF EXISTS "invite_requests" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp with time zone;`
       await sql`ALTER TABLE IF EXISTS "user_module_preferences" ADD COLUMN IF NOT EXISTS "in_overview" boolean DEFAULT false NOT NULL;`
       await sql`

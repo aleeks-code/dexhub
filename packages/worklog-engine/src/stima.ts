@@ -204,6 +204,8 @@ export interface StimaInput {
                                        // senza ricorrere a coefficienti forfettari.
   orePermessoNonRetribuito: number    // Permesso non retribuito (Step 1a) — definito, NON ancora
                                        // agganciato a lordo/imponibili (vedi computeStornoPermesso).
+  oreCongedoParentale80?: number      // Congedo parentale indennizzato INPS all'80%
+  oreCongedoParentale30?: number      // Congedo parentale indennizzato INPS al 30%
   divisoreOrario: number              // Permesso non retribuito (Step 1b-forma) — divisore CCNL
                                        // esplicito (173), NON derivabile da tariffaOraria: nel ramo
                                        // hourly tariffaOraria è la tariffa letterale, non 173-based.
@@ -266,6 +268,10 @@ export interface StimaOutput {
                                        // INPS (= lordo, verificato contro busta reale), per intero
                                        // nell'imponibileIrpefMensile (bucket marginale, niente
                                        // 5.84% — v1, warning integrazioneSolidarietaStimata).
+  stornoCongedoParentale: number       // Storno lordo aziendale per ore di congedo parentale
+  indennitaCongedoParentale: number    // Indennità a carico INPS (80% o 30%), esente INPS, imponibile IRPEF
+  oreCongedoParentale80: number
+  oreCongedoParentale30: number
   trattenutaSindacale: number           // Stadio 10 — coefficiente × minimoTabellareReale, netta
                                        // pura (non deducibile, fuori da ogni imponibile). Già
                                        // sottratta dal netto (vedi computeNetto).
@@ -314,6 +320,7 @@ export function stimaBustaPaga(input: StimaInput): StimaOutput {
     tariffaOraria,
     ore, entriesOrdinarieMaggiorate, turniStandard, fasceMaggiorate, maggiorazioni, variabiliFlat, oreCig,
     giorniFerialiMese, coefficienteSolidarieta, massimaleCigNetto, orePermessoNonRetribuito, divisoreOrario,
+    oreCongedoParentale80, oreCongedoParentale30,
     coefficienteSindacale, minimoTabellareReale, coefficienteCometa,
     numeroPasti, importoMensa,
     addizionaleRegionale, addizionaleComunale, accontoComunale,
@@ -323,7 +330,7 @@ export function stimaBustaPaga(input: StimaInput): StimaOutput {
   // ── Stadio 2: retribuzioneFissaMensile = somma componenti dichiarati ──────
   const retribuzioneMensile = computeRetribuzioneFissaMensile(retribuzioneFissaComponenti)
 
-  // ── Stadio 5: lordo del mese (fisso a giorni + variabili a ore − storno CIG) ──
+  // ── Stadio 5: lordo del mese (fisso a giorni + variabili a ore − storno CIG − storno congedo) ──
   const lordoBase = computeFissaMaturata(retribuzioneMensile, giorniPagatiEffettivi, giorniLavorabiliMese)
   const maggiorazioniOrdinarie = computeMaggiorazioniOrdinarie(entriesOrdinarieMaggiorate, tariffaOraria, turniStandard, fasceMaggiorate)
   const variabiliLordo = r2(
@@ -333,7 +340,13 @@ export function stimaBustaPaga(input: StimaInput): StimaOutput {
   )
   const stornoCig = computeStornoCig(oreCig, retribuzioneMensile, giorniFerialiMese)
   const stornoPermesso = computeStornoPermesso(orePermessoNonRetribuito, retribuzioneMensile, divisoreOrario)
-  const lordo = computeLordoMese(lordoBase, variabiliLordo, stornoCig, stornoPermesso)
+  const oreCongedo80 = oreCongedoParentale80 ?? 0
+  const oreCongedo30 = oreCongedoParentale30 ?? 0
+  const stornoCongedo80 = computeStornoPermesso(oreCongedo80, retribuzioneMensile, divisoreOrario)
+  const stornoCongedo30 = computeStornoPermesso(oreCongedo30, retribuzioneMensile, divisoreOrario)
+  const stornoCongedoParentale = r2(stornoCongedo80 + stornoCongedo30)
+  const indennitaCongedoParentale = r2(stornoCongedo80 * 0.80 + stornoCongedo30 * 0.30)
+  const lordo = computeLordoMese(lordoBase, variabiliLordo, stornoCig, stornoPermesso + stornoCongedoParentale)
 
   // ── Stadio 5d: integrazione CIG / solidarietà — FUORI dal lordo E FUORI dall'imponibile INPS,
   // DENTRO il solo imponibile IRPEF.
@@ -345,7 +358,7 @@ export function stimaBustaPaga(input: StimaInput): StimaOutput {
     ? computeIntegrazioneDaMassimale(oreCig, massimaleCigNetto, giorniFerialiMese)
     : computeIntegrazioneSolidarieta(stornoCig, coefficienteSolidarieta)
 
-  // ── Stadio 6: contributi INPS (dipendente, mensile) — SOLO sul lordo, mai sull'integrazione ──
+  // ── Stadio 6: contributi INPS (dipendente, mensile) — SOLO sul lordo, mai sull'integrazione o congedo ──
   const contributiInps = computeContributiInps(lordo, contributiInpsRate)
 
   // ── Cometa (previdenza complementare) — calcolata QUI, prima dei due canali imponibile che
@@ -355,8 +368,10 @@ export function stimaBustaPaga(input: StimaInput): StimaOutput {
   // (quello è variabile/straordinario, Cometa non lo tocca).
   const cometaDeducibile = computeCometaMensile(coefficienteCometa, minimoTabellareReale)
 
-  // ── Stadio 7: imponibile fiscale mensile = (lordo − INPS) + integrazione intera − Cometa ──
-  const imponibileIrpefMensile = r2(computeImponibileFiscale(lordo, contributiInps) + integrazioneSolidarieta - cometaDeducibile)
+  // ── Stadio 7: imponibile fiscale mensile = (lordo − INPS) + integrazione intera + indennità congedo − Cometa ──
+  const imponibileIrpefMensile = r2(
+    computeImponibileFiscale(lordo, contributiInps) + integrazioneSolidarieta + indennitaCongedoParentale - cometaDeducibile,
+  )
   // Base teorica del mese (per il conguaglio annuale): stessa aliquota INPS applicata sopra,
   // quindi un mese con ore CIG porta già il +0,30% CIGS senza che nessuno lo ricostruisca.
   const imponibileNominaleMensile = r2(retribuzioneMensile * (1 - contributiInpsRate) - cometaDeducibile)
@@ -407,6 +422,10 @@ export function stimaBustaPaga(input: StimaInput): StimaOutput {
     beneficioCuneo,
     stornoCig,
     integrazioneSolidarieta,
+    stornoCongedoParentale,
+    indennitaCongedoParentale,
+    oreCongedoParentale80: oreCongedo80,
+    oreCongedoParentale30: oreCongedo30,
     trattenutaSindacale,
     trattenutaMensa,
     trattenutaAddizionali,

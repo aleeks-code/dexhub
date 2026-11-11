@@ -120,6 +120,8 @@ const KIND_PERC: Record<EntryKind, number> = {
   cig: 1.0,    // CIG (Step 1): il giorno matura la fissa piena — Strada A, storno a valle (Step 2)
   permesso_non_retribuito: 1.0,  // Permesso (Step 2): stesso pattern CIG — Strada A, storno a
                                  // valle via orePermesso, MAI 0 (doppio conteggio col pool-ore).
+  congedo_parentale_80: 1.0,     // Congedo 80%: fissa piena, storno e indennità INPS a valle
+  congedo_parentale_30: 1.0,     // Congedo 30%: fissa piena, storno e indennità INPS a valle
 }
 
 // ─── Resolver ─────────────────────────────────────────────────────────────────
@@ -309,6 +311,8 @@ export async function resolveStima(
   const entriesOrdinarieMaggiorate: EntryOrdinariaInput[] = []
   let oreCig = 0
   let orePermesso = 0
+  let oreCongedo80 = 0
+  let oreCongedo30 = 0
   for (const entries of dayMap.values()) {
     for (const { kind, modifiers, hours } of entries) {
       if (kind === 'overtime') {
@@ -331,6 +335,10 @@ export async function resolveStima(
       } else if (kind === 'permesso_non_retribuito') {
         // Permesso Step 2 — stesso pattern di oreCig: pool-ore indipendente, mai il giorno-livello.
         orePermesso += hours
+      } else if (kind === 'congedo_parentale_80') {
+        oreCongedo80 += hours
+      } else if (kind === 'congedo_parentale_30') {
+        oreCongedo30 += hours
       }
     }
   }
@@ -480,6 +488,8 @@ export async function resolveStima(
     coefficienteSolidarieta,
     massimaleCigNetto,
     orePermessoNonRetribuito: orePermesso,
+    oreCongedoParentale80: oreCongedo80,
+    oreCongedoParentale30: oreCongedo30,
     divisoreOrario,
     coefficienteSindacale,
     coefficienteCometa,  // da worklog_cometa_config, vedi query 8c-bis sopra

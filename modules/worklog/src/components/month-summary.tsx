@@ -68,6 +68,8 @@ export function MonthSummary({ summary, oreNotturne, orePomeridiane, t }: Props)
     { label: t.summary.sick, value: summary.oreMalattia, display: `${summary.oreMalattia.toFixed(1)}${t.hours}`, color: KIND_COLOR.sick.dot },
     { label: t.summary.holiday, value: summary.oreFestivi, display: `${summary.oreFestivi.toFixed(1)}${t.hours}`, color: KIND_COLOR.holiday.dot },
     { label: t.summary.permessoNonRetribuito, value: summary.orePermessoNonRetribuito, display: `${summary.orePermessoNonRetribuito.toFixed(1)}${t.hours}`, color: KIND_COLOR.permesso_non_retribuito.dot },
+    { label: t.summary.congedoParentale80, value: summary.oreCongedoParentale80 ?? 0, display: `${(summary.oreCongedoParentale80 ?? 0).toFixed(1)}${t.hours}`, color: KIND_COLOR.congedo_parentale_80.dot },
+    { label: t.summary.congedoParentale30, value: summary.oreCongedoParentale30 ?? 0, display: `${(summary.oreCongedoParentale30 ?? 0).toFixed(1)}${t.hours}`, color: KIND_COLOR.congedo_parentale_30.dot },
     { label: t.summary.cig, value: summary.oreCig, display: `${summary.oreCig.toFixed(1)}${t.hours}`, color: KIND_COLOR.cig.dot },
   ].filter((s) => s.value > 0)
 

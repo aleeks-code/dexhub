@@ -71,7 +71,8 @@ export function CedolinoImportModal({
   const [oreOrdinarie, setOreOrdinarie] = useState<string>('0')
   const [oreFerie, setOreFerie] = useState<string>('0')
   const [orePermessi, setOrePermessi] = useState<string>('0')
-  const [oreCongedo, setOreCongedo] = useState<string>('0')
+  const [oreCongedo80, setOreCongedo80] = useState<string>('0')
+  const [oreCongedo30, setOreCongedo30] = useState<string>('0')
   const [oreMalattia, setOreMalattia] = useState<string>('0')
   const [oreCig, setOreCig] = useState<string>('0')
   const [oreNotturno, setOreNotturno] = useState<string>('0')
@@ -93,7 +94,8 @@ export function CedolinoImportModal({
     const ord = parseFloat(oreOrdinarie) || 0
     const fer = parseFloat(oreFerie) || 0
     const per = parseFloat(orePermessi) || 0
-    const cong = parseFloat(oreCongedo) || 0
+    const cong80 = parseFloat(oreCongedo80) || 0
+    const cong30 = parseFloat(oreCongedo30) || 0
     const mal = parseFloat(oreMalattia) || 0
     const cig = parseFloat(oreCig) || 0
     const nott = parseFloat(oreNotturno) || 0
@@ -105,7 +107,9 @@ export function CedolinoImportModal({
         ordinarie: ord,
         ferie: fer,
         permessi: per,
-        congedo: cong,
+        congedo: cong80 + cong30,
+        congedo80: cong80,
+        congedo30: cong30,
         malattia: mal,
         cig: cig,
         straordinario: 0,
@@ -124,7 +128,8 @@ export function CedolinoImportModal({
     oreOrdinarie,
     oreFerie,
     orePermessi,
-    oreCongedo,
+    oreCongedo80,
+    oreCongedo30,
     oreMalattia,
     oreCig,
     oreNotturno,
@@ -149,7 +154,8 @@ export function CedolinoImportModal({
     setOreOrdinarie('0')
     setOreFerie('0')
     setOrePermessi('0')
-    setOreCongedo('0')
+    setOreCongedo80('0')
+    setOreCongedo30('0')
     setOreMalattia('0')
     setOreCig('0')
     setOreNotturno('0')
@@ -191,7 +197,8 @@ export function CedolinoImportModal({
       setOreOrdinarie(String(parsed.ore.ordinarie))
       setOreFerie(String(parsed.ore.ferie))
       setOrePermessi(String(parsed.ore.permessi))
-      setOreCongedo(String(parsed.ore.congedo))
+      setOreCongedo80(String(parsed.ore.congedo80))
+      setOreCongedo30(String(parsed.ore.congedo30))
       setOreMalattia(String(parsed.ore.malattia))
       setOreCig(String(parsed.ore.cig))
       setOreNotturno(String(parsed.ore.notturno))
@@ -458,17 +465,34 @@ export function CedolinoImportModal({
                   </div>
                 </div>
 
-                {/* Congedo */}
+                {/* Congedo 80% */}
                 <div className="rounded-xl border border-border bg-surface-raised/30 p-2.5 space-y-1">
                   <span className="text-[11px] text-text-muted flex items-center gap-1">
-                    <Baby size={12} className="text-indigo-400" /> Congedo
+                    <Baby size={12} className="text-teal-400" /> Congedo 80%
                   </span>
                   <div className="flex items-center gap-1">
                     <input
                       type="number"
                       step="1"
-                      value={oreCongedo}
-                      onChange={(e) => setOreCongedo(e.target.value)}
+                      value={oreCongedo80}
+                      onChange={(e) => setOreCongedo80(e.target.value)}
+                      className="w-full h-7 rounded border border-border bg-surface px-2 text-xs font-semibold text-text focus:border-primary focus:outline-none"
+                    />
+                    <span className="text-xs text-text-muted">h</span>
+                  </div>
+                </div>
+
+                {/* Congedo 30% */}
+                <div className="rounded-xl border border-border bg-surface-raised/30 p-2.5 space-y-1">
+                  <span className="text-[11px] text-text-muted flex items-center gap-1">
+                    <Baby size={12} className="text-indigo-400" /> Congedo 30%
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      step="1"
+                      value={oreCongedo30}
+                      onChange={(e) => setOreCongedo30(e.target.value)}
                       className="w-full h-7 rounded border border-border bg-surface px-2 text-xs font-semibold text-text focus:border-primary focus:outline-none"
                     />
                     <span className="text-xs text-text-muted">h</span>
@@ -575,9 +599,14 @@ export function CedolinoImportModal({
                   <span className="inline-flex items-center gap-1 rounded bg-surface px-1.5 py-0.5 border border-border">
                     💼 {importResult.stats.giorniLavorati} Lavoro
                   </span>
-                  {importResult.stats.giorniCongedo > 0 && (
+                  {importResult.stats.giorniCongedo80 > 0 && (
                     <span className="inline-flex items-center gap-1 rounded bg-surface px-1.5 py-0.5 border border-border">
-                      👶 {importResult.stats.giorniCongedo} Congedo
+                      👶 {importResult.stats.giorniCongedo80} Congedo 80%
+                    </span>
+                  )}
+                  {importResult.stats.giorniCongedo30 > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded bg-surface px-1.5 py-0.5 border border-border">
+                      👶 {importResult.stats.giorniCongedo30} Congedo 30%
                     </span>
                   )}
                   {importResult.stats.giorniPermesso > 0 && (
