@@ -24,6 +24,8 @@ export function AddizionaliConfigPanel({ t }: Props) {
   const [accontoStr, setAccontoStr] = useState<string>(
     existing?.accontoComunale != null ? String(existing.accontoComunale) : '0',
   )
+  const [meseInizio, setMeseInizio] = useState<number>(existing?.meseInizio ?? 3)
+  const [meseFine, setMeseFine] = useState<number>(existing?.meseFine ?? 11)
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
 
   // useState cattura `existing` solo al mount — se la query non è ancora in cache (primo open),
@@ -34,7 +36,24 @@ export function AddizionaliConfigPanel({ t }: Props) {
     setRegionaleStr(existing?.addizionaleRegionale != null ? String(existing.addizionaleRegionale) : '0')
     setComunaleStr(existing?.addizionaleComunale != null ? String(existing.addizionaleComunale) : '0')
     setAccontoStr(existing?.accontoComunale != null ? String(existing.accontoComunale) : '0')
+    setMeseInizio(existing?.meseInizio ?? 3)
+    setMeseFine(existing?.meseFine ?? 11)
   }, [isSuccess, existing])
+
+  const MONTHS = [
+    { value: 1, label: 'Gennaio (01)' },
+    { value: 2, label: 'Febbraio (02)' },
+    { value: 3, label: 'Marzo (03)' },
+    { value: 4, label: 'Aprile (04)' },
+    { value: 5, label: 'Maggio (05)' },
+    { value: 6, label: 'Giugno (06)' },
+    { value: 7, label: 'Luglio (07)' },
+    { value: 8, label: 'Agosto (08)' },
+    { value: 9, label: 'Settembre (09)' },
+    { value: 10, label: 'Ottobre (10)' },
+    { value: 11, label: 'Novembre (11)' },
+    { value: 12, label: 'Dicembre (12)' },
+  ]
 
   const regionale = regionaleStr !== '' ? parseFloat(regionaleStr) : null
   const comunale = comunaleStr !== '' ? parseFloat(comunaleStr) : null
@@ -43,6 +62,9 @@ export function AddizionaliConfigPanel({ t }: Props) {
     regionale !== null && regionale >= 0 &&
     comunale !== null && comunale >= 0 &&
     acconto !== null && acconto >= 0 &&
+    meseInizio >= 1 && meseInizio <= 12 &&
+    meseFine >= 1 && meseFine <= 12 &&
+    meseInizio <= meseFine &&
     status !== 'saving'
 
   async function handleSave() {
@@ -55,6 +77,8 @@ export function AddizionaliConfigPanel({ t }: Props) {
       addizionaleRegionale: regionale,
       addizionaleComunale: comunale,
       accontoComunale: acconto,
+      meseInizio,
+      meseFine,
     }
     await update.mutateAsync(body)
     setStatus('saved')
@@ -136,6 +160,45 @@ export function AddizionaliConfigPanel({ t }: Props) {
           <Receipt size={12} className="shrink-0" />
           {t.addizionaliConfig.importoHint}
         </p>
+      </div>
+
+      {/* Finestra temporale di applicazione */}
+      <div className="space-y-2 border-t border-border/50 pt-3">
+        <label className="text-xs font-semibold text-text">{t.addizionaliConfig.periodoTitle}</label>
+        <p className="text-xs text-text-muted opacity-75">{t.addizionaliConfig.periodoHint}</p>
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <div className="space-y-1">
+            <span className="text-[11px] text-text-muted">{t.addizionaliConfig.meseInizio}</span>
+            <select
+              value={meseInizio}
+              disabled={!attivo}
+              onChange={(e) => setMeseInizio(parseInt(e.target.value, 10))}
+              className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none disabled:opacity-60"
+            >
+              {MONTHS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <span className="text-xs text-text-muted self-end pb-2">→</span>
+          <div className="space-y-1">
+            <span className="text-[11px] text-text-muted">{t.addizionaliConfig.meseFine}</span>
+            <select
+              value={meseFine}
+              disabled={!attivo}
+              onChange={(e) => setMeseFine(parseInt(e.target.value, 10))}
+              className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none disabled:opacity-60"
+            >
+              {MONTHS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-end border-t border-border pt-3">

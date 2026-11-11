@@ -28,6 +28,8 @@ export const worklogNettoReale = pgTable(
     // Snapshot immutabile della stima generata al momento del primo confronto
     stimaNettoSnapshot: numeric('stima_netto_snapshot', { precision: 10, scale: 2 }),
     stimaSnapshot: jsonb('stima_snapshot').$type<StimaSnapshotMetadata>(),
+    // Storico rilevazioni del cedolino effettivo importato per il mese
+    cedolinoSnapshot: jsonb('cedolino_snapshot').$type<Record<string, unknown>>(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

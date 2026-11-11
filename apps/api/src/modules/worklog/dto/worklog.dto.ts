@@ -102,6 +102,8 @@ export class UpsertAddizionaliConfigDto {
   addizionaleRegionale!: number
   addizionaleComunale!: number
   accontoComunale!: number
+  meseInizio?: number
+  meseFine?: number
 }
 
 export class UpsertCometaConfigDto {
@@ -112,4 +114,5 @@ export class UpsertCometaConfigDto {
 export class UpsertNettoRealeDto {
   mese!: string  // 'YYYY-MM'
   netto!: number
+  cedolinoSnapshot?: Record<string, unknown> | null
 }

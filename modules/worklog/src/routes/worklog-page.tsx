@@ -18,6 +18,11 @@ import {
   useDeleteDay,
   useUpdateNettoReale,
   useCreateRetribuzione,
+  useUpsertFiscalConfig,
+  useUpdateAddizionaliConfig,
+  useUpsertSindacatoConfig,
+  useUpdateCometaConfig,
+  useUpdateMensaConfig,
   worklogApi,
   type EntryInput,
   type UpsertDayInput,
@@ -32,7 +37,7 @@ import { TemplatesPanel } from '../components/templates-panel'
 import { TrashPanel } from '../components/trash-panel'
 import { BulkModal } from '../components/bulk-modal'
 import { SettingsPanel } from '../components/settings-panel'
-import { CedolinoImportModal } from '../components/cedolino-import-modal'
+import { CedolinoImportModal, type CedolinoCalibrationsToApply } from '../components/cedolino-import-modal'
 import type { CedolinoRetribuzione } from '../engine/cedolino-parser'
 import { WorklogHeader, type ToolbarPanel } from '../components/worklog-header'
 import { WorklogSetupWizard } from '../components/worklog-setup-wizard'
@@ -162,6 +167,11 @@ export default function WorklogPage() {
   const ensureHolidayDay = useEnsureHolidayDay()
   const updateNettoReale = useUpdateNettoReale()
   const createRetribuzione = useCreateRetribuzione()
+  const upsertFiscalConfig = useUpsertFiscalConfig()
+  const updateAddizionaliConfig = useUpdateAddizionaliConfig()
+  const upsertSindacatoConfig = useUpsertSindacatoConfig()
+  const updateCometaConfig = useUpdateCometaConfig()
+  const updateMensaConfig = useUpdateMensaConfig()
 
   const defaultHours = contract?.oreGiornaliereStandard ?? 8
   const workdays = contract?.giorniLavorativiSettimana ?? [1, 2, 3, 4, 5]
@@ -406,12 +416,18 @@ export default function WorklogPage() {
     daysToSave: UpsertDayInput[],
     nettoVal: number | null,
     retribuzione?: CedolinoRetribuzione | null,
+    cedolinoSnapshot?: Record<string, unknown> | null,
+    calibrations?: CedolinoCalibrationsToApply | null,
   ) {
     await Promise.all(
       daysToSave.map((dayInput) => upsertDay.mutateAsync(dayInput)),
     )
     if (nettoVal !== null && !isNaN(nettoVal) && nettoVal > 0) {
-      await updateNettoReale.mutateAsync({ mese: targetMonth, netto: nettoVal })
+      await updateNettoReale.mutateAsync({
+        mese: targetMonth,
+        netto: nettoVal,
+        cedolinoSnapshot: cedolinoSnapshot ?? null,
+      })
     }
     if (retribuzione && !retribuzioni.some((r) => r.decorrenza === targetMonth)) {
       await createRetribuzione.mutateAsync({
@@ -424,6 +440,32 @@ export default function WorklogPage() {
         superminimo: retribuzione.superminimo ?? 0,
         note: `Importato da cedolino ${targetMonth}`,
       })
+    }
+    if (calibrations) {
+      if (calibrations.inpsRate != null && fiscalData?.config) {
+        await upsertFiscalConfig.mutateAsync({
+          ccnlId: fiscalData.config.ccnlId,
+          tipoContratto: fiscalData.config.tipoContratto,
+          regione: fiscalData.config.regione,
+          comune: fiscalData.config.comune,
+          aliquotaAddRegionale: fiscalData.config.aliquotaAddRegionale,
+          aliquotaAddComunale: fiscalData.config.aliquotaAddComunale,
+          contributiInpsOverride: calibrations.inpsRate,
+          mensilita: fiscalData.config.mensilita,
+        })
+      }
+      if (calibrations.addizionali) {
+        await updateAddizionaliConfig.mutateAsync(calibrations.addizionali)
+      }
+      if (calibrations.sindacato) {
+        await upsertSindacatoConfig.mutateAsync(calibrations.sindacato)
+      }
+      if (calibrations.cometa) {
+        await updateCometaConfig.mutateAsync(calibrations.cometa)
+      }
+      if (calibrations.mensa) {
+        await updateMensaConfig.mutateAsync(calibrations.mensa)
+      }
     }
     setMonth(targetMonth)
   }

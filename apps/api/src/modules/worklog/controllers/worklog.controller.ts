@@ -76,6 +76,8 @@ const AddizionaliConfigSchema = z.object({
   addizionaleRegionale: z.number().min(0),
   addizionaleComunale: z.number().min(0),
   accontoComunale: z.number().min(0),
+  meseInizio: z.number().int().min(1).max(12).optional().default(3),
+  meseFine: z.number().int().min(1).max(12).optional().default(11),
 })
 
 const CometaConfigSchema = z.object({
@@ -88,6 +90,7 @@ const CometaConfigSchema = z.object({
 const NettoRealeSchema = z.object({
   mese: MonthSchema,
   netto: z.number().min(0),
+  cedolinoSnapshot: z.record(z.unknown()).nullable().optional(),
 })
 
 const RetribuzioneSchema = z.object({

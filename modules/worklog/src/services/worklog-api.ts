@@ -285,6 +285,8 @@ export interface AddizionaliConfig {
   addizionaleRegionale: number
   addizionaleComunale: number
   accontoComunale: number
+  meseInizio?: number
+  meseFine?: number
 }
 
 // ─── Netto reale (per mese, chiave composta userId+mese) — upsert per-mese ─────
@@ -294,6 +296,7 @@ export interface NettoRealeConfig {
   netto: number
   stimaNettoSnapshot?: number | null
   stimaSnapshot?: unknown
+  cedolinoSnapshot?: unknown
   scostamento?: ScostamentoResult | null
   updatedAt?: string | null
 }
@@ -529,7 +532,7 @@ export const worklogApi = {
   getNettoRealeHistory: (anno: number) =>
     request<NettoRealeHistoryResponse>(`/netto-reale/history?anno=${anno}`),
 
-  upsertNettoReale: (body: { mese: string; netto: number }) =>
+  upsertNettoReale: (body: { mese: string; netto: number; cedolinoSnapshot?: Record<string, unknown> | null }) =>
     request<NettoRealeConfig>('/netto-reale', { method: 'PUT', body: JSON.stringify(body) }),
 
   deleteNettoReale: (mese: string) =>
@@ -923,7 +926,8 @@ export function useNettoRealeHistory(anno: number) {
 export function useUpdateNettoReale() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: { mese: string; netto: number }) => worklogApi.upsertNettoReale(body),
+    mutationFn: (body: { mese: string; netto: number; cedolinoSnapshot?: Record<string, unknown> | null }) =>
+      worklogApi.upsertNettoReale(body),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: worklogKeys.nettoReale(variables.mese) })
       void qc.invalidateQueries({ queryKey: ['worklog', 'netto-reale', 'history'] })

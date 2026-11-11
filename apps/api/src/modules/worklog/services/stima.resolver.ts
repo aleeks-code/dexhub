@@ -470,6 +470,17 @@ export async function resolveStima(
     .where(and(eq(worklogVariabiliFlat.userId, userId), eq(worklogVariabiliFlat.mese, targetMonth)))
   const variabiliFlat = variabiliFlatRow?.totale ? parseFloat(variabiliFlatRow.totale) : 0
 
+  // ── 9c. Gestione temporale Addizionali IRPEF e Aliquota INPS effettiva ────
+  const targetMonthNum = parseInt(targetMonth.split('-')[1] ?? '0', 10)
+  const meseInizio = addizionaliConfig?.meseInizio ?? 3
+  const meseFine = addizionaliConfig?.meseFine ?? 11
+  const isAddizionaliActiveForMonth =
+    Boolean(addizionaliConfig?.attivo) && targetMonthNum >= meseInizio && targetMonthNum <= meseFine
+
+  const inpsBase = config.contributiInpsOverride != null
+    ? parseFloat(config.contributiInpsOverride)
+    : parseFloat(fiscal.contributiInps)
+
   // ── 10. Assemble engine input and call ───────────────────────────────────────
   const input: StimaInput = {
     retribuzioneFissaComponenti: componenti,
@@ -496,10 +507,10 @@ export async function resolveStima(
     minimoTabellareReale,
     numeroPasti,
     importoMensa,
-    addizionaleRegionale: addizionaliConfig?.attivo ? parseFloat(addizionaliConfig.addizionaleRegionale) : 0,
-    addizionaleComunale: addizionaliConfig?.attivo ? parseFloat(addizionaliConfig.addizionaleComunale) : 0,
-    accontoComunale: addizionaliConfig?.attivo ? parseFloat(addizionaliConfig.accontoComunale) : 0,
-    contributiInpsRate: computeContributiInpsRate(parseFloat(fiscal.contributiInps), oreCig),
+    addizionaleRegionale: isAddizionaliActiveForMonth && addizionaliConfig ? parseFloat(addizionaliConfig.addizionaleRegionale) : 0,
+    addizionaleComunale: isAddizionaliActiveForMonth && addizionaliConfig ? parseFloat(addizionaliConfig.addizionaleComunale) : 0,
+    accontoComunale: isAddizionaliActiveForMonth && addizionaliConfig ? parseFloat(addizionaliConfig.accontoComunale) : 0,
+    contributiInpsRate: computeContributiInpsRate(inpsBase, oreCig),
     scaglioni: fiscal.scaglioniIrpef,
     detrazioniLavoro: fiscal.detrazioniLavoro,
     trattamentoIntegrativo: fiscal.trattamentoIntegrativo ?? null,

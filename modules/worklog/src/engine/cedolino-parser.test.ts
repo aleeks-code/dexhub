@@ -56,6 +56,41 @@ describe('cedolino-parser', () => {
       expect(data.retribuzione?.minimoTabellare).toBe(2023.27)
       expect(data.retribuzione?.premioProduzioneFisso).toBe(248.24)
       expect(data.retribuzione?.scattiAnzianita).toBe(25.05)
+
+      // Addizionali
+      expect(data.addizionali.rataRegionale).toBe(37.39)
+      expect(data.addizionali.rataComunale).toBe(14.73)
+      expect(data.addizionali.accontoComunale).toBe(6.41)
+      expect(data.addizionali.totale).toBe(58.53)
+      expect(data.addizionali.residuoRegionale).toBe(37.38)
+      expect(data.addizionali.residuoComunale).toBe(14.72)
+      expect(data.addizionali.residuoAcconto).toBe(6.40)
+
+      // Previdenza & Aliquota effettiva rilevata
+      expect(data.previdenza.imponibileInps).toBe(2042.00)
+      expect(data.previdenza.contributiInps).toBe(193.79)
+      expect(data.previdenza.aliquotaInpsCalcolata).toBe(0.0949) // 9,49%
+
+      // Trattenute ricorrenti
+      expect(data.trattenute.sindacato).toBe(20.23)
+      expect(data.trattenute.cometa).toBe(24.28)
+      expect(data.trattenute.mensaTotale).toBe(10.01)
+      expect(data.trattenute.mensaPasti).toBe(13)
+      expect(data.trattenute.mensaUnitario).toBe(0.77)
+      expect(data.trattenute.impostaSostitutivaPremi).toBe(10.51)
+
+      // Fiscale
+      expect(data.fiscale.totaleLordo).toBe(2042.21)
+      expect(data.fiscale.imponibileIrpef).toBe(2040.09)
+      expect(data.fiscale.irpefLorda).toBe(469.22)
+      expect(data.fiscale.detrazioniLavoro).toBe(166.38)
+      expect(data.fiscale.irpefNetta).toBe(302.84)
+
+      // Congedo parentale
+      expect(data.congedo.indennitaInps).toBe(310.72)
+      expect(data.congedo.stornoAzienda).toBe(318.60)
+      expect(data.congedo.ore).toBe(32)
+      expect(data.congedo.giorni).toBe(4)
     })
   })
 

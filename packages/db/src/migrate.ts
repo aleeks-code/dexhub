@@ -46,6 +46,9 @@ export async function runMigrations(): Promise<void> {
     try {
       await sql`ALTER TYPE "public"."worklog_entry_kind" ADD VALUE IF NOT EXISTS 'congedo_parentale_80';`
       await sql`ALTER TYPE "public"."worklog_entry_kind" ADD VALUE IF NOT EXISTS 'congedo_parentale_30';`
+      await sql`ALTER TABLE IF EXISTS "worklog_addizionali_config" ADD COLUMN IF NOT EXISTS "mese_inizio" integer DEFAULT 3 NOT NULL;`
+      await sql`ALTER TABLE IF EXISTS "worklog_addizionali_config" ADD COLUMN IF NOT EXISTS "mese_fine" integer DEFAULT 11 NOT NULL;`
+      await sql`ALTER TABLE IF EXISTS "worklog_netto_reale" ADD COLUMN IF NOT EXISTS "cedolino_snapshot" jsonb;`
       await sql`ALTER TABLE IF EXISTS "invite_requests" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp with time zone;`
       await sql`ALTER TABLE IF EXISTS "user_module_preferences" ADD COLUMN IF NOT EXISTS "in_overview" boolean DEFAULT false NOT NULL;`
       await sql`

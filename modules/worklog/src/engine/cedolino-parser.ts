@@ -29,6 +29,46 @@ export interface CedolinoRetribuzione {
   superminimo: number | null
 }
 
+export interface CedolinoAddizionaliRilevate {
+  rataRegionale: number
+  rataComunale: number
+  accontoComunale: number
+  totale: number
+  residuoRegionale?: number | null
+  residuoComunale?: number | null
+  residuoAcconto?: number | null
+}
+
+export interface CedolinoPrevidenzaRilevata {
+  imponibileInps: number | null
+  contributiInps: number | null
+  aliquotaInpsCalcolata: number | null // e.g. 0.0949
+}
+
+export interface CedolinoTrattenuteRilevate {
+  sindacato: number | null
+  cometa: number | null
+  mensaTotale: number | null
+  mensaPasti: number | null
+  mensaUnitario: number | null
+  impostaSostitutivaPremi: number | null
+}
+
+export interface CedolinoFiscaleRilevato {
+  totaleLordo: number | null
+  imponibileIrpef: number | null
+  irpefLorda: number | null
+  detrazioniLavoro: number | null
+  irpefNetta: number | null
+}
+
+export interface CedolinoCongedoRilevato {
+  indennitaInps: number | null
+  stornoAzienda: number | null
+  ore: number | null
+  giorni: number | null
+}
+
 export interface CedolinoParsedData {
   mese: string | null       // 'YYYY-MM'
   meseNome?: string         // e.g. 'Settembre 2026'
@@ -43,6 +83,11 @@ export interface CedolinoParsedData {
   ore: CedolinoHoursBreakdown
   pastiMensa: number
   residui: CedolinoResidui
+  addizionali: CedolinoAddizionaliRilevate
+  previdenza: CedolinoPrevidenzaRilevata
+  trattenute: CedolinoTrattenuteRilevate
+  fiscale: CedolinoFiscaleRilevato
+  congedo: CedolinoCongedoRilevato
   rawRows: Array<{ code?: string; desc: string; qty: number; value?: number }>
 }
 
@@ -338,6 +383,128 @@ export async function extractCedolinoFromPdfBuffer(
     }
   }
 
+  // ── 6. Rilevazione Addizionali IRPEF, Previdenza, Fiscale, Trattenute ─────
+  let rataRegionale = 0
+  let rataComunale = 0
+  let accontoComunale = 0
+  let residuoRegionale: number | null = null
+  let residuoComunale: number | null = null
+  let residuoAcconto: number | null = null
+
+  let cometaImporto: number | null = null
+  let sindacatoImporto: number | null = null
+  let mensaTotale: number | null = null
+  let mensaUnitario: number | null = null
+  let mensaPastiQty: number | null = null
+  let impostaSostitutivaTotale = 0
+
+  let indennitaCongedoTotale = 0
+  let stornoAziendaCongedo: number | null = null
+
+  let lordoRilevato: number | null = null
+  let imponibileInpsRilevato: number | null = null
+  let contributiInpsRilevati: number | null = null
+  let imponibileIrpefRilevato: number | null = null
+  let irpefLordaRilevata: number | null = null
+  let detrazioniLavoroRilevate: number | null = null
+  let irpefNettaRilevata: number | null = null
+
+  for (const line of lines) {
+    // Addizionale regionale
+    const regMatch = line.match(/(?:RATA\s+ADDIZ\.?\s*REGIONALE|ADDIZ\.?\s*REGIONALE\s*A\.?P\.?)[^\d]*([0-9]+,[0-9]{2})(?:\s+Res:\s*([0-9]+,[0-9]{2}))?/i)
+    if (regMatch) {
+      rataRegionale = parseItalianNumber(regMatch[1]!) ?? 0
+      if (regMatch[2]) residuoRegionale = parseItalianNumber(regMatch[2])
+    }
+
+    // Addizionale comunale
+    const comMatch = line.match(/(?:RATA\s+ADDIZ\.?\s*COMUNALE|ADDIZ\.?\s*COMUNALE\s*A\.?P\.?)[^\d]*([0-9]+,[0-9]{2})(?:\s+Res:\s*([0-9]+,[0-9]{2}))?/i)
+    if (comMatch && !line.includes('ACCONTO')) {
+      rataComunale = parseItalianNumber(comMatch[1]!) ?? 0
+      if (comMatch[2]) residuoComunale = parseItalianNumber(comMatch[2])
+    }
+
+    // Acconto comunale
+    const accMatch = line.match(/(?:ACCONTO\s+ADD\.?LE\s+COMUNALE|ACCONTO\s+ADDIZ\.?\s*COMUNALE)[^\d]*([0-9]+,[0-9]{2})(?:\s+Res:\s*([0-9]+,[0-9]{2}))?/i)
+    if (accMatch) {
+      accontoComunale = parseItalianNumber(accMatch[1]!) ?? 0
+      if (accMatch[2]) residuoAcconto = parseItalianNumber(accMatch[2])
+    }
+
+    // Cometa dipendente
+    const cometaMatch = line.match(/(?:CONTRIB\.?\s*DIP\.?\s*F\.?DO\s*COMETA|F\.DO\s*COMETA\s*DIP)[^\d]*([0-9]+,[0-9]{2})/i)
+    if (cometaMatch && !line.includes('Azienda') && !line.includes('TFR')) {
+      cometaImporto = parseItalianNumber(cometaMatch[1]!)
+    }
+
+    // Mensa corrispettivo pasti
+    const mensaMatch = line.match(/(?:CORRISPETTIVO\s+PASTI|TRATT\.?\s*MENSA)\s+([0-9]+,[0-9]{2})\s+([0-9]+,[0-9]{2,5})\s+([0-9]+,[0-9]{2})/i)
+    if (mensaMatch) {
+      mensaPastiQty = parseItalianNumber(mensaMatch[1]!)
+      mensaUnitario = parseItalianNumber(mensaMatch[2]!)
+      mensaTotale = parseItalianNumber(mensaMatch[3]!)
+    }
+
+    // Imposta sostitutiva premi (L.199/25)
+    const impSostMatch = line.match(/IMPOSTA\s+SOST\.?(?:[0-9% ]+L\.199\/25)?[^\d]*([0-9]+,[0-9]{2})/i)
+    if (impSostMatch) {
+      impostaSostitutivaTotale = Math.round((impostaSostitutivaTotale + (parseItalianNumber(impSostMatch[1]!) ?? 0)) * 100) / 100
+    }
+
+    // Congedo indennità INPS
+    if (/CONG\.PARENTALE\s+C\/INPS/i.test(line)) {
+      const parts = line.trim().split(/\s+/)
+      const last = parts[parts.length - 1]
+      const val = parseItalianNumber(last ?? '')
+      if (val !== null && val > 0) {
+        indennitaCongedoTotale = Math.round((indennitaCongedoTotale + val) * 100) / 100
+      }
+    }
+
+    // Recupero stipendio assenze
+    const recMatch = line.match(/RECUPERO\s+STIPENDIO.*?([0-9]+,[0-9]{2})\b/i)
+    if (recMatch) {
+      stornoAziendaCongedo = parseItalianNumber(recMatch[1]!)
+    }
+
+    // Previdenza line: es. "2.042,21 2.042,00 193,79 193,79"
+    const prevMatch = line.match(/^\s*([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s*$/)
+    if (prevMatch) {
+      lordoRilevato = parseItalianNumber(prevMatch[1]!)
+      imponibileInpsRilevato = parseItalianNumber(prevMatch[2]!)
+      contributiInpsRilevati = parseItalianNumber(prevMatch[3]!)
+    }
+
+    // Fiscale line: es. "68,79 2.040,09 469,22 166,38 302,84"
+    const fiscMatch = line.match(/^\s*([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s*$/)
+    if (fiscMatch) {
+      imponibileIrpefRilevato = parseItalianNumber(fiscMatch[2]!)
+      irpefLordaRilevata = parseItalianNumber(fiscMatch[3]!)
+      detrazioniLavoroRilevate = parseItalianNumber(fiscMatch[4]!)
+      irpefNettaRilevata = parseItalianNumber(fiscMatch[5]!)
+    }
+
+    // Sindacato line: es. "20,23 411,42 938,79" (tratt. sindacale, trattenute corpo, totale trattenute)
+    const sindMatch = line.match(/^\s*([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s*$/)
+    if (sindMatch && sindacatoImporto === null) {
+      const val = parseItalianNumber(sindMatch[1]!)
+      const tot = parseItalianNumber(sindMatch[3]!)
+      // Distingue dalla riga retribuzione (2.023,27 248,24 25,05): una quota sindacale è < 100 €
+      // e il terzo valore è il totale trattenute (> 200 €)
+      if (val !== null && val > 0 && val < 100 && tot !== null && tot > 200) {
+        sindacatoImporto = val
+      }
+    }
+  }
+
+  const aliquotaInpsCalcolata =
+    imponibileInpsRilevato && imponibileInpsRilevato > 0 && contributiInpsRilevati
+      ? Math.round((contributiInpsRilevati / imponibileInpsRilevato) * 10000) / 10000
+      : null
+
+  const totaleAddizionali = Math.round((rataRegionale + rataComunale + accontoComunale) * 100) / 100
+  const oreCongedoTot = (congedo80Ore + congedo80Days * 8) + (congedo30Ore + congedo30Days * 8)
+
   return {
     mese: detectedMese,
     meseNome: detectedMeseNome,
@@ -353,7 +520,7 @@ export async function extractCedolinoFromPdfBuffer(
       permessi,
       malattia,
       cig,
-      congedo: (congedo80Ore + congedo80Days * 8) + (congedo30Ore + congedo30Days * 8),
+      congedo: oreCongedoTot,
       congedo80: congedo80Ore + congedo80Days * 8,
       congedo30: congedo30Ore + congedo30Days * 8,
       straordinario,
@@ -366,6 +533,41 @@ export async function extractCedolinoFromPdfBuffer(
       ferie: ferieResidue,
       permessi: permessiResidui,
       rol: rolResidui,
+    },
+    addizionali: {
+      rataRegionale,
+      rataComunale,
+      accontoComunale,
+      totale: totaleAddizionali,
+      residuoRegionale,
+      residuoComunale,
+      residuoAcconto,
+    },
+    previdenza: {
+      imponibileInps: imponibileInpsRilevato,
+      contributiInps: contributiInpsRilevati,
+      aliquotaInpsCalcolata,
+    },
+    trattenute: {
+      sindacato: sindacatoImporto,
+      cometa: cometaImporto,
+      mensaTotale,
+      mensaPasti: mensaPastiQty,
+      mensaUnitario,
+      impostaSostitutivaPremi: impostaSostitutivaTotale > 0 ? impostaSostitutivaTotale : null,
+    },
+    fiscale: {
+      totaleLordo: lordoRilevato,
+      imponibileIrpef: imponibileIrpefRilevato,
+      irpefLorda: irpefLordaRilevata,
+      detrazioniLavoro: detrazioniLavoroRilevate,
+      irpefNetta: irpefNettaRilevata,
+    },
+    congedo: {
+      indennitaInps: indennitaCongedoTotale > 0 ? indennitaCongedoTotale : null,
+      stornoAzienda: stornoAziendaCongedo,
+      ore: oreCongedoTot > 0 ? oreCongedoTot : null,
+      giorni: (congedo80Days + congedo30Days) > 0 ? (congedo80Days + congedo30Days) : null,
     },
     rawRows,
   }

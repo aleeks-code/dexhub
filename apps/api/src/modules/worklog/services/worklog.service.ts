@@ -1024,6 +1024,8 @@ export class WorklogService {
       addizionaleRegionale: parseFloat(config.addizionaleRegionale),
       addizionaleComunale: parseFloat(config.addizionaleComunale),
       accontoComunale: parseFloat(config.accontoComunale),
+      meseInizio: config.meseInizio ?? 3,
+      meseFine: config.meseFine ?? 11,
     }
   }
 
@@ -1034,6 +1036,8 @@ export class WorklogService {
       addizionaleRegionale: String(dto.addizionaleRegionale),
       addizionaleComunale: String(dto.addizionaleComunale),
       accontoComunale: String(dto.accontoComunale),
+      meseInizio: dto.meseInizio ?? 3,
+      meseFine: dto.meseFine ?? 11,
     }
 
     await this.db
@@ -1101,6 +1105,7 @@ export class WorklogService {
       netto,
       stimaNettoSnapshot,
       stimaSnapshot: row.stimaSnapshot,
+      cedolinoSnapshot: row.cedolinoSnapshot ?? null,
       scostamento: stimaNettoSnapshot !== null ? valutaScostamento(stimaNettoSnapshot, netto) : null,
       updatedAt: row.updatedAt?.toISOString() ?? null,
     }
@@ -1145,6 +1150,7 @@ export class WorklogService {
         netto: String(dto.netto),
         stimaNettoSnapshot,
         stimaSnapshot,
+        cedolinoSnapshot: dto.cedolinoSnapshot ?? null,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -1153,6 +1159,9 @@ export class WorklogService {
       const updateSet: Record<string, unknown> = {
         netto: String(dto.netto),
         updatedAt: new Date(),
+      }
+      if (dto.cedolinoSnapshot !== undefined) {
+        updateSet['cedolinoSnapshot'] = dto.cedolinoSnapshot
       }
       if (!existing.stimaNettoSnapshot) {
         try {
