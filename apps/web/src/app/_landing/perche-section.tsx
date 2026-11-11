@@ -31,7 +31,7 @@ const DEXHUB_WAY = [
   },
   {
     title: 'Zero abbonamenti o paywall',
-    desc: 'Software indipendente e self-hosted. Lo installi sul tuo server o computer locale: niente canoni ricorrenti, niente costi nascosti.',
+    desc: 'Software personale indipendente. Accessibile direttamente dal tuo browser senza canoni ricorrenti, annunci o costi nascosti.',
   },
   {
     title: '100% Privacy & Sovranità dei dati',

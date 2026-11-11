@@ -18,12 +18,12 @@ export function Hero({ onOpenLogin }: HeroProps) {
       <div className={styles.heroGlow} aria-hidden="true" />
       <div className={`${styles.container} ${styles.heroGrid}`}>
         <div>
-          <div className={styles.heroEyebrow}>Software personale indipendente &middot; Self-hosted & Cloud-free</div>
+          <div className={styles.heroEyebrow}>Software personale indipendente &middot; Privato & Cloud-free</div>
           <h1 className={styles.heroHeadline}>
             Basta fogli Excel rotti e <span className={styles.heroAccent}>dieci abbonamenti diversi.</span>
           </h1>
           <p className={`${styles.heroSubline} ${styles.measure}`}>
-            DexHub è il tuo hub personale per cartellino con stima stipendio netto CCNL, gestione prestiti e debiti, note e to-do. Veloce, privato, installato sul tuo server o computer.
+            DexHub è il tuo hub personale per cartellino con stima stipendio netto CCNL, gestione prestiti e debiti, note e to-do. Veloce, privato, senza canoni né pubblicità.
           </p>
           <div className={styles.heroActions}>
             <a href="#invito" className={styles.btnPrimary}>Richiedi un invito</a>
@@ -211,7 +211,7 @@ export function Hero({ onOpenLogin }: HeroProps) {
                 <span className={styles.previewLiveDot} />
                 <span>Database locale PostgreSQL</span>
               </span>
-              <span>100% self-hosted &middot; Zero telemetria</span>
+              <span>100% privato &middot; Zero telemetria</span>
             </div>
           </div>
         </div>

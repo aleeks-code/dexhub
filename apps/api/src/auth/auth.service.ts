@@ -43,6 +43,20 @@ export class AuthService implements OnModuleInit {
 
     if (!sessionRow || sessionRow.expiresAt < new Date()) return null
 
+    // Sliding Window Session: se la sessione attiva ha consumato più di 24 ore
+    // (rimangono meno di 6 giorni rispetto ai 7 originari), estendiamo la validità
+    // per altri 7 giorni garantendo continuità operativa agli utenti attivi.
+    const sixDaysRemaining = Date.now() + 6 * 24 * 60 * 60 * 1000
+    if (sessionRow.expiresAt.getTime() < sixDaysRemaining) {
+      const newExpiresAt = new Date(Date.now() + SESSION_DURATION_MS)
+      sessionRow.expiresAt = newExpiresAt
+      void db
+        .update(sessions)
+        .set({ expiresAt: newExpiresAt, updatedAt: new Date() })
+        .where(eq(sessions.id, sessionRow.id))
+        .catch(() => {})
+    }
+
     const user = await db
       .select()
       .from(users)
