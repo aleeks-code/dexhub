@@ -25,6 +25,9 @@ import {
   Building2,
   FileSpreadsheet,
   BadgePercent,
+  FileSearch,
+  ClipboardCheck,
+  MinusCircle,
 } from 'lucide-react'
 import { Button } from '@dexhub/ui'
 import type { WorklogTranslations } from '../i18n'
@@ -127,7 +130,7 @@ export function CedolinoImportModal({
   const [retribuzione, setRetribuzione] = useState<CedolinoRetribuzione | null>(null)
   const [showPreviewList, setShowPreviewList] = useState(false)
 
-  const [activeReviewTab, setActiveReviewTab] = useState<'ore' | 'busta' | 'calibrazione'>('ore')
+  const [activeReviewTab, setActiveReviewTab] = useState<'ore' | 'busta' | 'calibrazione' | 'report'>('ore')
   const [parsedData, setParsedData] = useState<CedolinoParsedData | null>(null)
 
   // Calibration checkboxes
@@ -153,6 +156,235 @@ export function CedolinoImportModal({
     if (parsedData.trattenute.cometa) count++
     if (parsedData.trattenute.mensaUnitario) count++
     return count
+  }, [parsedData])
+
+  interface RecognitionReportItem {
+    category: string
+    name: string
+    detected: boolean
+    status: 'success' | 'absent' | 'warning'
+    value: string
+    details: string
+  }
+
+  const recognitionReport = useMemo<RecognitionReportItem[]>(() => {
+    if (!parsedData) return []
+
+    const items: RecognitionReportItem[] = []
+
+    // 1. Identificazione Cedolino
+    items.push({
+      category: 'Identificazione Cedolino',
+      name: 'Mese e Anno di competenza',
+      detected: Boolean(parsedData.mese),
+      status: parsedData.mese ? 'success' : 'warning',
+      value: parsedData.meseNome ?? parsedData.mese ?? 'Non rilevato',
+      details: parsedData.mese ? 'Riconosciuto automaticamente dal testo della busta paga' : 'Inserimento manuale richiesto',
+    })
+
+    items.push({
+      category: 'Identificazione Cedolino',
+      name: 'Netto a pagare',
+      detected: parsedData.netto !== null && parsedData.netto > 0,
+      status: parsedData.netto !== null && parsedData.netto > 0 ? 'success' : 'warning',
+      value: parsedData.netto !== null ? `${parsedData.netto.toFixed(2)} €` : 'Non trovato',
+      details: parsedData.netto !== null ? 'Estratto dalle caselle di fondo busta paga' : 'Verifica la riga NETTO DEL MESE / A PAGARE',
+    })
+
+    items.push({
+      category: 'Identificazione Cedolino',
+      name: 'Azienda e Dipendente',
+      detected: Boolean(parsedData.datiDipendente?.azienda || parsedData.datiDipendente?.nome),
+      status: parsedData.datiDipendente?.azienda || parsedData.datiDipendente?.nome ? 'success' : 'absent',
+      value: [parsedData.datiDipendente?.azienda, parsedData.datiDipendente?.nome].filter(Boolean).join(' • ') || 'Non specificato',
+      details: 'Informazioni di intestazione anagrafica',
+    })
+
+    // 2. Presenze e Cartellino
+    items.push({
+      category: 'Presenze e Cartellino',
+      name: 'Ore Ordinarie Lavorate',
+      detected: parsedData.ore.ordinarie > 0,
+      status: parsedData.ore.ordinarie > 0 ? 'success' : 'warning',
+      value: `${parsedData.ore.ordinarie.toFixed(1)} ore`,
+      details: 'Ripartite automaticamente sui giorni lavorativi feriali del mese',
+    })
+
+    items.push({
+      category: 'Presenze e Cartellino',
+      name: 'Pasti Mensa / Ticket',
+      detected: parsedData.pastiMensa > 0,
+      status: parsedData.pastiMensa > 0 ? 'success' : 'absent',
+      value: `${parsedData.pastiMensa} pasti`,
+      details: parsedData.pastiMensa > 0
+        ? `Tutti i ${parsedData.pastiMensa} pasti sono stati assegnati e conteggiati nel cartellino`
+        : 'Nessun pasto trattenuto o rilevato nel cedolino',
+    })
+
+    items.push({
+      category: 'Presenze e Cartellino',
+      name: 'Ferie Godute',
+      detected: parsedData.ore.ferie > 0,
+      status: parsedData.ore.ferie > 0 ? 'success' : 'absent',
+      value: `${parsedData.ore.ferie.toFixed(1)} ore (${Math.round(parsedData.ore.ferie / 8)} gg)`,
+      details: parsedData.ore.ferie > 0 ? 'Posizionate come assenze ferie retribuite' : 'Nessuna giornata di ferie goduta nel mese',
+    })
+
+    items.push({
+      category: 'Presenze e Cartellino',
+      name: 'Permessi Retribuiti (PAR / ROL)',
+      detected: parsedData.ore.permessi > 0,
+      status: parsedData.ore.permessi > 0 ? 'success' : 'absent',
+      value: `${parsedData.ore.permessi.toFixed(1)} ore (${Math.round(parsedData.ore.permessi / 8)} gg)`,
+      details: parsedData.ore.permessi > 0 ? 'Posizionate come permessi orari / giornate' : 'Nessun permesso registrato nel cedolino',
+    })
+
+    items.push({
+      category: 'Presenze e Cartellino',
+      name: 'Congedo Parentale / Maternità INPS',
+      detected: parsedData.ore.congedo > 0,
+      status: parsedData.ore.congedo > 0 ? 'success' : 'absent',
+      value: parsedData.ore.congedo > 0 ? `${parsedData.ore.congedo.toFixed(1)} ore (${parsedData.ore.congedo80 > 0 ? '80%' : '30%'})` : '0 ore',
+      details: parsedData.ore.congedo > 0 ? 'Riconosciuta causale congedo parentale' : 'Nessuna assenza per congedo',
+    })
+
+    items.push({
+      category: 'Presenze e Cartellino',
+      name: 'Lavoro Notturno (Maggiorazione)',
+      detected: parsedData.ore.notturno > 0,
+      status: parsedData.ore.notturno > 0 ? 'success' : 'absent',
+      value: `${parsedData.ore.notturno.toFixed(1)} ore`,
+      details: parsedData.ore.notturno > 0 ? 'Applicata maggiorazione notturna alle giornate ordinarie' : 'Nessun turno notturno registrato',
+    })
+
+    items.push({
+      category: 'Presenze e Cartellino',
+      name: 'Malattia',
+      detected: parsedData.ore.malattia > 0,
+      status: parsedData.ore.malattia > 0 ? 'success' : 'absent',
+      value: `${parsedData.ore.malattia.toFixed(1)} ore`,
+      details: parsedData.ore.malattia > 0 ? 'Registrata causale malattia INPS' : 'Nessun giorno di malattia nel mese',
+    })
+
+    items.push({
+      category: 'Presenze e Cartellino',
+      name: 'Cassa Integrazione (CIG / FIS)',
+      detected: parsedData.ore.cig > 0,
+      status: parsedData.ore.cig > 0 ? 'success' : 'absent',
+      value: `${parsedData.ore.cig.toFixed(1)} ore`,
+      details: parsedData.ore.cig > 0 ? 'Ore CIG registrate' : 'Nessuna cassa integrazione nel mese',
+    })
+
+    items.push({
+      category: 'Presenze e Cartellino',
+      name: 'Altre Assenze / Assemblea Sindacale',
+      detected: parsedData.ore.altreAssenze > 0,
+      status: parsedData.ore.altreAssenze > 0 ? 'success' : 'absent',
+      value: `${parsedData.ore.altreAssenze.toFixed(1)} ore`,
+      details: parsedData.ore.altreAssenze > 0 ? 'Rilevata assemblea o permesso orario' : 'Nessuna causale accessoria',
+    })
+
+    // 3. Economico, Previdenziale e Fiscale
+    items.push({
+      category: 'Dati Retributivi e Fiscali',
+      name: 'Retribuzione Fissa Mensile',
+      detected: Boolean(parsedData.retribuzione?.importo),
+      status: parsedData.retribuzione?.importo ? 'success' : 'absent',
+      value: parsedData.retribuzione?.importo ? `${parsedData.retribuzione.importo.toFixed(2)} €` : 'Non rilevata',
+      details: parsedData.retribuzione?.minimoTabellare
+        ? `Minimo ${parsedData.retribuzione.minimoTabellare.toFixed(2)} € + Premio ${parsedData.retribuzione.premioProduzioneFisso?.toFixed(2) ?? '0'} € + Scatti ${parsedData.retribuzione.scattiAnzianita?.toFixed(2) ?? '0'} €`
+        : 'Parametri tabellari contrattuali fissi',
+    })
+
+    items.push({
+      category: 'Dati Retributivi e Fiscali',
+      name: 'Aliquota Contributiva INPS',
+      detected: parsedData.previdenza.aliquotaInpsCalcolata !== null,
+      status: parsedData.previdenza.aliquotaInpsCalcolata !== null ? 'success' : 'absent',
+      value: parsedData.previdenza.aliquotaInpsCalcolata !== null
+        ? `${(parsedData.previdenza.aliquotaInpsCalcolata * 100).toFixed(2)}% (su ${parsedData.previdenza.imponibileInps?.toFixed(2)} €)`
+        : 'Non rilevata',
+      details: parsedData.previdenza.contributiInps
+        ? `Contributi trattenuti: ${parsedData.previdenza.contributiInps.toFixed(2)} €`
+        : 'Aliquota IVS e ammortizzatori sociali',
+    })
+
+    items.push({
+      category: 'Dati Retributivi e Fiscali',
+      name: 'Addizionali Regionali e Comunali',
+      detected: parsedData.addizionali.totale > 0,
+      status: parsedData.addizionali.totale > 0 ? 'success' : 'absent',
+      value: parsedData.addizionali.totale > 0 ? `${parsedData.addizionali.totale.toFixed(2)} € / mese` : '0,00 €',
+      details: parsedData.addizionali.totale > 0
+        ? `Regionale ${parsedData.addizionali.rataRegionale.toFixed(2)} € + Saldo Com. ${parsedData.addizionali.rataComunale.toFixed(2)} € + Acc. Com. ${parsedData.addizionali.accontoComunale.toFixed(2)} €`
+        : 'Nessuna rata rilevata a debito',
+    })
+
+    items.push({
+      category: 'Dati Retributivi e Fiscali',
+      name: 'Trattenuta Sindacale',
+      detected: parsedData.trattenute.sindacato !== null,
+      status: parsedData.trattenute.sindacato !== null ? 'success' : 'absent',
+      value: parsedData.trattenute.sindacato !== null ? `${parsedData.trattenute.sindacato.toFixed(2)} €` : 'Non presente',
+      details: parsedData.trattenute.sindacato !== null ? 'Rilevata trattenuta sindacato' : 'Nessuna quota sindacale trattenuta',
+    })
+
+    items.push({
+      category: 'Dati Retributivi e Fiscali',
+      name: 'Fondo Cometa / Previdenza Complementare',
+      detected: parsedData.trattenute.cometa !== null,
+      status: parsedData.trattenute.cometa !== null ? 'success' : 'absent',
+      value: parsedData.trattenute.cometa !== null ? `${parsedData.trattenute.cometa.toFixed(2)} €` : 'Non presente',
+      details: parsedData.trattenute.cometa !== null ? 'Trattenuta fondo negoziale a carico lavoratore' : 'Nessun fondo complementare trattenuto',
+    })
+
+    items.push({
+      category: 'Dati Retributivi e Fiscali',
+      name: 'Costo Unitario Mensa',
+      detected: parsedData.trattenute.mensaUnitario !== null,
+      status: parsedData.trattenute.mensaUnitario !== null ? 'success' : 'absent',
+      value: parsedData.trattenute.mensaUnitario !== null ? `${parsedData.trattenute.mensaUnitario.toFixed(2)} € / pasto` : 'Non specificato',
+      details: parsedData.trattenute.mensaTotale ? `Totale mensile addebitato: ${parsedData.trattenute.mensaTotale.toFixed(2)} € (${parsedData.trattenute.mensaPasti} pasti)` : 'Nessuna trattenuta mensa',
+    })
+
+    items.push({
+      category: 'Dati Retributivi e Fiscali',
+      name: 'Detassazione Premi di Risultato (L.199/25)',
+      detected: parsedData.trattenute.impostaSostitutivaPremi !== null,
+      status: parsedData.trattenute.impostaSostitutivaPremi !== null ? 'success' : 'absent',
+      value: parsedData.trattenute.impostaSostitutivaPremi !== null ? `${parsedData.trattenute.impostaSostitutivaPremi.toFixed(2)} €` : 'Non applicata',
+      details: parsedData.trattenute.impostaSostitutivaPremi !== null ? 'Imposta sostitutiva agevolata 5% / 15% sul premio' : 'Nessun premio detassato',
+    })
+
+    // 4. Residui e Contatori
+    items.push({
+      category: 'Contatori e Residui',
+      name: 'Ferie Residue',
+      detected: parsedData.residui.ferie !== null,
+      status: parsedData.residui.ferie !== null ? 'success' : 'absent',
+      value: parsedData.residui.ferie !== null ? `${parsedData.residui.ferie.toFixed(2)} h` : 'Non presente',
+      details: 'Saldo contatore ferie a fine mese',
+    })
+
+    items.push({
+      category: 'Contatori e Residui',
+      name: 'Permessi / PAR Residui',
+      detected: parsedData.residui.permessi !== null,
+      status: parsedData.residui.permessi !== null ? 'success' : 'absent',
+      value: parsedData.residui.permessi !== null ? `${parsedData.residui.permessi.toFixed(2)} h` : 'Non presente',
+      details: 'Saldo contatore permessi individuali/aziendali',
+    })
+
+    items.push({
+      category: 'Contatori e Residui',
+      name: 'ROL Residui',
+      detected: parsedData.residui.rol !== null,
+      status: parsedData.residui.rol !== null ? 'success' : 'absent',
+      value: parsedData.residui.rol !== null ? `${parsedData.residui.rol.toFixed(2)} h` : 'Non presente',
+      details: 'Saldo riduzione orario di lavoro',
+    })
+
+    return items
   }, [parsedData])
 
   // Computed generated schedule based on currently edited values - always called at top level
@@ -594,6 +826,23 @@ export function CedolinoImportModal({
                 {suggestedCalibrationsCount > 0 && (
                   <span className="text-[10px] bg-primary text-bg font-bold px-1.5 py-0.2 rounded-full">
                     {suggestedCalibrationsCount}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveReviewTab('report')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeReviewTab === 'report'
+                    ? 'bg-primary/15 text-primary border border-primary/25'
+                    : 'text-text-muted hover:text-text hover:bg-surface-raised'
+                }`}
+              >
+                <ClipboardCheck size={13} />
+                <span>4. Report Importazione</span>
+                {recognitionReport.length > 0 && (
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-1.5 py-0.2 rounded-full border border-emerald-500/30">
+                    {recognitionReport.filter((r) => r.status === 'success').length}/{recognitionReport.length}
                   </span>
                 )}
               </button>
@@ -1192,6 +1441,106 @@ export function CedolinoImportModal({
                     </div>
                   </label>
                 )}
+              </div>
+            )}
+
+            {/* ── TAB 4: REPORT IMPORTAZIONE / AUDIT ── */}
+            {activeReviewTab === 'report' && (
+              <div className="space-y-4">
+                {/* Header Scorecard */}
+                <div className="rounded-xl border border-border bg-surface-raised/40 p-3 space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
+                        <FileSearch size={16} />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-text">Audit di Riconoscimento PDF</span>
+                        <p className="text-[11px] text-text-muted">
+                          File analizzato: <span className="font-mono text-text">{fileName}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11px] flex-wrap">
+                      <span className="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">
+                        <CheckCircle2 size={12} /> {recognitionReport.filter((r) => r.status === 'success').length} Rilevati
+                      </span>
+                      <span className="inline-flex items-center gap-1 bg-surface-raised text-text-muted border border-border px-2 py-0.5 rounded-full font-medium">
+                        <MinusCircle size={12} /> {recognitionReport.filter((r) => r.status === 'absent').length} Non presenti (zero)
+                      </span>
+                      {recognitionReport.some((r) => r.status === 'warning') && (
+                        <span className="inline-flex items-center gap-1 bg-warning/15 text-warning border border-warning/30 px-2 py-0.5 rounded-full font-semibold">
+                          <AlertCircle size={12} /> {recognitionReport.filter((r) => r.status === 'warning').length} Da verificare
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-text-muted leading-relaxed">
+                    Questo prospetto mostra lo stato di estrazione per ogni voce contrattuale, oraria e fiscale. Gli elementi verdi sono stati rilevati con certezza dal PDF; gli elementi grigi indicano voci assenti o a zero in questo specifico mese; gli elementi ambra richiedono una conferma dell'utente.
+                  </p>
+                </div>
+
+                {/* Grouped Items by Category */}
+                {Array.from(new Set(recognitionReport.map((r) => r.category))).map((category) => {
+                  const catItems = recognitionReport.filter((r) => r.category === category)
+                  const successInCat = catItems.filter((i) => i.status === 'success').length
+
+                  return (
+                    <div key={category} className="space-y-1.5">
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-xs font-bold text-text uppercase tracking-wider text-text-muted">
+                          {category}
+                        </span>
+                        <span className="text-[10px] text-text-muted font-medium">
+                          {successInCat} su {catItems.length} rilevati
+                        </span>
+                      </div>
+
+                      <div className="rounded-xl border border-border bg-surface-raised/30 divide-y divide-border/50 overflow-hidden">
+                        {catItems.map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="p-2.5 flex items-start justify-between gap-3 hover:bg-surface-raised/50 transition-colors"
+                          >
+                            <div className="flex items-start gap-2.5 min-w-0">
+                              <div className="mt-0.5 shrink-0">
+                                {item.status === 'success' ? (
+                                  <CheckCircle2 size={15} className="text-emerald-400" />
+                                ) : item.status === 'warning' ? (
+                                  <AlertCircle size={15} className="text-warning" />
+                                ) : (
+                                  <MinusCircle size={15} className="text-text-muted/50" />
+                                )}
+                              </div>
+                              <div className="space-y-0.5 min-w-0">
+                                <span className="text-xs font-semibold text-text block truncate">
+                                  {item.name}
+                                </span>
+                                <span className="text-[11px] text-text-muted block leading-tight">
+                                  {item.details}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="shrink-0 text-right">
+                              <span
+                                className={`inline-block text-xs font-medium font-mono px-2 py-0.5 rounded-md ${
+                                  item.status === 'success'
+                                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/25'
+                                    : item.status === 'warning'
+                                      ? 'bg-warning/15 text-warning border border-warning/30'
+                                      : 'bg-surface text-text-muted/70 border border-border/50'
+                                }`}
+                              >
+                                {item.value}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             )}
 

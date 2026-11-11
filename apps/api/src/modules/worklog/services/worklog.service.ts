@@ -1155,7 +1155,7 @@ export class WorklogService {
         updatedAt: new Date(),
       })
     } else {
-      // Modifica: lo snapshot immutabile non viene sovrascritto
+      // Modifica: aggiorna netto reale, snapshot cedolino e ricalcola lo snapshot stima aggiornato
       const updateSet: Record<string, unknown> = {
         netto: String(dto.netto),
         updatedAt: new Date(),
@@ -1163,28 +1163,26 @@ export class WorklogService {
       if (dto.cedolinoSnapshot !== undefined) {
         updateSet['cedolinoSnapshot'] = dto.cedolinoSnapshot
       }
-      if (!existing.stimaNettoSnapshot) {
-        try {
-          const stimaRes = await resolveStima(userId, dto.mese)
-          if (stimaRes.ok) {
-            updateSet['stimaNettoSnapshot'] = String(stimaRes.output.netto)
-            updateSet['stimaSnapshot'] = {
-              engineVersion: '1.0',
-              mese: dto.mese,
-              calculatedAt: new Date().toISOString(),
-              netto: stimaRes.output.netto,
-              lordo: stimaRes.output.lordo,
-              inps: stimaRes.output.contributiInps,
-              imponibile: stimaRes.output.imponibileIrpefMensile,
-              irpef: stimaRes.output.irpefNettaMensile,
-              trattenutaSindacale: stimaRes.output.trattenutaSindacale,
-              trattenutaMensa: stimaRes.output.trattenutaMensa,
-              trattenutaAddizionali: stimaRes.output.trattenutaAddizionali,
-            }
+      try {
+        const stimaRes = await resolveStima(userId, dto.mese)
+        if (stimaRes.ok) {
+          updateSet['stimaNettoSnapshot'] = String(stimaRes.output.netto)
+          updateSet['stimaSnapshot'] = {
+            engineVersion: '1.0',
+            mese: dto.mese,
+            calculatedAt: new Date().toISOString(),
+            netto: stimaRes.output.netto,
+            lordo: stimaRes.output.lordo,
+            inps: stimaRes.output.contributiInps,
+            imponibile: stimaRes.output.imponibileIrpefMensile,
+            irpef: stimaRes.output.irpefNettaMensile,
+            trattenutaSindacale: stimaRes.output.trattenutaSindacale,
+            trattenutaMensa: stimaRes.output.trattenutaMensa,
+            trattenutaAddizionali: stimaRes.output.trattenutaAddizionali,
           }
-        } catch {
-          // ignora
         }
+      } catch {
+        // ignora
       }
 
       await this.db

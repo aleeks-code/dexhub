@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight, Settings } from 'lucide-react'
 import { Button } from '@dexhub/ui'
 import { useWorklogT } from '../i18n'
@@ -113,6 +114,7 @@ export default function WorklogPage() {
   const t = useWorklogT()
   // Cartellino starts always on the current month upon returning/mounting
   const [month, setMonth] = useState(todayYYYYMM)
+  const queryClient = useQueryClient()
   const [showCedolinoImport, setShowCedolinoImport] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [panel, setPanel] = useState<Panel>(null)
@@ -419,16 +421,11 @@ export default function WorklogPage() {
     cedolinoSnapshot?: Record<string, unknown> | null,
     calibrations?: CedolinoCalibrationsToApply | null,
   ) {
+    // 1. Salva i giorni compilati del cartellino
     await Promise.all(
       daysToSave.map((dayInput) => upsertDay.mutateAsync(dayInput)),
     )
-    if (nettoVal !== null && !isNaN(nettoVal) && nettoVal > 0) {
-      await updateNettoReale.mutateAsync({
-        mese: targetMonth,
-        netto: nettoVal,
-        cedolinoSnapshot: cedolinoSnapshot ?? null,
-      })
-    }
+    // 2. Registra la retribuzione fissa se non già presente per il mese
     if (retribuzione && !retribuzioni.some((r) => r.decorrenza === targetMonth)) {
       await createRetribuzione.mutateAsync({
         decorrenza: targetMonth,
@@ -441,6 +438,7 @@ export default function WorklogPage() {
         note: `Importato da cedolino ${targetMonth}`,
       })
     }
+    // 3. Applica le calibrazioni previsionali (aliquota INPS, rate addizionali, trattenute fisse)
     if (calibrations) {
       if (calibrations.inpsRate != null && fiscalData?.config) {
         await upsertFiscalConfig.mutateAsync({
@@ -467,6 +465,16 @@ export default function WorklogPage() {
         await updateMensaConfig.mutateAsync(calibrations.mensa)
       }
     }
+    // 4. Salva il netto reale e lo snapshot storico del cedolino DOPO aver impostato i parametri
+    if (nettoVal !== null && !isNaN(nettoVal) && nettoVal > 0) {
+      await updateNettoReale.mutateAsync({
+        mese: targetMonth,
+        netto: nettoVal,
+        cedolinoSnapshot: cedolinoSnapshot ?? null,
+      })
+    }
+    // 5. Invalida la cache di cartellino, stima, netto reale e riepilogo
+    void queryClient.invalidateQueries({ queryKey: ['worklog'] })
     setMonth(targetMonth)
   }
 

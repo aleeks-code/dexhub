@@ -124,7 +124,7 @@ describe('cedolino-parser', () => {
       expect(result.stats.giorniCongedo).toBe(4)
       expect(result.stats.giorniCongedo80).toBe(4)
       expect(result.stats.giorniCongedo30).toBe(0)
-      expect(result.stats.pastiAssegnati).toBe(12) // all 12 work days get meals
+      expect(result.stats.pastiAssegnati).toBe(13) // all 13 meals are distributed accurately (12 work days + 1 partial/permessi day)
       expect(result.stats.totaleOreRegistrate).toBe(176.5)
 
       // Check congedo parentale 80% days

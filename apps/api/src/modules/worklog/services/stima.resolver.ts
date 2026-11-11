@@ -520,10 +520,9 @@ export async function resolveStima(
   if (output.warningDetrazioniForfettizzate) warnings.push('detrazioni_stimate_ral_teorico')
   if (output.warningTrattenutaSindacaleNonDisponibile) warnings.push('trattenuta_sindacale_non_disponibile')
 
-  // Scarto stima vs reale — calcolato con engine puro valutaScostamento.
-  // Se è presente uno snapshot immutabile di quel periodo, confronta con lo snapshot,
-  // altrimenti con la stima corrente. Se il netto reale è null o <= 0, valutazione = 'uncommunicated'.
-  const comparisonEstimate = stimaNettoSnapshot ?? output.netto
+  // Scarto stima vs reale — calcolato con engine puro valutaScostamento sulla stima corrente del mese.
+  // Se il netto reale è null o <= 0, valutazione = 'uncommunicated'.
+  const comparisonEstimate = output.netto
   const sc = nettoReale !== null && nettoReale > 0 ? valutaScostamento(comparisonEstimate, nettoReale) : null
   const scarto = sc && sc.valutazione !== 'uncommunicated' ? sc.delta : null
   const scostamentoPerc = sc && sc.valutazione !== 'uncommunicated' ? sc.scostamentoPerc : null

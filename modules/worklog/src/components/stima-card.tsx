@@ -353,7 +353,7 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                     <div>
                       <span className="block text-[10px] text-text-muted">{t.nettoRealeConfig.estimate}</span>
                       <span className="text-xs font-semibold tabular-nums text-text">
-                        {formatEur(data.stimaNettoSnapshot ?? data.stima.netto, locale)}
+                        {formatEur(data.stima.netto, locale)}
                       </span>
                     </div>
                     <div>

@@ -231,8 +231,37 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
   }
 
   // Assign meals:
-  // Meals are distributed across worked days up to `pastiMensa`
+  // Meals are distributed across days up to `pastiMensa`:
+  // 1st priority: worked days ('work')
+  // 2nd priority: permessi / PAR days (often taken as partial day presence with lunch)
+  // 3rd priority: any other scheduled day in the plan
   let mealsRemaining = pastiMensa
+  const mealIndices = new Set<number>()
+
+  // Priority 1: Work days
+  for (let i = 0; i < plan.length && mealsRemaining > 0; i++) {
+    if (plan[i]!.kind === 'work') {
+      mealIndices.add(i)
+      mealsRemaining--
+    }
+  }
+
+  // Priority 2: Permessi / ROL / PAR days
+  for (let i = 0; i < plan.length && mealsRemaining > 0; i++) {
+    if (plan[i]!.kind === 'permessi' && !mealIndices.has(i)) {
+      mealIndices.add(i)
+      mealsRemaining--
+    }
+  }
+
+  // Priority 3: Any other scheduled day
+  for (let i = 0; i < plan.length && mealsRemaining > 0; i++) {
+    if (!mealIndices.has(i)) {
+      mealIndices.add(i)
+      mealsRemaining--
+    }
+  }
+
   const daysToSave: UpsertDayInput[] = []
   const previewDays: CedolinoDayPreview[] = []
 
@@ -249,7 +278,8 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
 
   let countCongedo80 = 0
   let countCongedo30 = 0
-  for (const item of plan) {
+  for (let idx = 0; idx < plan.length; idx++) {
+    const item = plan[idx]!
     if (!overwriteExisting && existingMap.has(item.date)) {
       const existing = existingMap.get(item.date)!
       if (existing.entries && existing.entries.length > 0) {
@@ -298,9 +328,8 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
         break
     }
 
-    const hasMeal = item.kind === 'work' && mealsRemaining > 0
+    const hasMeal = mealIndices.has(idx)
     if (hasMeal) {
-      mealsRemaining--
       countPasti++
     }
 
