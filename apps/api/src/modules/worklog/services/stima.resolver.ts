@@ -10,6 +10,7 @@ import {
   worklogAddizionaliConfig,
   worklogCcnlProfile,
   worklogCigConfig,
+  worklogCigMassimale,
   worklogCometaConfig,
   worklogContract,
   worklogDays,
@@ -307,11 +308,10 @@ export async function resolveStima(
     quantita,
   }))
 
-  // ── 8b. CIG config (Step 3) — blocker CONDIZIONALE-ALL'USO, non universale come
-  // no_turni_config: richiesto SOLO se il mese ha ore CIG (la maggioranza degli utenti non ha
-  // mai CIG, bloccarli tutti sarebbe una regressione). Nessuna ora cig → coefficiente 0, la
-  // solidarietà non entra da nessuna parte, comportamento identico a prima di questo step.
+  // ── 8b. CIG config (Step 3) — risolve il massimale di legge per l'anno (es. 2026: 1.340,56 €)
+  // o l'override utente. Non retroattivo: ogni anno legge il proprio massimale storico da worklog_cig_massimale.
   let coefficienteSolidarieta = 0
+  let massimaleCigNetto: number | null = null
   if (oreCig > 0) {
     const [cigConfig] = await db
       .select()
@@ -319,11 +319,30 @@ export async function resolveStima(
       .where(eq(worklogCigConfig.userId, userId))
       .limit(1)
 
-    if (!cigConfig) {
+    // Massimale storico per targetYear
+    const [cigMassimaleRow] = await db
+      .select()
+      .from(worklogCigMassimale)
+      .where(eq(worklogCigMassimale.anno, targetYear))
+      .limit(1)
+
+    if (cigConfig?.massimaleMensile != null) {
+      massimaleCigNetto = parseFloat(cigConfig.massimaleMensile)
+    } else if (cigMassimaleRow?.massimaleNetto != null) {
+      massimaleCigNetto = parseFloat(cigMassimaleRow.massimaleNetto)
+    }
+
+    if (cigConfig?.coefficiente != null) {
+      coefficienteSolidarieta = parseFloat(cigConfig.coefficiente)
+    }
+
+    if (!cigConfig && !cigMassimaleRow) {
       return { ok: false, reason: 'no_cig_config', warnings }
     }
-    coefficienteSolidarieta = parseFloat(cigConfig.coefficiente)
-    warnings.push('integrazione_solidarieta_stimata')
+
+    if (!massimaleCigNetto) {
+      warnings.push('integrazione_solidarieta_stimata')
+    }
   }
 
   // ── 8c. Sindacato config (CGIL) — query SEMPRE eseguita, NON condizionale come CIG:
@@ -427,6 +446,7 @@ export async function resolveStima(
     oreCig,
     giorniFerialiMese,
     coefficienteSolidarieta,
+    massimaleCigNetto,
     orePermessoNonRetribuito: orePermesso,
     divisoreOrario,
     coefficienteSindacale,

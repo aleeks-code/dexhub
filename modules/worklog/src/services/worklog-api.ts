@@ -231,6 +231,16 @@ export interface UpsertCigConfigInput {
   note?: string | null
 }
 
+export interface CigMassimale {
+  anno: number
+  massimaleLordo: number
+  massimaleNetto: number
+  aliquotaRiduzione: number
+  circolareInps: string | null
+  note: string | null
+  documentoUrl: string | null
+}
+
 // ─── Sindacato config (trattenuta CGIL) — single-row per user, upsert ──────────
 
 export interface SindacatoConfig {
@@ -443,6 +453,9 @@ export const worklogApi = {
   upsertCigConfig: (body: UpsertCigConfigInput) =>
     request<CigConfig>('/cig-config', { method: 'PUT', body: JSON.stringify(body) }),
 
+  getCigMassimali: () =>
+    request<CigMassimale[]>('/cig-massimali'),
+
   getSindacatoConfig: () =>
     request<SindacatoConfig | null>('/sindacato-config'),
 
@@ -491,6 +504,7 @@ export const worklogKeys = {
   retribuzione: () => ['worklog', 'retribuzione'] as const,
   variabiliFlat: (mese?: string) => ['worklog', 'variabili-flat', mese ?? 'all'] as const,
   cigConfig: () => ['worklog', 'cig-config'] as const,
+  cigMassimali: () => ['worklog', 'cig-massimali'] as const,
   sindacatoConfig: () => ['worklog', 'sindacato-config'] as const,
   mensaConfig: () => ['worklog', 'mensa-config'] as const,
   cometaConfig: () => ['worklog', 'cometa-config'] as const,
@@ -753,6 +767,14 @@ export function useUpsertCigConfig() {
       void qc.invalidateQueries({ queryKey: worklogKeys.cigConfig() })
       void qc.invalidateQueries({ queryKey: ['worklog', 'stima'] })
     },
+  })
+}
+
+export function useCigMassimali() {
+  return useQuery({
+    queryKey: worklogKeys.cigMassimali(),
+    queryFn: () => worklogApi.getCigMassimali(),
+    staleTime: 60 * 60_000,
   })
 }
 

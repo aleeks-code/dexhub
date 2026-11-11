@@ -218,6 +218,13 @@
       "when": 1794359000000,
       "tag": "0030_seed_worklog_ccnl_and_fiscal",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794360000000,
+      "tag": "0031_worklog_cig_massimale",
+      "breakpoints": true
     }
   ]
 }

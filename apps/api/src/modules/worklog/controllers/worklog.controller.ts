@@ -344,6 +344,12 @@ export class WorklogController {
     return successResponse(config)
   }
 
+  @Get('cig-massimali')
+  async getCigMassimali() {
+    const data = await this.worklogService.getCigMassimali()
+    return successResponse(data)
+  }
+
   // ── Sindacato config (trattenuta CGIL) ──────────────────────────────────────
 
   @Get('sindacato-config')

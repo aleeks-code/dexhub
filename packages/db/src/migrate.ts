@@ -112,6 +112,28 @@ export async function runMigrations(): Promise<void> {
           '{"detrazione_da": 20001, "detrazione_zero_a": 40000, "detrazione_importo": 1000, "fasce_non_imponibili": [{"percentuale": 0.071, "reddito_da": 0, "reddito_fino": 8500}, {"percentuale": 0.053, "reddito_da": 8501, "reddito_fino": 15000}, {"percentuale": 0.048, "reddito_da": 15001, "reddito_fino": 20000}], "detrazione_piatto_fino": 32000}'
         ) ON CONFLICT ("anno") DO NOTHING;
       `
+
+      // Defensive guarantee: ensure CIG historical massimali table and 2026 entry exist
+      await sql`
+        CREATE TABLE IF NOT EXISTS "worklog_cig_massimale" (
+          "anno" integer PRIMARY KEY NOT NULL,
+          "massimale_lordo" numeric(10, 2) NOT NULL,
+          "massimale_netto" numeric(10, 2) NOT NULL,
+          "aliquota_riduzione" numeric(6, 5) DEFAULT '0.05840' NOT NULL,
+          "circolare_inps" text,
+          "note" text,
+          "documento_url" text,
+          "created_at" timestamp with time zone DEFAULT now() NOT NULL
+        );
+      `
+      await sql`
+        INSERT INTO "worklog_cig_massimale" ("anno", "massimale_lordo", "massimale_netto", "aliquota_riduzione", "circolare_inps", "note", "documento_url")
+        VALUES 
+          (2026, 1423.69, 1340.56, 0.05840, 'Circolare INPS n. 4 del 28/01/2026', 'Massimali Cassa Integrazione Guadagni e Contratti di Solidarietà anno 2026', '/docs/volantino-cig-2026.pdf'),
+          (2025, 1392.89, 1311.56, 0.05840, 'Circolare INPS n. 25 del 29/01/2025', 'Massimali Cassa Integrazione Guadagni anno 2025', NULL),
+          (2024, 1317.07, 1240.15, 0.05840, 'Circolare INPS n. 25 del 29/01/2024', 'Massimali Cassa Integrazione Guadagni anno 2024', NULL)
+        ON CONFLICT ("anno") DO NOTHING;
+      `
     } catch (e) {
       process.stderr.write(`[Migrate] Schema sync note: ${e}\n`)
     }

@@ -14,6 +14,7 @@ import {
   sql,
   worklogCcnlProfile,
   worklogCigConfig,
+  worklogCigMassimale,
   worklogContract,
   worklogDays,
   worklogEntries,
@@ -905,6 +906,23 @@ export class WorklogService {
       })
 
     return this.getCigConfig(userId)
+  }
+
+  async getCigMassimali() {
+    const rows = await this.db
+      .select()
+      .from(worklogCigMassimale)
+      .orderBy(desc(worklogCigMassimale.anno))
+
+    return rows.map((r) => ({
+      anno: r.anno,
+      massimaleLordo: parseFloat(r.massimaleLordo),
+      massimaleNetto: parseFloat(r.massimaleNetto),
+      aliquotaRiduzione: parseFloat(r.aliquotaRiduzione),
+      circolareInps: r.circolareInps ?? null,
+      note: r.note ?? null,
+      documentoUrl: r.documentoUrl ?? null,
+    }))
   }
 
   // ── Sindacato config (trattenuta CGIL) — single-row per user, upsert, mirror CIG ──────────

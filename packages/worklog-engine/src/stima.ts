@@ -199,6 +199,9 @@ export interface StimaInput {
                                        // FUORI dal lordo (TOTALE LORDO busta) ma DENTRO l'imponibile
                                        // contributivo+fiscale. Da worklog_cig_config, 0 se assente/
                                        // non applicabile (nessuna ora CIG questo mese).
+  massimaleCigNetto?: number | null   // Massimale mensile CIG netto INPS di legge per l'anno (es. € 1.340,56 per il 2026).
+                                       // Quando presente, l'integrazione è calcolata esattamente da massimale / divisoreCig
+                                       // senza ricorrere a coefficienti forfettari.
   orePermessoNonRetribuito: number    // Permesso non retribuito (Step 1a) — definito, NON ancora
                                        // agganciato a lordo/imponibili (vedi computeStornoPermesso).
   divisoreOrario: number              // Permesso non retribuito (Step 1b-forma) — divisore CCNL
@@ -310,7 +313,7 @@ export function stimaBustaPaga(input: StimaInput): StimaOutput {
     giorniPagatiEffettivi, giorniLavorabiliMese,
     tariffaOraria,
     ore, entriesOrdinarieMaggiorate, turniStandard, fasceMaggiorate, maggiorazioni, variabiliFlat, oreCig,
-    giorniFerialiMese, coefficienteSolidarieta, orePermessoNonRetribuito, divisoreOrario,
+    giorniFerialiMese, coefficienteSolidarieta, massimaleCigNetto, orePermessoNonRetribuito, divisoreOrario,
     coefficienteSindacale, minimoTabellareReale, coefficienteCometa,
     numeroPasti, importoMensa,
     addizionaleRegionale, addizionaleComunale, accontoComunale,
@@ -332,12 +335,15 @@ export function stimaBustaPaga(input: StimaInput): StimaOutput {
   const stornoPermesso = computeStornoPermesso(orePermessoNonRetribuito, retribuzioneMensile, divisoreOrario)
   const lordo = computeLordoMese(lordoBase, variabiliLordo, stornoCig, stornoPermesso)
 
-  // ── Stadio 5d: integrazione solidarietà — FUORI dal lordo E FUORI dall'imponibile INPS,
-  // DENTRO il solo imponibile IRPEF (per intero, non al 5.84%). Verificato contro la busta
-  // reale di aprile: imponibile INPS ≈ lordo (integrazione non ci entra), imponibile IRPEF =
-  // (lordo−INPS)+integrazione intera — CORREZIONE rispetto alla prima versione di questo stadio,
-  // che aveva un imponibileContributivo unico per INPS+IRPEF: i numeri reali lo smentivano.
-  const integrazioneSolidarieta = computeIntegrazioneSolidarieta(stornoCig, coefficienteSolidarieta)
+  // ── Stadio 5d: integrazione CIG / solidarietà — FUORI dal lordo E FUORI dall'imponibile INPS,
+  // DENTRO il solo imponibile IRPEF.
+  // Se massimaleCigNetto è specificato (> 0), usa la formula esatta di legge da Circolare INPS:
+  // quotaOraria = massimaleNetto / (giorniFerialiMese * 8)
+  // integrazione = oreCig * quotaOraria
+  // Altrimenti fallback al coefficiente forfettario.
+  const integrazioneSolidarieta = massimaleCigNetto != null && massimaleCigNetto > 0 && giorniFerialiMese > 0
+    ? computeIntegrazioneDaMassimale(oreCig, massimaleCigNetto, giorniFerialiMese)
+    : computeIntegrazioneSolidarieta(stornoCig, coefficienteSolidarieta)
 
   // ── Stadio 6: contributi INPS (dipendente, mensile) — SOLO sul lordo, mai sull'integrazione ──
   const contributiInps = computeContributiInps(lordo, contributiInpsRate)
@@ -572,12 +578,17 @@ export function computeTrattenutaAddizionali(
   return r2(addizionaleRegionale + addizionaleComunale + accontoComunale)
 }
 
+export function computeIntegrazioneDaMassimale(
+  oreCig: number,
+  massimaleCigNetto: number,
+  giorniFerialiMese: number,
+): number {
+  const divisoreCig = giorniFerialiMese * 8
+  return divisoreCig > 0 ? r2(oreCig * (massimaleCigNetto / divisoreCig)) : 0
+}
+
 /**
- * Stadio 5d: integrazione solidarietà = storno × coefficiente. MAI nel lordo (in busta è una
- * riga separata, "IMPORTO SOLIDARIETÀ"), MAI nell'imponibile INPS (verificato contro busta
- * reale: imponibile INPS ≈ lordo, l'integrazione non ci entra) — solo nell'imponibile IRPEF
- * mensile, per intero (Stadio 7). Il coefficiente (default 0.596) è calibrato sui mesi reali
- * dell'utente, non la % ufficiale d'accordo né il massimale INPS (v1, warning lato resolver).
+ * Stadio 5d: integrazione solidarietà = storno × coefficiente (fallback v1).
  */
 function computeIntegrazioneSolidarieta(stornoCig: number, coefficienteSolidarieta: number): number {
   return r2(stornoCig * coefficienteSolidarieta)
