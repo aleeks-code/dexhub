@@ -10,11 +10,15 @@ import {
   ArrowLeft,
   CheckCircle2,
   ExternalLink,
+  Scale,
+  FileText,
+  Mail,
+  Server,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy — DexHub',
-  description: 'Informativa estesa sui cookie e strumenti di memorizzazione tecnica di DexHub conforme al GDPR e alle linee guida del Garante Privacy.',
+  title: 'Informativa Privacy & Cookie Policy — DexHub',
+  description: 'Informativa completa sul trattamento dei dati personali, cookie tecnici e matrice di conformità dello storage di DexHub ex artt. 13-14 GDPR e art. 122 Codice Privacy.',
 }
 
 export default function CookiePolicyPage() {
@@ -40,84 +44,103 @@ export default function CookiePolicyPage() {
       </header>
 
       {/* Main Content Container */}
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 space-y-8">
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 space-y-9">
         {/* Title & Badge */}
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
             <ShieldCheck className="h-3.5 w-3.5" />
-            <span>GDPR & Garante della Privacy</span>
+            <span>GDPR (UE 2016/679) & D.Lgs. 196/2003</span>
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-text sm:text-4xl">
-            Informativa sui Cookie e Strumenti di Archiviazione Locale
+            Informativa Privacy e Gestione dei Cookie & Storage Locale
           </h1>
           <p className="text-sm text-text-muted leading-relaxed">
-            Informativa estesa resa ai sensi dell&apos;art. 13 del Regolamento UE 2016/679 (GDPR), dell&apos;art. 122 del D.Lgs. 196/2003 (Codice Privacy) e in conformità alle Linee Guida del Garante per la protezione dei dati personali del 10 giugno 2021.
+            Informativa estesa resa ai sensi degli artt. 12, 13 e 14 del Regolamento UE 2016/679 (GDPR), dell&apos;art. 122 del D.Lgs. 196/2003 (Codice Privacy), delle Linee Guida del Garante per la protezione dei dati personali del 10 giugno 2021 (doc. web n. 9677876) e delle Linee Guida EDPB 5/2019 e 2/2023.
           </p>
-          <p className="text-xs text-text-subtle">
-            Ultimo aggiornamento: <strong>11 Novembre 2026</strong>
-          </p>
+          <div className="flex flex-wrap items-center gap-4 text-xs text-text-subtle pt-1">
+            <span>Ultimo aggiornamento normativo: <strong>11 Novembre 2026</strong></span>
+            <span>•</span>
+            <span>Ambito applicativo: <strong>Piattaforma Web DexHub (dexhub.it)</strong></span>
+          </div>
         </div>
 
-        {/* Banner Informativo / Garante Notice */}
+        {/* Banner Informativo / Esenzione Banner Cookie */}
         <section className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5 space-y-3">
           <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
             <CheckCircle2 className="h-5 w-5 shrink-0" />
-            <span>Nessun Cookie di Profilazione o Tracciamento Pubblicitario</span>
+            <span>Assenza di Cookie di Profilazione e Fondamento Giuridico dell&apos;Esenzione dal Banner</span>
           </div>
           <p className="text-xs text-text-muted leading-relaxed">
-            <strong>DexHub adotta una politica rigorosa di minimizzazione dei dati:</strong> la piattaforma utilizza <strong>esclusivamente cookie tecnici essenziali</strong> e strumenti di archiviazione locale (Web Storage) strettamente necessari per garantire l&apos;autenticazione sicura dell&apos;utente, la memorizzazione delle preferenze di visualizzazione e l&apos;erogazione del servizio.
+            <strong>Principio di Privacy-by-Design e Minimizzazione (Art. 5 GDPR):</strong> DexHub è una piattaforma personale modulare progettata per operare senza tracciamento pubblicitario, senza cessione di dati a data broker e <strong>senza alcun cookie o strumento di profilazione commerciale</strong>.
           </p>
           <p className="text-xs text-text-muted leading-relaxed">
-            Ai sensi della normativa vigente e dei chiarimenti ufficiali del Garante della Privacy, <strong>per l&apos;installazione di tali strumenti tecnici non è richiesto il preventivo consenso dell&apos;utente</strong> e non è pertanto necessario mostrare un banner di blocco/accettazione preventiva all&apos;accesso.
+            In conformità all&apos;<strong>art. 122, comma 1 del Codice Privacy</strong> e ai chiarimenti ufficiali delle <strong>FAQ del Garante Privacy</strong>, per l&apos;installazione di cookie e strumenti di memorizzazione locale aventi natura meramente tecnica <strong>non è richiesto il preventivo consenso dell&apos;utente</strong>. Non avrebbe senso giuridico richiedere all&apos;utente di accettare tecnologie per le quali la legge non prescrive il consenso: l&apos;obbligo di legge è assolto mediante la presente informativa trasparente e documentata.
           </p>
         </section>
 
-        {/* 1. Titolare del Trattamento */}
+        {/* 1. Titolare del Trattamento e DPO */}
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-text flex items-center gap-2">
             <Lock className="h-4 w-4 text-primary" />
-            1. Titolare del Trattamento
-          </h2>
-          <p className="text-xs text-text-muted leading-relaxed">
-            Il Titolare del trattamento è l&apos;amministratore dell&apos;istanza software DexHub (dominio <code>dexhub.it</code>). Per qualsiasi richiesta in merito al trattamento dei dati personali o per l&apos;esercizio dei diritti previsti dagli artt. 15-22 del GDPR, è possibile contattare l&apos;amministratore all&apos;indirizzo email: <a href="mailto:alexmunni@outlook.it" className="text-primary hover:underline font-medium">alexmunni@outlook.it</a> o tramite il pannello di Feedback interno alla piattaforma.
-          </p>
-        </section>
-
-        {/* 2. Cosa sono i Cookie e il Web Storage */}
-        <section className="space-y-3">
-          <h2 className="text-lg font-bold text-text flex items-center gap-2">
-            <CookieIcon className="h-4 w-4 text-primary" />
-            2. Cosa sono i Cookie e gli Strumenti di Archiviazione Locale
+            1. Titolare del Trattamento e DPO
           </h2>
           <div className="text-xs text-text-muted space-y-2 leading-relaxed">
             <p>
-              I <strong>cookie</strong> sono stringhe di testo di piccole dimensioni che i siti visitati dall&apos;utente inviano al suo terminale (solitamente al browser), dove vengono memorizzati per essere poi ritrasmessi agli stessi siti alla successiva visita del medesimo utente.
+              <strong>Titolare del Trattamento:</strong> L&apos;amministratore dell&apos;istanza software DexHub (dominio <code>dexhub.it</code>). Email di contatto: <a href="mailto:alexmunni@outlook.it" className="text-primary hover:underline font-medium">alexmunni@outlook.it</a>.
             </p>
             <p>
-              Il <strong>Web Storage</strong> (suddiviso in <code>localStorage</code> e <code>sessionStorage</code>) è una tecnologia standard HTML5 che consente all&apos;applicazione di salvare informazioni direttamente sul browser del dispositivo dell&apos;utente, con maggiore sicurezza e senza trasmettere automaticamente tali dati al server a ogni singola richiesta HTTP.
+              <strong>Responsabile della Protezione dei Dati (DPO):</strong> Ai sensi dell&apos;art. 37 del GDPR, la designazione del DPO non è obbligatoria, poiché il trattamento non è effettuato da un&apos;autorità pubblica e le attività principali non consistono in trattamenti che richiedono il monitoraggio regolare e sistematico degli interessati su larga scala, né nel trattamento su larga scala di categorie particolari di dati ex art. 9 GDPR. L&apos;utente può rivolgersi direttamente al Titolare per qualunque istanza privacy.
             </p>
           </div>
         </section>
 
-        {/* 3. Mappa Dettagliata degli Strumenti Utilizzati */}
-        <section className="space-y-4">
+        {/* 2. Basi Giuridiche e Finalità del Trattamento (Art. 13.1.c GDPR) */}
+        <section className="space-y-3">
           <h2 className="text-lg font-bold text-text flex items-center gap-2">
-            <HardDrive className="h-4 w-4 text-primary" />
-            3. Registro Completo dei Cookie e delle Tecnologie Tecniche Utilizzate
+            <Scale className="h-4 w-4 text-primary" />
+            2. Finalità e Basi Giuridiche del Trattamento
           </h2>
-          <p className="text-xs text-text-muted">
-            La tabella seguente elenca in maniera trasparente e verificabile tutti gli elementi memorizzati da DexHub, la loro natura, la finalità esatta e il periodo di conservazione:
-          </p>
+          <div className="text-xs text-text-muted space-y-2 leading-relaxed">
+            <p>I dati personali trattati da DexHub sono raccolti esclusivamente per le seguenti finalità:</p>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li>
+                <strong>Erogazione dei Servizi e Moduli Applicativi (Art. 6.1.b GDPR):</strong> gestione del cartellino presenze, turni, calcolo stima busta paga CCNL, registro debiti/crediti, gestione piani di ammortamento e ricette pizza. Il conferimento è necessario per l&apos;esecuzione del servizio esplicitamente richiesto dall&apos;utente.
+              </li>
+              <li>
+                <strong>Autenticazione e Sicurezza Informatica (Art. 6.1.b e Art. 6.1.f GDPR):</strong> verifica dell&apos;identità tramite credenziali WebAuthn/Passkeys, prevenzione accessi abusivi, protezione anti-CSRF e tenuta degli audit log di sicurezza.
+              </li>
+              <li>
+                <strong>Personalizzazione dell&apos;Esperienza d&apos;Uso (Art. 6.1.b GDPR e Art. 122 co. 1 Codice Privacy):</strong> memorizzazione delle preferenze esplicitamente impostate dall&apos;utente (lingua, tema visivo, formati date e valute).
+              </li>
+              <li>
+                <strong>Comunicazioni Transazionali di Servizio (Art. 6.1.b GDPR):</strong> invio di email relative a link di invito e notifiche critiche di sistema.
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {/* 3. Matrice Definitiva di Conformità Giuridica dello Storage */}
+        <section className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold text-text flex items-center gap-2">
+              <HardDrive className="h-4 w-4 text-primary" />
+              3. Matrice di Conformità Giuridica dello Storage (Cookie & Web Storage)
+            </h2>
+            <p className="text-xs text-text-muted">
+              Valutazione analitica e motivazione giuridica dell&apos;esenzione dal consenso ai sensi dell&apos;art. 122, comma 1 del Codice Privacy (Criterio A e Criterio B) e del Parere WP29 04/2012:
+            </p>
+          </div>
 
           <div className="overflow-x-auto rounded-xl border border-border bg-surface">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border bg-surface-raised text-text-muted font-semibold">
-                  <th className="p-3 w-44">Strumento / Chiave</th>
-                  <th className="p-3 w-28">Tipologia</th>
-                  <th className="p-3">Finalità Tecnica</th>
-                  <th className="p-3 w-32">Durata</th>
-                  <th className="p-3 w-28">Sicurezza</th>
+                  <th className="p-3 w-40">Chiave / Identificativo</th>
+                  <th className="p-3 w-24">Vettore</th>
+                  <th className="p-3">Finalità Concreta</th>
+                  <th className="p-3 w-36">Motivazione Giuridica Esenzione</th>
+                  <th className="p-3 w-28">Durata</th>
+                  <th className="p-3 w-28">Misure di Sicurezza</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
@@ -128,14 +151,17 @@ export default function CookiePolicyPage() {
                   </td>
                   <td className="p-3">
                     <span className="rounded bg-surface-raised px-1.5 py-0.5 font-medium text-text">
-                      Cookie HTTP (Prima Parte)
+                      Cookie HTTP (First-Party)
                     </span>
                   </td>
                   <td className="p-3 text-text-muted leading-relaxed">
-                    <strong>Autenticazione essenziale:</strong> mantiene la sessione crittografata dell&apos;utente loggato. Permette l&apos;accesso sicuro alle API protette di DexHub e ai moduli personali.
+                    <strong>Autenticazione di Sessione:</strong> mantiene l&apos;associazione crittografica sicura tra il browser dell&apos;utente loggato e la sessione lato server.
+                  </td>
+                  <td className="p-3 text-text-muted leading-relaxed">
+                    <strong>Criterio B (Servizio Richiesto):</strong> strettamente necessario per erogare l&apos;accesso all&apos;area riservata richiesta dall&apos;utente all&apos;atto del login.
                   </td>
                   <td className="p-3 text-text-muted tabular-nums">
-                    7 giorni (o fino a disconnessione / logout)
+                    7 giorni (o fino a disconnessione esplicita)
                   </td>
                   <td className="p-3">
                     <span className="text-[11px] text-emerald-400 font-semibold block">HttpOnly</span>
@@ -144,10 +170,11 @@ export default function CookiePolicyPage() {
                   </td>
                 </tr>
 
-                {/* dexhub-app-store */}
+                {/* dexhub-app-store & dexhub-language */}
                 <tr className="hover:bg-surface-raised/40 transition-colors">
                   <td className="p-3 font-mono font-bold text-text">
-                    dexhub-app-store
+                    dexhub-app-store<br />
+                    <span className="text-[11px] font-normal text-text-subtle">dexhub-language</span>
                   </td>
                   <td className="p-3">
                     <span className="rounded bg-surface-raised px-1.5 py-0.5 font-medium text-text">
@@ -155,13 +182,19 @@ export default function CookiePolicyPage() {
                     </span>
                   </td>
                   <td className="p-3 text-text-muted leading-relaxed">
-                    <strong>Preferenze dell&apos;interfaccia utente:</strong> memorizza le scelte espressamente impostate dall&apos;utente: tema (scuro/chiaro), lingua (italiano/inglese), colore d&apos;accento, densità visiva, stato aperto/chiuso della barra laterale e formati data/valuta.
+                    <strong>Personalizzazione Interfaccia Utente (UI Customization):</strong> memorizza le preferenze esplicitamente selezionate dall&apos;utente (tema dark/light, lingua it/en, palette colori, densità, formati data/valuta).
+                    <div className="mt-1 text-[11px] text-text-subtle">
+                      <em>Distinzione valori:</em> I valori predefiniti (es. dark mode, EUR, DD/MM/YYYY) risiedono staticamente nel bundle software; lo storage viene scritto unicamente a seguito di una variazione attiva dell&apos;utente.
+                    </div>
+                  </td>
+                  <td className="p-3 text-text-muted leading-relaxed">
+                    <strong>Criterio B & Parere WP29 04/2012:</strong> le preferenze di interfaccia impostate su espressa richiesta dell&apos;utente sono esenti da consenso in quanto funzionali al servizio richiesto.
                   </td>
                   <td className="p-3 text-text-muted">
-                    Persistente fino alla pulizia del browser o ripristino impostazioni
+                    Persistente fino a reset manuale
                   </td>
                   <td className="p-3 text-text-subtle text-[11px]">
-                    Locale (dispositivo)
+                    Non inviato su rete HTTP (solo client-side)
                   </td>
                 </tr>
 
@@ -176,13 +209,16 @@ export default function CookiePolicyPage() {
                     </span>
                   </td>
                   <td className="p-3 text-text-muted leading-relaxed">
-                    <strong>Navigazione Cartellino:</strong> memorizza l&apos;ultimo mese visualizzato nel cartellino per evitare di dover riselezionare la data a ogni cambio di pagina.
+                    <strong>Preservazione Contesto di Lavoro (SPA State):</strong> mantiene l&apos;ultimo mese visualizzato nel cartellino durante la navigazione tra le schede.
+                  </td>
+                  <td className="p-3 text-text-muted leading-relaxed">
+                    <strong>Criterio B (Funzionalità Richiesta):</strong> strumento tecnico di gestione dello stato applicativo interno al modulo richiesto.
                   </td>
                   <td className="p-3 text-text-muted">
                     Persistente locale
                   </td>
                   <td className="p-3 text-text-subtle text-[11px]">
-                    Locale (dispositivo)
+                    Isolato nel browser
                   </td>
                 </tr>
 
@@ -197,13 +233,16 @@ export default function CookiePolicyPage() {
                     </span>
                   </td>
                   <td className="p-3 text-text-muted leading-relaxed">
-                    <strong>Visualizzazione Stima Busta Paga:</strong> ricorda se l&apos;utente ha lasciato espanso o collassato il dettaglio analitico del calcolo cedolino.
+                    <strong>Stato Componente UI:</strong> ricorda lo stato aperto/chiuso della vista dettagliata della stima busta paga.
+                  </td>
+                  <td className="p-3 text-text-muted leading-relaxed">
+                    <strong>Criterio B:</strong> preferenza di visualizzazione dell&apos;utente strettamente legata al componente.
                   </td>
                   <td className="p-3 text-text-muted">
                     Persistente locale
                   </td>
                   <td className="p-3 text-text-subtle text-[11px]">
-                    Locale (dispositivo)
+                    Isolato nel browser
                   </td>
                 </tr>
 
@@ -218,13 +257,16 @@ export default function CookiePolicyPage() {
                     </span>
                   </td>
                   <td className="p-3 text-text-muted leading-relaxed">
-                    <strong>Notifiche Broadcast:</strong> evita la riproposizione di un banner di annuncio di sistema già chiuso dall&apos;utente durante la sessione di navigazione attiva.
+                    <strong>Soppressione Annunci Chiusi:</strong> registra l&apos;avvenuta chiusura di un avviso di sistema per evitarne la reiterazione nella stessa sessione.
+                  </td>
+                  <td className="p-3 text-text-muted leading-relaxed">
+                    <strong>Criterio B:</strong> strettamente tecnico, necessario per dare corso all&apos;azione &quot;Chiudi avviso&quot; richiesta dall&apos;utente.
                   </td>
                   <td className="p-3 text-text-muted">
                     Sessione (cancellato alla chiusura della scheda)
                   </td>
                   <td className="p-3 text-text-subtle text-[11px]">
-                    Temporaneo
+                    Volatile in memoria
                   </td>
                 </tr>
 
@@ -239,17 +281,20 @@ export default function CookiePolicyPage() {
                     </span>
                   </td>
                   <td className="p-3 text-text-muted leading-relaxed">
-                    <strong>Modulo Calcolatore Pizza:</strong> memorizza la modalità di calcolo preferita (diretto, biga, poolish) e le ricette personali salvate localmente.
+                    <strong>Dati Offline Calcolatore Pizza:</strong> salvataggio sul dispositivo dei parametri di impasto e delle ricette salvate localmente.
+                  </td>
+                  <td className="p-3 text-text-muted leading-relaxed">
+                    <strong>Criterio B:</strong> erogazione del servizio di calcolo e archivio locale richiesto dall&apos;utente.
                   </td>
                   <td className="p-3 text-text-muted">
                     Persistente locale
                   </td>
                   <td className="p-3 text-text-subtle text-[11px]">
-                    Locale (dispositivo)
+                    Non trasmesso al server
                   </td>
                 </tr>
 
-                {/* dexhub:debts:session_undo */}
+                {/* dexhub:debts:session_undo/redo */}
                 <tr className="hover:bg-surface-raised/40 transition-colors">
                   <td className="p-3 font-mono font-medium text-text">
                     dexhub:debts:session_undo / redo
@@ -260,13 +305,41 @@ export default function CookiePolicyPage() {
                     </span>
                   </td>
                   <td className="p-3 text-text-muted leading-relaxed">
-                    <strong>Modulo Debiti & Crediti:</strong> cronologia temporanea per consentire l&apos;annullamento o ripristino immediato (Undo/Redo) delle modifiche ai record.
+                    <strong>Gestione Undo/Redo Modulo Debiti:</strong> memorizzazione temporanea delle operazioni per consentire il ripristino durante la modifica.
+                  </td>
+                  <td className="p-3 text-text-muted leading-relaxed">
+                    <strong>Criterio B:</strong> funzionalità tecnica di editor richiesta dall&apos;utente.
                   </td>
                   <td className="p-3 text-text-muted">
-                    Sessione
+                    Sessione attiva
                   </td>
                   <td className="p-3 text-text-subtle text-[11px]">
-                    Temporaneo
+                    Volatile
+                  </td>
+                </tr>
+
+                {/* feedbackBugsLastSeen & feedbackFeaturesLastSeen */}
+                <tr className="hover:bg-surface-raised/40 transition-colors">
+                  <td className="p-3 font-mono font-medium text-text">
+                    feedbackBugsLastSeen<br />
+                    <span className="text-[11px] font-normal text-text-subtle">feedbackFeaturesLastSeen</span>
+                  </td>
+                  <td className="p-3">
+                    <span className="rounded bg-surface-raised px-1.5 py-0.5 font-medium text-text">
+                      localStorage
+                    </span>
+                  </td>
+                  <td className="p-3 text-text-muted leading-relaxed">
+                    <strong>Contatori Badge Amministrazione:</strong> memorizza il numero di segnalazioni già visualizzate dall&apos;amministratore per evidenziare nuovi elementi non letti.
+                  </td>
+                  <td className="p-3 text-text-muted leading-relaxed">
+                    <strong>Criterio B:</strong> strumento tecnico di stato visivo dell&apos;interfaccia amministrativa richiesta dall&apos;amministratore.
+                  </td>
+                  <td className="p-3 text-text-muted">
+                    Persistente locale
+                  </td>
+                  <td className="p-3 text-text-subtle text-[11px]">
+                    Isolato nel browser
                   </td>
                 </tr>
               </tbody>
@@ -274,42 +347,58 @@ export default function CookiePolicyPage() {
           </div>
         </section>
 
-        {/* 4. Servizi Terzi e Chiamate Esterne */}
+        {/* 4. Autarchia Tecnica e Fornitori di Servizi (Art. 13.1.e GDPR) */}
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-text flex items-center gap-2">
-            <Info className="h-4 w-4 text-primary" />
-            4. Servizi, Fornitori Terzi e Chiamate Esterne
+            <Server className="h-4 w-4 text-primary" />
+            4. Autarchia Tecnica, Fornitori e Destinatari dei Dati
           </h2>
           <div className="text-xs text-text-muted space-y-3 leading-relaxed">
             <p>
-              In conformità all&apos;obbligo di trasparenza, si segnala lo stato delle risorse e delle connessioni esterne utilizzate dall&apos;applicazione:
+              In ottemperanza all&apos;obbligo di piena trasparenza sui destinatari (Art. 13.1.e GDPR), si dichiara:
             </p>
             <ul className="list-disc pl-5 space-y-2">
               <li>
-                <strong>Caratteri Tipografici (Font):</strong> I font utilizzati (Geist Sans e Geist Mono) sono distribuiti come pacchetti software interni e serviti direttamente dal server di DexHub. Non viene effettuata alcuna richiesta verso i server di Google Fonts o altre CDN terze.
+                <strong>Totale Indipendenza da CDN Esterne per Font e Immagini:</strong> Tutti i caratteri tipografici (Geist Sans / Mono) e le icone delle bandiere (emoji Unicode native di sistema) sono distribuiti localmente dal server DexHub. <em>Nessuna connessione esterna viene generata verso Google Fonts o CDN di terze parti (incluso flagcdn.com, completamente rimosso)</em>, evitando qualsiasi esposizione dell&apos;indirizzo IP dell&apos;utente.
               </li>
               <li>
-                <strong>Icone Bandiere Internazionali (flagcdn.com):</strong> Nella sola landing page pubblica, all&apos;interno del selettore del prefisso telefonico per la richiesta di invito, vengono caricate piccole immagini statiche di bandiere da <code>flagcdn.com</code>. Tale fornitore non installa cookie e riceve unicamente la richiesta HTTP standard per la visualizzazione dell&apos;immagine.
+                <strong>Fornitore del Database Relazionale (Neon Inc.):</strong> L&apos;istanza PostgreSQL è gestita tramite Neon Serverless su server posizionati fisicamente nell&apos;Unione Europea (Regione <code>eu-central-1</code>, Francoforte, Germania). I dati sono crittografati a riposo (AES-256) e in transito (TLS 1.3).
               </li>
               <li>
-                <strong>Infrastruttura Database (Neon):</strong> Il database PostgreSQL è gestito tramite Neon Serverless su server situati nell&apos;Unione Europea (Francoforte, Germania), con connessioni crittografate end-to-end con protocollo TLS.
+                <strong>Fornitore di Posta Transazionale (Brevo / Sendinblue SAS):</strong> Utilizzato dal backend esclusivamente per l&apos;inoltro via SMTP di comunicazioni essenziali richieste dall&apos;utente (inviti e alert di sicurezza). I server di recapito risiedono nell&apos;Unione Europea (Francia/Germania) e operano in qualità di Responsabile del Trattamento (Data Processing Agreement conforme all&apos;Art. 28 GDPR). Nelle comunicazioni non è presente alcun pixel o tracker di apertura.
               </li>
               <li>
-                <strong>Email Transazionali (Brevo Relay):</strong> Le email di sistema (richieste invito e notifiche amministrative) vengono inviate tramite protocollo SMTP sicuro direttamente dal backend dell&apos;applicazione. Nessun tracker di profilazione o pixel invisibile di marketing viene inserito nelle email.
+                <strong>Trasferimenti di Dati Extra-UE:</strong> Nessun dato personale viene trasferito al di fuori dello Spazio Economico Europeo (SEE).
               </li>
             </ul>
           </div>
         </section>
 
-        {/* 5. Come Disabilitare o Cancellare Cookie e Storage */}
+        {/* 5. Periodo di Conservazione dei Dati (Art. 13.2.a GDPR) */}
+        <section className="space-y-3">
+          <h2 className="text-lg font-bold text-text flex items-center gap-2">
+            <FileText className="h-4 w-4 text-primary" />
+            5. Tempi di Conservazione (Retention Policy)
+          </h2>
+          <div className="text-xs text-text-muted space-y-2 leading-relaxed">
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li><strong>Cookie di sessione:</strong> 7 giorni dall&apos;emissione o eliminazione immediata al comando di logout.</li>
+              <li><strong>Dati di profilo e moduli (cartellino, debiti, prestiti, task):</strong> conservati per l&apos;intera durata dell&apos;account attivo, fino alla richiesta di cancellazione da parte dell&apos;utente o chiusura dell&apos;istanza.</li>
+              <li><strong>Audit log amministrativi:</strong> conservati per 90 giorni con rotazione automatica per sole finalità di sicurezza informatica e accertamento di accessi abusivi.</li>
+              <li><strong>Web Storage del dispositivo:</strong> sotto il diretto controllo dell&apos;utente, persistente fino alla cancellazione dei dati del browser o ripristino della cache dalla sezione Impostazioni.</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* 6. Come Disabilitare o Cancellare Cookie e Storage */}
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-text flex items-center gap-2">
             <CookieIcon className="h-4 w-4 text-primary" />
-            5. Come Gestire o Cancellare i Cookie e lo Storage dal Tuo Browser
+            6. Modalità di Gestione e Cancellazione dello Storage nel Browser
           </h2>
           <div className="text-xs text-text-muted space-y-3 leading-relaxed">
             <p>
-              L&apos;utente può gestire, limitare o cancellare i cookie e i dati salvati in <code>localStorage</code> e <code>sessionStorage</code> direttamente dalle impostazioni del proprio browser. Di seguito i collegamenti alle guide ufficiali dei principali browser:
+              L&apos;utente può verificare, limitare o cancellare in ogni momento i cookie e lo storage locale direttamente dalle impostazioni del proprio browser:
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
               {[
@@ -333,26 +422,43 @@ export default function CookiePolicyPage() {
               ))}
             </div>
             <p className="text-[11px] text-text-subtle pt-2">
-              <em>Nota tecnica:</em> La disabilitazione del cookie tecnico <code>better-auth.session_token</code> comporterà l&apos;impossibilità di effettuare l&apos;accesso e di mantenere attiva la sessione autenticata su DexHub.
+              All&apos;interno di DexHub, è inoltre possibile svuotare la cache e le preferenze locali in 1-click dal menu <em>Impostazioni → Dati & Privacy → Ripristina Cache Locale</em>.
             </p>
           </div>
         </section>
 
-        {/* 6. Diritti dell'Interessato */}
+        {/* 7. Diritti dell'Interessato e Diritto di Reclamo (Artt. 15-22 & 77 GDPR) */}
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-text flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-primary" />
-            6. Diritti dell&apos;Interessato (GDPR)
+            <Scale className="h-4 w-4 text-primary" />
+            7. Diritti dell&apos;Interessato e Reclamo all&apos;Autorità Garante
           </h2>
-          <p className="text-xs text-text-muted leading-relaxed">
-            In ogni momento, gli utenti possono esercitare i diritti garantiti dagli artt. 15 e seguenti del Regolamento UE 2016/679 (accesso, rettifica, cancellazione dei dati, limitazione e portabilità), nonché richiedere la cancellazione totale del proprio account e dei relativi dati memorizzati, contattando direttamente il Titolare o utilizzando le funzioni di esportazione e cancellazione presenti nella sezione <em>Impostazioni → Dati & Privacy</em> di DexHub.
-          </p>
+          <div className="text-xs text-text-muted space-y-2.5 leading-relaxed">
+            <p>
+              In conformità agli artt. 15-22 del Regolamento UE 2016/679, l&apos;utente ha diritto di:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Ottenere la conferma dell&apos;esistenza o meno di dati personali che lo riguardano e la loro comunicazione in forma intelligibile (Diritto di Accesso).</li>
+              <li>Ottenere l&apos;aggiornamento, la rettificazione o l&apos;integrazione dei dati.</li>
+              <li>Ottenere la cancellazione completa dei dati personali trattati (Diritto all&apos;Oblio), disponibile anche tramite download preventivo dell&apos;archivio completo in formato JSON (Diritto alla Portabilità dei Dati, Art. 20 GDPR).</li>
+              <li>Ottenere la limitazione del trattamento o opporsi allo stesso per motivi legittimi.</li>
+            </ul>
+            <div className="rounded-xl border border-border bg-surface-raised p-4 space-y-2 mt-3">
+              <p className="font-semibold text-text">Diritto di Reclamo all&apos;Autorità di Controllo (Art. 77 GDPR):</p>
+              <p>
+                Qualora ritenga che il trattamento violi il Regolamento (UE) 2016/679, l&apos;interessato ha il diritto di proporre formale reclamo al <strong>Garante per la protezione dei dati personali</strong>:
+              </p>
+              <p className="text-[11px] text-text-subtle">
+                Piazza Venezia n. 11, 00187 Roma (Italia) • Centralino: (+39) 06.696771 • PEC: <code>protocollo@pec.gpdp.it</code> • Web: <a href="https://www.garanteprivacy.it" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.garanteprivacy.it</a>
+              </p>
+            </div>
+          </div>
         </section>
       </main>
 
       {/* Footer */}
       <footer className="mt-12 border-t border-border py-6 text-center text-xs text-text-muted">
-        <p>© 2026 DexHub — Software personale modulare self-hosted. Tutti i diritti riservati.</p>
+        <p>© 2026 DexHub — Piattaforma personale modulare self-hosted. Tutti i diritti riservati.</p>
       </footer>
     </div>
   )

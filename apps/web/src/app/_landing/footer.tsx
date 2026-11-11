@@ -16,7 +16,7 @@ export function Footer() {
         <a href="#moduli" className={styles.footerLink}>Moduli</a>
         <a href="#perche" className={styles.footerLink}>I Principi</a>
         <a href="#chi" className={styles.footerLink}>Chi c’è dietro</a>
-        <Link href="/cookie-policy" className={styles.footerLink}>Cookie Policy</Link>
+        <Link href="/cookie-policy" className={styles.footerLink}>Privacy & Cookie</Link>
       </div>
     </footer>
   )

@@ -8,7 +8,8 @@ function isPublicPath(pathname: string): boolean {
     pathname.startsWith('/setup') ||
     pathname.startsWith('/invite') ||
     pathname.startsWith('/changelog') ||
-    pathname.startsWith('/cookie-policy')
+    pathname.startsWith('/cookie-policy') ||
+    pathname.startsWith('/privacy')
   )
 }
 

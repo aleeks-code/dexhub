@@ -64,6 +64,14 @@ const COUNTRIES = [
 
 type Country = typeof COUNTRIES[number]
 
+function getFlagEmoji(countryCode: string): string {
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map((char) => 127397 + char.charCodeAt(0))
+  return String.fromCodePoint(...codePoints)
+}
+
 export function InvitoSection() {
   const [email, setEmail] = useState('')
   const [country, setCountry] = useState<Country>(COUNTRIES[0]!)
@@ -147,14 +155,9 @@ export function InvitoSection() {
                     aria-haspopup="listbox"
                     aria-expanded={dropdownOpen}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`https://flagcdn.com/20x15/${country.iso}.png`}
-                      width={20}
-                      height={15}
-                      alt={country.name}
-                      className={styles.phoneTriggerFlag}
-                    />
+                    <span className="text-base leading-none select-none" aria-hidden="true">
+                      {getFlagEmoji(country.iso)}
+                    </span>
                     <span>{country.dial}</span>
                   </button>
 
@@ -172,8 +175,9 @@ export function InvitoSection() {
                             setDropdownOpen(false)
                           }}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={`https://flagcdn.com/20x15/${c.iso}.png`} width={20} height={15} alt="" />
+                          <span className="text-base leading-none select-none shrink-0" aria-hidden="true">
+                            {getFlagEmoji(c.iso)}
+                          </span>
                           <span className={styles.phoneDropdownItemName}>{c.name}</span>
                           <span className={styles.phoneDropdownItemDial}>{c.dial}</span>
                         </button>

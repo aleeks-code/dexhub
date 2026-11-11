@@ -1093,7 +1093,7 @@ export default function SettingsPage() {
               href="/cookie-policy"
               className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface-raised px-4 py-2.5 text-xs font-semibold text-text hover:bg-surface hover:border-primary/60 transition-colors shrink-0"
             >
-              Consulta la Cookie Policy
+              Informativa Privacy & Cookie
               <ChevronRight className="h-3.5 w-3.5 text-text-subtle" />
             </Link>
           </section>
