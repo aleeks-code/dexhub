@@ -184,9 +184,9 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-surface-raised p-4 space-y-4">
+    <div className="rounded-2xl border border-border bg-surface/50 backdrop-blur-md p-4 sm:p-5 space-y-4 shadow-sm">
       {/* Header */}
-      <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider">
+      <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider">
         {t.stima.title}
       </h3>
 
@@ -245,7 +245,7 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
               prominent
             />
             {/* ── Sezione Netto Reale & Confronto Busta Paga ── */}
-            <div className="mt-3 rounded-xl border border-border bg-surface p-3.5 space-y-3">
+            <div className="mt-3 rounded-xl border border-border/60 bg-surface-raised/40 p-3.5 space-y-3">
               {isEditing ? (
                 /* ── Form Inline di Inserimento/Modifica ── */
                 <div className="space-y-3">

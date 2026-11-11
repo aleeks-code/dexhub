@@ -520,7 +520,7 @@ export default function WorklogPage() {
           )}
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_310px] xl:grid-cols-[1fr_320px] items-start">
           <MonthCalendar
             year={parseYYYYMM(month)[0]}
             month={parseYYYYMM(month)[1]}

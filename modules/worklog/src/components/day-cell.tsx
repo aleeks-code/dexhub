@@ -18,6 +18,46 @@ function uniqueKinds(entries: WorklogDay['entries']): EntryKind[] {
   return entries.length > 0 ? ['work'] : []
 }
 
+function getKindLabel(kind: EntryKind, t: WorklogTranslations): string {
+  switch (kind) {
+    case 'sick':
+      return 'Malattia'
+    case 'vacation':
+      return 'Ferie'
+    case 'leave':
+      return 'Permesso'
+    case 'cig':
+      return 'CIG'
+    case 'permesso_non_retribuito':
+      return 'Non retrib.'
+    case 'holiday':
+      return 'Festivo'
+    case 'overtime':
+      return 'Straord.'
+    default:
+      return t.kind[kind] ?? kind
+  }
+}
+
+function getSpecialKindBadgeClass(kind: EntryKind): string {
+  switch (kind) {
+    case 'sick':
+      return 'bg-warning/10 text-warning border-warning/25'
+    case 'vacation':
+      return 'bg-orange-500/10 text-orange-400 border-orange-500/25'
+    case 'leave':
+      return 'bg-info/10 text-info border-info/25'
+    case 'cig':
+      return 'bg-error/10 text-error border-error/25'
+    case 'permesso_non_retribuito':
+      return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/25'
+    case 'holiday':
+      return 'bg-pink-500/10 text-pink-400 border-pink-500/25'
+    default:
+      return 'bg-surface text-text-muted border-border'
+  }
+}
+
 interface Props {
   date: string // 'YYYY-MM-DD'
   day: WorklogDay | undefined
@@ -31,7 +71,18 @@ interface Props {
   onClick: (e: React.MouseEvent) => void
 }
 
-export function DayCell({ date, day, isToday, isWorkday, isWeekend, isHoliday, selectionMode, isSelected, t, onClick }: Props) {
+export function DayCell({
+  date,
+  day,
+  isToday,
+  isWorkday,
+  isWeekend: _isWeekend,
+  isHoliday,
+  selectionMode,
+  isSelected,
+  t,
+  onClick,
+}: Props) {
   const dayNum = parseInt(date.slice(8), 10)
   const entries = day?.entries ?? []
   const hasEntries = entries.length > 0
@@ -44,111 +95,163 @@ export function DayCell({ date, day, isToday, isWorkday, isWeekend, isHoliday, s
 
   const kinds = uniqueKinds(entries)
   const shownKinds = kinds.slice(0, MAX_KIND_DOTS)
-  const hasMoreKinds = kinds.length > MAX_KIND_DOTS
   const hasDayNote = !!day?.note
   const mealOverride = day?.mealOverride ?? null
-  // Mirror deriveMeal (resolver, stima.resolver.ts) — client-side preview only, mai il server.
   const autoMealCounted = entries.some((e) => e.kind === 'work' || e.kind === 'overtime')
   const mealCounted = mealOverride ?? autoMealCounted
 
-  // Non-working day (weekend or holiday) with nothing logged is recessed/muted — festivo counts as non-working
-  // even if it falls on a weekday, which plain isWorkday (weekday-only) would miss.
+  const jsDay = new Date(date + 'T00:00:00').getDay() || 7
   const isNonWorking = !isWorkday || isHoliday
-  const isRecessed = !hasEntries && isNonWorking
-  // Literal Sat/Sun (not the contract's isWorkday pattern) recedes into the page background
-  // instead of the standard recessed surface — visually distinct from a non-weekend rest day.
-  const recessedBg = isWeekend ? 'bg-bg' : 'bg-surface'
+  const specialKind = entries.find((e) => e.kind !== 'work' && e.kind !== 'overtime')?.kind
+
+  // ── Differenziazione superfici e contrasti (punto C) ───────────────────────
+  let surfaceClass = 'bg-surface border-border/80'
+  let textDateClass = 'text-text'
+
+  if (isHoliday) {
+    // Festività: evidenziazione dedicata con tonalità arancione/warm
+    surfaceClass = hasEntries
+      ? 'bg-amber-500/[0.08] border-amber-500/30'
+      : 'bg-amber-500/[0.04] border-amber-500/20'
+    textDateClass = 'text-amber-400 font-bold'
+  } else if (jsDay === 7) {
+    // Domenica: superficie leggermente più scura e data più attenuata
+    surfaceClass = hasEntries
+      ? 'bg-surface-raised/60 border-border/60'
+      : 'bg-surface/30 border-border/40'
+    textDateClass = hasEntries ? 'text-text-muted font-medium' : 'text-text-subtle/70'
+  } else if (jsDay === 6) {
+    // Sabato: superficie leggermente più scura dei feriali
+    surfaceClass = hasEntries
+      ? 'bg-surface-raised/80 border-border/70'
+      : 'bg-surface/50 border-border/50'
+    textDateClass = hasEntries ? 'text-text font-semibold' : 'text-text-muted'
+  } else {
+    // Giorni feriali lavorativi
+    if (hasEntries) {
+      surfaceClass = 'bg-surface-raised border-border'
+      textDateClass = 'text-text font-semibold'
+    } else if (isWorkday) {
+      surfaceClass = 'bg-surface border-border/80 border-dashed'
+      textDateClass = 'text-text-muted font-medium'
+    } else {
+      surfaceClass = 'bg-surface/50 border-border/60'
+      textDateClass = 'text-text-subtle'
+    }
+  }
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={[
-        'group relative flex flex-col items-start rounded-lg p-1.5 text-left transition-colors min-h-[3.5rem]',
-        'hover:border-primary/60 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        isRecessed
-          ? `border border-border ${recessedBg}`
-          : hasEntries
-            ? 'border border-border bg-surface-raised'
-            : 'border border-dashed border-border bg-surface',
+        'group relative flex flex-col justify-between rounded-xl p-2 text-left transition-all min-h-[78px] sm:min-h-[82px]',
+        'hover:border-primary/60 hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        surfaceClass,
         isToday ? 'ring-2 ring-primary ring-offset-1 ring-offset-bg' : '',
-        selectionMode && isSelected ? 'ring-2 ring-primary ring-offset-1 ring-offset-bg' : '',
+        selectionMode && isSelected ? 'ring-2 ring-primary ring-offset-1 ring-offset-bg bg-primary/10' : '',
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      {/* Selection checkbox */}
-      {selectionMode && (
-        <span
-          className={[
-            'absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full border transition-colors',
-            isSelected ? 'border-primary bg-primary text-white' : 'border-border bg-bg',
-          ].join(' ')}
-        >
-          {isSelected && <Check size={10} />}
-        </span>
-      )}
-
-      {isToday && !selectionMode && (
-        <span className="absolute top-1 right-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-          {t.today}
-        </span>
-      )}
-
-      <div className="flex w-full items-baseline justify-between gap-1 overflow-hidden">
-        <span className={['text-xs font-semibold', isRecessed ? 'text-text-subtle' : 'text-text-muted'].join(' ')}>
+      {/* ── Riga Superiore: Numero del Giorno + Badge (Oggi / Festivo / Checkbox) ── */}
+      <div className="flex w-full items-center justify-between gap-1">
+        <span className={`text-xs sm:text-sm tabular-nums ${textDateClass}`}>
           {dayNum}
         </span>
-        {isHoliday && (
+
+        {selectionMode ? (
           <span
-            className="truncate text-[9px] font-medium text-amber-500 leading-tight"
+            className={[
+              'flex h-4 w-4 items-center justify-center rounded-md border transition-colors',
+              isSelected ? 'border-primary bg-primary text-white' : 'border-border bg-bg',
+            ].join(' ')}
+          >
+            {isSelected && <Check size={10} />}
+          </span>
+        ) : isToday ? (
+          <span className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-primary/15 text-primary border border-primary/25">
+            {t.today}
+          </span>
+        ) : isHoliday ? (
+          <span
+            className="truncate text-[9px] font-semibold text-amber-400 max-w-[85px]"
             title={getItalianHolidayName(date) ?? undefined}
           >
             {getItalianHolidayName(date)}
           </span>
-        )}
+        ) : null}
       </div>
 
-      {hasEntries && shownKinds.length > 0 ? (
-        <div className="mt-1 flex items-center gap-1.5 text-xs">
-          <div className="flex items-center gap-0.5">
-            {shownKinds.map((k) => (
-              <span key={k} className={`h-1.5 w-1.5 shrink-0 rounded-full ${KIND_COLOR[k].dot}`} />
-            ))}
-            {hasMoreKinds && <span className="text-text-subtle leading-none">…</span>}
+      {/* ── Zona Centrale: Ore e Tipologia Anomalia / Stato (punto B) ── */}
+      <div className="my-auto py-1 w-full space-y-1">
+        {hasEntries ? (
+          <>
+            <div className="flex items-baseline gap-1">
+              <span className="text-sm sm:text-base font-bold text-text tabular-nums leading-none">
+                {displayHours.toFixed(displayHours % 1 === 0 ? 0 : 1)}
+                <span className="text-xs font-normal text-text-muted ml-0.5">{t.hours}</span>
+              </span>
+              {displayDelta > 0 && (
+                <span className="text-xs font-semibold text-warning tabular-nums">
+                  +{displayDelta.toFixed(displayDelta % 1 === 0 ? 0 : 1)}
+                </span>
+              )}
+            </div>
+
+            {/* In evidenza le giornate anomale (Malattia, Ferie, Permesso, CIG, ecc.) */}
+            {specialKind ? (
+              <div className="flex items-center">
+                <span
+                  className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none border ${getSpecialKindBadgeClass(specialKind)}`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${KIND_COLOR[specialKind].dot}`} />
+                  <span className="truncate max-w-[70px] sm:max-w-[90px]">
+                    {getKindLabel(specialKind, t)}
+                  </span>
+                </span>
+              </div>
+            ) : shownKinds.length > 1 ? (
+              <div className="flex items-center gap-1">
+                {shownKinds.map((k) => (
+                  <span key={k} className={`h-1.5 w-1.5 rounded-full ${KIND_COLOR[k].dot}`} />
+                ))}
+              </div>
+            ) : null}
+          </>
+        ) : !isNonWorking ? (
+          <div className="flex items-center justify-center py-1 text-text-subtle text-xs font-medium opacity-40 group-hover:opacity-100 transition-opacity">
+            +
           </div>
-          <span className="font-medium text-text">
-            {displayHours.toFixed(displayHours % 1 === 0 ? 0 : 1)}{t.hours}
+        ) : null}
+      </div>
+
+      {/* ── Riga Inferiore: Metadati (Mensa, Note) ── */}
+      <div className="flex w-full items-center justify-between text-[10px] min-h-[14px]">
+        {hasEntries && mealCounted ? (
+          <span
+            className="inline-flex items-center gap-1 text-[10px] font-medium text-primary"
+            title={
+              mealOverride === true
+                ? t.modal.mensaForcedAria
+                : mealOverride === false
+                  ? t.modal.mensaExcludedAria
+                  : autoMealCounted
+                    ? t.modal.mensaAutoCountedAria
+                    : t.modal.mensaAutoNotCountedAria
+            }
+          >
+            <Utensils size={10} />
+            <span className="hidden sm:inline">Mensa</span>
           </span>
-          {displayDelta > 0 && (
-            <span className={`font-medium ${KIND_COLOR.overtime.text}`}>
-              +{displayDelta.toFixed(displayDelta % 1 === 0 ? 0 : 1)}
-            </span>
-          )}
-        </div>
-      ) : !isNonWorking ? (
-        <div className="flex flex-1 items-center justify-center self-stretch text-sm text-text-subtle">+</div>
-      ) : null}
+        ) : <span />}
 
-      {hasDayNote && (
-        <StickyNote size={10} className="absolute bottom-1 right-1 text-text-subtle" />
-      )}
-
-      {hasEntries && (
-        <Utensils
-          size={10}
-          aria-label={
-            mealOverride === true
-              ? t.modal.mensaForcedAria
-              : mealOverride === false
-                ? t.modal.mensaExcludedAria
-                : autoMealCounted
-                  ? t.modal.mensaAutoCountedAria
-                  : t.modal.mensaAutoNotCountedAria
-          }
-          className={['absolute bottom-1 left-1', mealCounted ? 'text-primary' : 'text-text-muted'].join(' ')}
-        />
-      )}
+        {hasDayNote && (
+          <span className="text-text-muted hover:text-text cursor-default" title={day?.note ?? ''}>
+            <StickyNote size={11} />
+          </span>
+        )}
+      </div>
     </button>
   )
 }

@@ -44,20 +44,22 @@ export function MonthCalendar({ year, month, days, workdays, holidays, t, locale
 
   return (
     <div className="w-full">
-      <div className="mb-1 grid grid-cols-7 gap-1">
+      <div className="mb-2 grid grid-cols-7 gap-x-1.5">
         {headers.map((h, i) => (
           <div
             key={h}
-            className={`py-1 text-center text-xs font-medium ${i >= 5 ? 'text-text-subtle' : 'text-text-muted'}`}
+            className={`py-1 text-center text-xs font-semibold uppercase tracking-wider ${
+              i === 6 ? 'text-text-subtle/70' : i === 5 ? 'text-text-subtle' : 'text-text-muted'
+            }`}
           >
             {h}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-x-1.5 gap-y-2">
         {grid.map((date, i) => {
-          if (!date) return <div key={`empty-${i}`} className="min-h-[3.5rem] rounded-lg" />
+          if (!date) return <div key={`empty-${i}`} className="min-h-[78px] sm:min-h-[82px] rounded-xl" />
           const jsDay = new Date(date + 'T00:00:00').getDay() || 7
           return (
             <DayCell
