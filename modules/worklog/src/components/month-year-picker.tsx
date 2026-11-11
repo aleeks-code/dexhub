@@ -40,7 +40,7 @@ export function MonthYearPicker({ label, month, todayYYYYMM, locale, onSelect }:
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-center gap-1 text-base font-semibold capitalize text-text hover:text-primary"
+        className="flex w-full items-center justify-center gap-1.5 px-1 text-sm font-semibold capitalize text-text hover:text-primary transition-colors cursor-pointer select-none whitespace-nowrap"
       >
         {label}
         <ChevronDown size={14} className={`text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} />

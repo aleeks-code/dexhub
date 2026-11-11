@@ -29,7 +29,7 @@ import { TemplatesPanel } from '../components/templates-panel'
 import { TrashPanel } from '../components/trash-panel'
 import { BulkModal } from '../components/bulk-modal'
 import { SettingsPanel } from '../components/settings-panel'
-import { WorklogToolbar, type ToolbarPanel } from '../components/worklog-toolbar'
+import { WorklogHeader, type ToolbarPanel } from '../components/worklog-header'
 import { WorklogSetupWizard } from '../components/worklog-setup-wizard'
 import { IconTooltip } from '../components/icon-tooltip'
 import { MonthYearPicker } from '../components/month-year-picker'
@@ -449,116 +449,47 @@ export default function WorklogPage() {
   return (
     <div className="px-4 py-6">
       <div className="print:hidden">
-        {/* Header — band 1: identity */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-text">{t.title}</h1>
-          <p className="text-sm text-text-muted">{t.subtitle}</p>
-        </div>
-        <IconTooltip label={t.settings.title}>
-          <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)}>
-            <Settings size={18} />
-          </Button>
-        </IconTooltip>
-      </div>
-
-      <div className="my-4 border-t border-border" />
-
-      {/* Header — band 2: action toolbar */}
-      <div className="mb-6">
-        <WorklogToolbar
+        <WorklogHeader
           t={t}
+          month={month}
+          onMonthChange={handleMonthChange}
+          onMonthSelect={(m) => {
+            setMonth(m)
+            persistMonth(m)
+          }}
+          onToday={() => {
+            const m = todayYYYYMM()
+            setMonth(m)
+            persistMonth(m)
+          }}
+          onOpenSettings={() => setShowSettings(true)}
+          contract={contract}
+          ccnlId={fiscalData?.config?.ccnlId}
           onWeekFill={handleWeekFill}
           weekFillPending={upsertDay.isPending}
           onMonthFill={handleMonthFill}
           monthFillPending={upsertDay.isPending}
-          onPrint={handlePrint}
           selectionMode={selectionMode}
           onToggleSelectionMode={toggleSelectionMode}
-          showSearch={showSearch}
-          onToggleSearch={() => setShowSearch((v) => !v)}
+          selectedCount={selectedDates.size}
+          hasDaysToDelete={daysToDelete.length > 0}
+          onBulkDelete={() => setShowBulkDelete(true)}
+          onBulkApply={() => setShowBulkApply(true)}
+          searchQuery={searchQuery}
+          onSearchChange={(q) => {
+            setSearchQuery(q)
+            if (!showSearch && q.length > 0) setShowSearch(true)
+          }}
+          onSearchClear={() => {
+            setSearchQuery('')
+            setShowSearch(false)
+          }}
+          onOpenWizard={() => setForceShowWizard(true)}
+          onPrint={handlePrint}
           onExport={handleExport}
           onOpenPanel={(panel: ToolbarPanel) => setPanel(panel)}
           onDeleteMonth={() => setShowDeleteMonth(true)}
-          onOpenWizard={() => setForceShowWizard(true)}
         />
-      </div>
-
-      {/* Search bar */}
-      {showSearch && (
-        <div className="mb-4">
-          <input
-            autoFocus
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t.search.placeholder}
-            className="w-full max-w-sm rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none"
-          />
-          {searchQuery.length > 0 && searchQuery.length < 2 && (
-            <p className="mt-1 text-xs text-text-muted">{t.search.minChars}</p>
-          )}
-        </div>
-      )}
-
-      {/* Month navigation — hidden during search */}
-      {!showSearch && (
-        <div className="mb-4 flex items-center gap-3">
-          <IconTooltip label={t.prevMonth}>
-            <Button variant="ghost" size="icon" onClick={() => handleMonthChange(-1)}>
-              <ChevronLeft size={18} />
-            </Button>
-          </IconTooltip>
-          <MonthYearPicker
-            label={formatMonthLabel(month, t.locale)}
-            month={month}
-            todayYYYYMM={todayYYYYMM()}
-            locale={t.locale}
-            onSelect={(m) => { setMonth(m); persistMonth(m) }}
-          />
-          <IconTooltip label={t.nextMonth}>
-            <Button variant="ghost" size="icon" onClick={() => handleMonthChange(1)}>
-              <ChevronRight size={18} />
-            </Button>
-          </IconTooltip>
-          <Button variant="outline" size="sm" onClick={() => { const m = todayYYYYMM(); setMonth(m); persistMonth(m) }}>
-            {t.today}
-          </Button>
-        </div>
-      )}
-
-      {/* Selection action bar */}
-      {selectionMode && !showSearch && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
-          <span className="text-xs font-medium text-text">
-            {fill(t.bulk.selected, { n: selectedDates.size })}
-          </span>
-          <div className="flex items-center gap-1.5">
-            {selectedDates.size > 0 && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowBulkDelete(true)}
-                  disabled={daysToDelete.length === 0}
-                >
-                  {t.bulk.delete}
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => setShowBulkApply(true)}
-                >
-                  {t.bulk.apply}
-                </Button>
-              </>
-            )}
-            <Button variant="ghost" size="sm" onClick={toggleSelectionMode}>
-              {t.bulk.cancelSelection}
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Content */}
       {isLoading ? (
