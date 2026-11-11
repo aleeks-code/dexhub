@@ -249,6 +249,30 @@ export function StimaCard({ month, t }: Props) {
                 )}
               </div>
 
+              {/* ── Rateo 13ª Mensilità ── */}
+              {data.stima.ralLordo > 0 && (
+                <div className="rounded-lg border border-border bg-surface/50 p-2.5 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-text">Maturazione 13ª Mensilità</span>
+                    <span className="font-bold text-primary tabular-nums">
+                      {Math.round((parseInt(month.slice(5, 7), 10) / 12) * 100)}% ({parseInt(month.slice(5, 7), 10)}/12)
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-border/40">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-300"
+                      style={{ width: `${Math.round((parseInt(month.slice(5, 7), 10) / 12) * 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-text-muted pt-0.5">
+                    <span>Lordo maturato progressivo:</span>
+                    <span className="font-semibold text-text tabular-nums">
+                      {formatEur((data.stima.ralLordo / 13) * (parseInt(month.slice(5, 7), 10) / 12), locale)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* ── Warnings ───────────────────────────────────────────────── */}
               {data.stimaWarnings.length > 0 && (
                 <div className="space-y-2">

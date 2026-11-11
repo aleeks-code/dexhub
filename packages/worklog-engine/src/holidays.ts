@@ -48,3 +48,27 @@ export function isItalianHoliday(date: string): boolean {
   const year = parseInt(date.slice(0, 4), 10)
   return getItalianHolidays(year).has(date)
 }
+
+export function getItalianHolidayName(date: string): string | null {
+  const year = parseInt(date.slice(0, 4), 10)
+  const easter = easterDate(year)
+  const easterMonday = new Date(easter)
+  easterMonday.setDate(easter.getDate() + 1)
+
+  const names: Record<string, string> = {
+    [`${year}-01-01`]: 'Capodanno',
+    [`${year}-01-06`]: 'Epifania',
+    [fmt(easter)]: 'Pasqua',
+    [fmt(easterMonday)]: "Lunedì dell'Angelo",
+    [`${year}-04-25`]: 'Liberazione',
+    [`${year}-05-01`]: 'Festa del Lavoro',
+    [`${year}-06-02`]: 'Festa della Repubblica',
+    [`${year}-08-15`]: 'Ferragosto',
+    [`${year}-11-01`]: 'Ognissanti',
+    [`${year}-12-08`]: 'Immacolata',
+    [`${year}-12-25`]: 'Natale',
+    [`${year}-12-26`]: 'Santo Stefano',
+  }
+
+  return names[date] ?? null
+}

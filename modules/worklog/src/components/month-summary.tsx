@@ -50,16 +50,20 @@ function ResidualRow({
 }) {
   if (value === null) return null
   const low = value < LOW_BALANCE_THRESHOLD
+  const giorniEquivalenti = (value / 8).toFixed(1)
   return (
-    <div className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${low ? 'bg-warning/10' : 'bg-surface'}`}>
-      {low && <AlertTriangle size={13} className="shrink-0 text-warning" />}
-      <span className="flex-1 text-text-muted">{label}</span>
-      <span className={`font-semibold ${low ? 'text-warning' : 'text-text'}`}>
-        {value.toFixed(1)}h
-      </span>
-      {low && (
-        <span className="text-xs text-warning">{t.residui.alert}</span>
-      )}
+    <div className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs ${low ? 'bg-warning/10 text-warning' : 'bg-surface text-text'}`}>
+      <div className="flex items-center gap-1.5">
+        {low && <AlertTriangle size={12} className="shrink-0 text-warning" />}
+        <span className="text-text-muted">{label}</span>
+      </div>
+      <div className="flex items-center gap-1.5 tabular-nums">
+        <span className="font-bold">{value.toFixed(1)}h</span>
+        <span className="text-[10px] text-text-subtle opacity-80">(~{giorniEquivalenti} gg)</span>
+        {low && (
+          <span className="ml-1 text-[10px] font-medium text-warning">({t.residui.alert})</span>
+        )}
+      </div>
     </div>
   )
 }
@@ -159,9 +163,17 @@ export function MonthSummary({ summary, oreNotturne, orePomeridiane, t }: Props)
       )}
 
       {hasResidui && (
-        <div className="space-y-1.5 border-t border-border pt-3">
-          <ResidualRow label={t.residui.ferie} value={summary.residuiFerie} t={t} />
-          <ResidualRow label={t.residui.permessi} value={summary.residuiPermessi} t={t} />
+        <div className="space-y-2 border-t border-border pt-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+              Banca Ore & Ferie
+            </span>
+            <span className="text-[10px] text-text-subtle">Rateo progressivo attivo</span>
+          </div>
+          <div className="space-y-1.5">
+            <ResidualRow label={t.residui.ferie} value={summary.residuiFerie} t={t} />
+            <ResidualRow label={t.residui.permessi} value={summary.residuiPermessi} t={t} />
+          </div>
         </div>
       )}
     </div>

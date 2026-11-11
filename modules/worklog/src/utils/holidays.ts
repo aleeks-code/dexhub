@@ -1,1 +1,1 @@
-export { getItalianHolidays, isItalianHoliday } from '@dexhub/worklog-engine'
+export { getItalianHolidays, isItalianHoliday, getItalianHolidayName } from '@dexhub/worklog-engine'

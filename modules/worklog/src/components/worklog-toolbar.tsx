@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react'
 import {
   CheckSquare, Search, MoreHorizontal, Download, LayoutTemplate,
-  ArchiveRestore, Trash2, Sparkles,
+  ArchiveRestore, Trash2, Sparkles, Printer,
 } from 'lucide-react'
 import { Button } from '@dexhub/ui'
 import { IconTooltip } from './icon-tooltip'
@@ -15,6 +15,9 @@ interface Props {
   t: WorklogTranslations
   onWeekFill: () => void
   weekFillPending: boolean
+  onMonthFill?: () => void
+  monthFillPending?: boolean
+  onPrint?: () => void
   selectionMode: boolean
   onToggleSelectionMode: () => void
   showSearch: boolean
@@ -57,7 +60,7 @@ function MenuItem({
 }
 
 export function WorklogToolbar({
-  t, onWeekFill, weekFillPending, selectionMode, onToggleSelectionMode,
+  t, onWeekFill, weekFillPending, onMonthFill, monthFillPending, onPrint, selectionMode, onToggleSelectionMode,
   showSearch, onToggleSearch, onExport, onOpenPanel, onDeleteMonth, onOpenWizard,
 }: Props) {
   const [showMore, setShowMore] = useState(false)
@@ -67,12 +70,19 @@ export function WorklogToolbar({
     setShowMore(false)
   }
 
+  const isPending = weekFillPending || !!monthFillPending
+
   return (
     <div className="flex w-full flex-wrap items-center gap-2">
       {/* Group A — frequent actions */}
-      <Button variant="primary" size="sm" onClick={onWeekFill} disabled={weekFillPending}>
+      <Button variant="primary" size="sm" onClick={onWeekFill} disabled={isPending}>
         {t.commands.week}
       </Button>
+      {onMonthFill && (
+        <Button variant="outline" size="sm" onClick={onMonthFill} disabled={isPending}>
+          {t.commands.month}
+        </Button>
+      )}
       <IconTooltip label={t.bulk.select}>
         <Button variant={selectionMode ? 'outline' : 'ghost'} size="icon" onClick={onToggleSelectionMode}>
           <CheckSquare size={16} />
@@ -106,6 +116,13 @@ export function WorklogToolbar({
                   />
                   <div className="my-1 border-t border-border" />
                 </>
+              )}
+              {onPrint && (
+                <MenuItem
+                  icon={<Printer size={14} />}
+                  label={t.export.pdf}
+                  onClick={() => runAndClose(onPrint)}
+                />
               )}
               <MenuItem
                 icon={<Download size={14} />}

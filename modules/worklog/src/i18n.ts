@@ -86,6 +86,7 @@ const translations = {
     commands: {
       today: 'Log today',
       week: 'Fill week',
+      month: 'Fill month',
       summary: 'Monthly summary',
       more: 'More',
     },
@@ -148,6 +149,7 @@ const translations = {
       title: 'Export',
       csv: 'CSV',
       json: 'JSON',
+      pdf: 'Print / Save PDF',
       rangeHint: 'Range:',
     },
     holidays: {
@@ -535,6 +537,7 @@ const translations = {
     commands: {
       today: 'Registra oggi',
       week: 'Compila settimana',
+      month: 'Compila mese',
       summary: 'Riepilogo mese',
       more: 'Altro',
     },
@@ -597,6 +600,7 @@ const translations = {
       title: 'Esporta',
       csv: 'CSV',
       json: 'JSON',
+      pdf: 'Stampa / Salva PDF',
       rangeHint: 'Periodo:',
     },
     holidays: {

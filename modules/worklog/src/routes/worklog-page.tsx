@@ -20,7 +20,7 @@ import {
   type EntryInput,
   type ContractConfig,
 } from '../services/worklog-api'
-import { getItalianHolidays, isItalianHoliday } from '../utils/holidays'
+import { getItalianHolidays, isItalianHoliday, getItalianHolidayName } from '../utils/holidays'
 import { MonthCalendar } from '../components/month-calendar'
 import { MonthSummary } from '../components/month-summary'
 import { StimaCard } from '../components/stima-card'
@@ -216,6 +216,42 @@ export default function WorklogPage() {
     return selectedDatesArr.length > 0 && selectedDatesArr.every(isFerialeNonFestivo)
   }, [selectedDatesArr, workdays, holidays])
 
+  const printDays = useMemo(() => {
+    const [y, m] = parseYYYYMM(month)
+    const yStr = String(y)
+    const mStr = String(m).padStart(2, '0')
+    const totalDays = new Date(y, m, 0).getDate()
+    const list = []
+    for (let day = 1; day <= totalDays; day++) {
+      const dateStr = `${yStr}-${mStr}-${String(day).padStart(2, '0')}`
+      const d = new Date(dateStr + 'T00:00:00')
+      const dow = d.toLocaleDateString(t.locale, { weekday: 'short' })
+      const isHol = isItalianHoliday(dateStr)
+      const holName = isHol ? getItalianHolidayName(dateStr) : null
+      const dayData = daysMap.get(dateStr)
+      const entries = dayData?.entries ?? []
+      const ordHours = entries.filter((e) => e.kind !== 'overtime').reduce((s, e) => s + e.hours, 0)
+      const otHours = entries.filter((e) => e.kind === 'overtime').reduce((s, e) => s + e.hours, 0)
+      const kinds = Array.from(new Set(entries.map((e) => e.kind)))
+      const autoMeal = entries.some((e) => e.kind === 'work' || e.kind === 'overtime')
+      const meal = dayData?.mealOverride ?? autoMeal
+
+      list.push({
+        dateStr,
+        dayNum: day,
+        dow,
+        isHol,
+        holName,
+        kinds,
+        ordHours,
+        otHours,
+        meal: entries.length > 0 && meal,
+        note: dayData?.note ?? '',
+      })
+    }
+    return list
+  }, [month, daysMap, t.locale])
+
   function handleMonthChange(delta: number) {
     const next = addMonths(month, delta)
     setMonth(next)
@@ -343,6 +379,34 @@ export default function WorklogPage() {
     await Promise.all(promises)
   }
 
+  async function handleMonthFill() {
+    const [y, m] = parseYYYYMM(month)
+    const yearStr = String(y)
+    const monthStr = String(m).padStart(2, '0')
+    const daysInMonth = new Date(y, m, 0).getDate()
+
+    const existingDates = new Set(days.map((d) => d.date))
+    const promises: Promise<unknown>[] = []
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${yearStr}-${monthStr}-${String(day).padStart(2, '0')}`
+      const d = new Date(dateStr + 'T00:00:00')
+      const isoDay = d.getDay() || 7
+      if (!workdays.includes(isoDay)) continue
+      if (existingDates.has(dateStr)) continue
+      const kind = isItalianHoliday(dateStr) ? 'holiday' : 'work'
+      promises.push(upsertDay.mutateAsync({ date: dateStr, entries: [{ kind, hours: defaultHours }] }))
+    }
+
+    if (promises.length > 0) {
+      await Promise.all(promises)
+    }
+  }
+
+  function handlePrint() {
+    window.print()
+  }
+
   function handleExport(format: 'csv' | 'json') {
     const url = worklogApi.exportUrl(format, from, to)
     const a = document.createElement('a')
@@ -384,7 +448,8 @@ export default function WorklogPage() {
 
   return (
     <div className="px-4 py-6">
-      {/* Header — band 1: identity */}
+      <div className="print:hidden">
+        {/* Header — band 1: identity */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-text">{t.title}</h1>
@@ -405,6 +470,9 @@ export default function WorklogPage() {
           t={t}
           onWeekFill={handleWeekFill}
           weekFillPending={upsertDay.isPending}
+          onMonthFill={handleMonthFill}
+          monthFillPending={upsertDay.isPending}
+          onPrint={handlePrint}
           selectionMode={selectionMode}
           onToggleSelectionMode={toggleSelectionMode}
           showSearch={showSearch}
@@ -550,6 +618,7 @@ export default function WorklogPage() {
       {/* Day modal — blocked in selection mode */}
       {selectedDate && !selectionMode && (
         <DayModal
+          key={selectedDate}
           date={selectedDate}
           existingDay={selectedDay}
           defaultHours={defaultHours}
@@ -561,6 +630,7 @@ export default function WorklogPage() {
           onSave={handleSave}
           onDelete={handleDelete}
           onClose={() => setSelectedDate(null)}
+          onNavigate={(targetDate) => setSelectedDate(targetDate)}
         />
       )}
 
@@ -698,6 +768,103 @@ export default function WorklogPage() {
           }}
         />
       )}
+      </div>
+
+      {/* ── Official Printable Timesheet Sheet (A4 print layout) ── */}
+      <div className="hidden print:block font-sans text-black bg-white p-6 min-h-screen">
+        {/* Print Header */}
+        <div className="flex items-start justify-between border-b-2 border-black pb-4 mb-4">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">DexHub — Cartellino Presenze</h1>
+            <p className="text-sm font-semibold text-gray-700 mt-1 capitalize">
+              Mese di competenza: {formatMonthLabel(month, t.locale)}
+            </p>
+          </div>
+          <div className="text-right text-xs text-gray-600">
+            <p>Data stampa: {new Date().toLocaleDateString(t.locale)}</p>
+            <p>Orario contrattuale: {defaultHours} ore/giorno</p>
+          </div>
+        </div>
+
+        {/* Totals Summary */}
+        <div className="grid grid-cols-4 gap-2 border border-gray-300 bg-gray-50 p-3 rounded mb-4 text-xs">
+          <div>
+            <span className="text-gray-500 block">Giorni Lavorati</span>
+            <span className="text-base font-bold text-black">{summary?.daysWorked ?? 0} gg</span>
+          </div>
+          <div>
+            <span className="text-gray-500 block">Ore Totali Registrate</span>
+            <span className="text-base font-bold text-black">{summary?.totaleRegistrate.toFixed(1) ?? 0} h</span>
+          </div>
+          <div>
+            <span className="text-gray-500 block">Ore Straordinario</span>
+            <span className="text-base font-bold text-black">{summary?.oreStraordinario.toFixed(1) ?? 0} h</span>
+          </div>
+          <div>
+            <span className="text-gray-500 block">Buoni Pasto / Mensa</span>
+            <span className="text-base font-bold text-black">{summary?.numeroPasti ?? 0}</span>
+          </div>
+        </div>
+
+        {/* Printable Timesheet Table */}
+        <table className="w-full text-xs border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-gray-100 border-b border-gray-300 font-semibold text-gray-700">
+              <th className="border border-gray-300 p-1.5 text-center w-12">Data</th>
+              <th className="border border-gray-300 p-1.5 text-left w-20">Giorno</th>
+              <th className="border border-gray-300 p-1.5 text-left">Tipologia / Causale</th>
+              <th className="border border-gray-300 p-1.5 text-center w-16">Ordinarie</th>
+              <th className="border border-gray-300 p-1.5 text-center w-16">Straord.</th>
+              <th className="border border-gray-300 p-1.5 text-center w-12">Mensa</th>
+              <th className="border border-gray-300 p-1.5 text-left">Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {printDays.map((d) => (
+              <tr key={d.dateStr} className={`border-b border-gray-200 ${d.isHol ? 'bg-amber-50/50' : ''}`}>
+                <td className="border border-gray-300 p-1 text-center tabular-nums font-medium">{d.dayNum}</td>
+                <td className="border border-gray-300 p-1 capitalize text-gray-600">{d.dow}</td>
+                <td className="border border-gray-300 p-1">
+                  {d.isHol && !d.kinds.length ? (
+                    <span className="text-amber-700 font-medium">{d.holName ?? 'Festivo'}</span>
+                  ) : d.kinds.length > 0 ? (
+                    <span>
+                      {d.kinds.map((k) => t.kind[k] ?? k).join(', ')}
+                      {d.isHol && d.holName && <span className="text-amber-700 ml-1">({d.holName})</span>}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
+                </td>
+                <td className="border border-gray-300 p-1 text-center tabular-nums font-semibold">
+                  {d.ordHours > 0 ? `${d.ordHours.toFixed(1)}h` : '—'}
+                </td>
+                <td className="border border-gray-300 p-1 text-center tabular-nums text-primary font-semibold">
+                  {d.otHours > 0 ? `+${d.otHours.toFixed(1)}h` : '—'}
+                </td>
+                <td className="border border-gray-300 p-1 text-center text-gray-700">
+                  {d.meal ? '✓' : '—'}
+                </td>
+                <td className="border border-gray-300 p-1 text-gray-500 text-[11px] truncate max-w-xs">
+                  {d.note || '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Signatures */}
+        <div className="mt-8 pt-6 border-t border-gray-300 grid grid-cols-2 gap-12 text-xs">
+          <div className="space-y-8">
+            <p className="font-semibold">Firma del Lavoratore:</p>
+            <div className="border-b border-dashed border-gray-400 w-48" />
+          </div>
+          <div className="space-y-8 text-right">
+            <p className="font-semibold">Firma del Datore di Lavoro / Responsabile:</p>
+            <div className="border-b border-dashed border-gray-400 w-48 ml-auto" />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

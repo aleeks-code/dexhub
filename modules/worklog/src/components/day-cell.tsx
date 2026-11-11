@@ -5,6 +5,7 @@ import { Check, StickyNote, Utensils } from 'lucide-react'
 import type { WorklogDay, EntryKind } from '../services/worklog-api'
 import type { WorklogTranslations } from '../i18n'
 import { KIND_COLOR } from '../utils/kind-colors'
+import { getItalianHolidayName } from '../utils/holidays'
 
 const MAX_KIND_DOTS = 3
 
@@ -94,9 +95,19 @@ export function DayCell({ date, day, isToday, isWorkday, isWeekend, isHoliday, s
         </span>
       )}
 
-      <span className={['text-xs font-semibold', isRecessed ? 'text-text-subtle' : 'text-text-muted'].join(' ')}>
-        {dayNum}
-      </span>
+      <div className="flex w-full items-baseline justify-between gap-1 overflow-hidden">
+        <span className={['text-xs font-semibold', isRecessed ? 'text-text-subtle' : 'text-text-muted'].join(' ')}>
+          {dayNum}
+        </span>
+        {isHoliday && (
+          <span
+            className="truncate text-[9px] font-medium text-amber-500 leading-tight"
+            title={getItalianHolidayName(date) ?? undefined}
+          >
+            {getItalianHolidayName(date)}
+          </span>
+        )}
+      </div>
 
       {hasEntries && shownKinds.length > 0 ? (
         <div className="mt-1 flex items-center gap-1.5 text-xs">

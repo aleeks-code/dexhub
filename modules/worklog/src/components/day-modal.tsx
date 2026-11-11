@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { X, Trash2, ChevronDown, ChevronUp, AlertTriangle, LayoutTemplate } from 'lucide-react'
+import { X, Trash2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, AlertTriangle, LayoutTemplate } from 'lucide-react'
 import { Button } from '@dexhub/ui'
 import type { WorklogDay, EntryInput, WorklogTemplate } from '../services/worklog-api'
 import type { WorklogTranslations } from '../i18n'
@@ -19,6 +19,16 @@ interface Props {
   onSave: (date: string, note: string, entries: EntryInput[], mealOverride: boolean | null) => Promise<void>
   onDelete: () => Promise<void>
   onClose: () => void
+  onNavigate?: (newDate: string) => void
+}
+
+function shiftDate(dateStr: string, deltaDays: number): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + deltaDays)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function defaultEntries(isHoliday: boolean, isWorkday: boolean, defaultHours: number): EntryInput[] {
@@ -39,6 +49,7 @@ export function DayModal({
   onSave,
   onDelete,
   onClose,
+  onNavigate,
 }: Props) {
   const isNew = !existingDay || existingDay.entries.length === 0
 
@@ -96,10 +107,18 @@ export function DayModal({
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
+      if (onNavigate && e.altKey && e.key === 'ArrowLeft') {
+        e.preventDefault()
+        onNavigate(shiftDate(date, -1))
+      }
+      if (onNavigate && e.altKey && e.key === 'ArrowRight') {
+        e.preventDefault()
+        onNavigate(shiftDate(date, 1))
+      }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose, onNavigate, date])
 
   function applyTemplate(tpl: WorklogTemplate) {
     setEntries(tpl.entries.map((e) => ({ ...e })))
@@ -136,12 +155,34 @@ export function DayModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-xl border border-border bg-bg shadow-xl">
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-border px-4 py-3">
-          <div>
-            <h2 className="text-sm font-semibold text-text">
-              {existingDay && existingDay.entries.length > 0 ? t.modal.titleEdit : t.modal.titleNew}
-            </h2>
-            <p className="mt-0.5 text-xs text-text-muted capitalize">{formattedDate}</p>
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="flex items-center gap-2">
+            {onNavigate && (
+              <div className="flex items-center gap-0.5 border-r border-border pr-2 mr-1">
+                <button
+                  type="button"
+                  title="Giorno precedente (Alt + ←)"
+                  onClick={() => onNavigate(shiftDate(date, -1))}
+                  className="rounded p-1 text-text-muted hover:bg-surface hover:text-text transition-colors"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  title="Giorno successivo (Alt + →)"
+                  onClick={() => onNavigate(shiftDate(date, 1))}
+                  className="rounded p-1 text-text-muted hover:bg-surface hover:text-text transition-colors"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+            <div>
+              <h2 className="text-sm font-semibold text-text">
+                {existingDay && existingDay.entries.length > 0 ? t.modal.titleEdit : t.modal.titleNew}
+              </h2>
+              <p className="mt-0.5 text-xs text-text-muted capitalize">{formattedDate}</p>
+            </div>
           </div>
           <button
             type="button"
