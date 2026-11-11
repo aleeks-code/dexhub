@@ -31,6 +31,7 @@ import {
   getItalianHolidays,
   quadraturaOk,
   stimaBustaPaga,
+  valutaScostamento,
   type EntryOrdinariaInput,
   type ModificatoreKey,
   type OrarioEsplicito,
@@ -40,6 +41,8 @@ import {
   type StimaOutput,
   type TaxContext,
   type TaxDataSource,
+  type ValutazioneScostamento,
+  type VersoScostamento,
 } from '@dexhub/worklog-engine'
 
 // ─── Public contract ──────────────────────────────────────────────────────────
@@ -89,7 +92,19 @@ export interface AddizionaliAnnuali {
 }
 
 export type StimaResolution =
-  | { ok: true; output: StimaOutput; warnings: StimaWarningCode[]; sindacatoNome: string | null; addizionali: AddizionaliAnnuali; nettoReale: number | null; scarto: number | null }
+  | {
+      ok: true
+      output: StimaOutput
+      warnings: StimaWarningCode[]
+      sindacatoNome: string | null
+      addizionali: AddizionaliAnnuali
+      nettoReale: number | null
+      scarto: number | null
+      stimaNettoSnapshot: number | null
+      scostamentoPerc: number | null
+      valutazione: ValutazioneScostamento | null
+      verso: VersoScostamento | null
+    }
   | { ok: false; reason: StimaBlocker; warnings: StimaWarningCode[] }
 
 // ─── Kind → pay percentage ────────────────────────────────────────────────────
@@ -400,6 +415,7 @@ export async function resolveStima(
     .where(and(eq(worklogNettoReale.userId, userId), eq(worklogNettoReale.mese, targetMonth)))
     .limit(1)
   const nettoReale = nettoRealeRow ? parseFloat(nettoRealeRow.netto) : null
+  const stimaNettoSnapshot = nettoRealeRow?.stimaNettoSnapshot ? parseFloat(nettoRealeRow.stimaNettoSnapshot) : null
 
   // ── 9. Tariffa oraria unica — stesso divisore in entrambe le direzioni mensile↔orario,
   // così il RAL non diverge tra i due tipi di input. Divisore = proprietà del CCNLProfile
@@ -467,9 +483,15 @@ export async function resolveStima(
   if (output.warningDetrazioniForfettizzate) warnings.push('detrazioni_stimate_ral_teorico')
   if (output.warningTrattenutaSindacaleNonDisponibile) warnings.push('trattenuta_sindacale_non_disponibile')
 
-  // Scarto stima vs reale — calcolato qui (non nella card), stesso schema r2 del motore ma
-  // fuori dal motore stesso (nettoReale non è un input di stimaBustaPaga, trasporto puro).
-  const scarto = nettoReale !== null ? Math.round((output.netto - nettoReale) * 100) / 100 : null
+  // Scarto stima vs reale — calcolato con engine puro valutaScostamento.
+  // Se è presente uno snapshot immutabile di quel periodo, confronta con lo snapshot,
+  // altrimenti con la stima corrente.
+  const comparisonEstimate = stimaNettoSnapshot ?? output.netto
+  const sc = nettoReale !== null ? valutaScostamento(comparisonEstimate, nettoReale) : null
+  const scarto = sc ? sc.delta : null
+  const scostamentoPerc = sc ? sc.scostamentoPerc : null
+  const valutazione = sc ? sc.valutazione : null
+  const verso = sc ? sc.verso : null
 
   // Fase 4B — addizionali regionali/comunali, dato PREVISIONALE/CONSOLIDATO, mai sottratto dal
   // netto qui (vedi output sopra, `computeNetto` non le vede). previousYearSnapshot è sempre
@@ -492,7 +514,19 @@ export async function resolveStima(
     source: addizionaliCalcolate.source,
   }
 
-  return { ok: true, output, warnings, sindacatoNome, addizionali, nettoReale, scarto }
+  return {
+    ok: true,
+    output,
+    warnings,
+    sindacatoNome,
+    addizionali,
+    nettoReale,
+    scarto,
+    stimaNettoSnapshot,
+    scostamentoPerc,
+    valutazione,
+    verso,
+  }
 }
 
 // ─── Modalità 1 — retribuzione fissa: componenti dichiarati o bucket legacy ──────────────

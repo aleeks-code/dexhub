@@ -225,6 +225,13 @@
       "when": 1794360000000,
       "tag": "0031_worklog_cig_massimale",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794361000000,
+      "tag": "0032_worklog_netto_reale_snapshot",
+      "breakpoints": true
     }
   ]
 }

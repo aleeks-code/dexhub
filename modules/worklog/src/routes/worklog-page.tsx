@@ -610,7 +610,7 @@ export default function WorklogPage() {
               orePomeridiane={stimaData?.stima?.orePomeridiane ?? 0}
               t={t}
             />
-            <StimaCard month={month} t={t} />
+            <StimaCard month={month} t={t} onSelectMonth={setMonth} />
           </div>
         </div>
       )}

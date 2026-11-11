@@ -424,12 +424,31 @@ export class WorklogController {
     return successResponse(data)
   }
 
+  @Get('netto-reale/history')
+  async getNettoRealeHistory(@Req() req: AuthReq, @Query('anno') anno?: string) {
+    const yearNum = anno ? parseInt(anno, 10) : new Date().getFullYear()
+    if (isNaN(yearNum) || yearNum < 2000 || yearNum > 2100) {
+      throw new BadRequestException({ code: 'VALIDATION_ERROR', message: 'Anno non valido' })
+    }
+    const data = await this.worklogService.getNettoRealeHistory(req.session.user.id, yearNum)
+    return successResponse(data)
+  }
+
   @Put('netto-reale')
   async upsertNettoReale(@Req() req: AuthReq, @Body() body: unknown) {
     const parsed = NettoRealeSchema.safeParse(body)
     if (!parsed.success) throw new BadRequestException({ code: 'VALIDATION_ERROR', details: parsed.error.issues })
     const data = await this.worklogService.upsertNettoReale(req.session.user.id, parsed.data as UpsertNettoRealeDto)
     return successResponse(data)
+  }
+
+  @Delete('netto-reale/:mese')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteNettoReale(
+    @Req() req: AuthReq,
+    @Param('mese', new ZodValidationPipe(MonthSchema)) mese: string,
+  ) {
+    await this.worklogService.deleteNettoReale(req.session.user.id, mese)
   }
 
   // ── Stima busta paga ──────────────────────────────────────────────────────

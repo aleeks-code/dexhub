@@ -10,6 +10,7 @@ import {
   inArray,
   isNotNull,
   isNull,
+  like,
   lte,
   sql,
   worklogCcnlProfile,
@@ -30,8 +31,15 @@ import {
   worklogVariabiliFlat,
 } from '@dexhub/db'
 import type { CigConfigTipo, EntryKind, VariabileFlatTipo } from '@dexhub/db'
-import { getItalianHolidays } from '@dexhub/worklog-engine'
-import { getWorkingDays, deriveMeal, todayDate } from './stima.resolver'
+import {
+  getItalianHolidays,
+  valutaScostamento,
+  calcolaMetricheConfronto,
+  type ScostamentoResult,
+  type MetricheConfronto,
+  type MeseConfrontoInput,
+} from '@dexhub/worklog-engine'
+import { getWorkingDays, deriveMeal, todayDate, resolveStima } from './stima.resolver'
 import type {
   UpsertDayDto,
   UpdateContractDto,
@@ -1072,8 +1080,7 @@ export class WorklogService {
     return this.getCometaConfig(userId)
   }
 
-  // ── Netto reale (per mese) — chiave composta (userId, mese), upsert, mirror config
-  // single-row ma con target composito (stesso pattern moduleKvStore) ─────────────
+  // ── Netto reale (per mese) — chiave composta (userId, mese), snapshot immutabile ──
 
   async getNettoReale(userId: string, mese: string) {
     const [row] = await this.db
@@ -1084,28 +1091,164 @@ export class WorklogService {
 
     if (!row) return null
 
+    const netto = parseFloat(row.netto)
+    const stimaNettoSnapshot = row.stimaNettoSnapshot ? parseFloat(row.stimaNettoSnapshot) : null
+
     return {
       mese: row.mese,
-      netto: parseFloat(row.netto),
+      netto,
+      stimaNettoSnapshot,
+      stimaSnapshot: row.stimaSnapshot,
+      scostamento: stimaNettoSnapshot !== null ? valutaScostamento(stimaNettoSnapshot, netto) : null,
+      updatedAt: row.updatedAt?.toISOString() ?? null,
     }
   }
 
   async upsertNettoReale(userId: string, dto: UpsertNettoRealeDto) {
-    const values = {
-      userId,
-      mese: dto.mese,
-      netto: String(dto.netto),
+    const [existing] = await this.db
+      .select()
+      .from(worklogNettoReale)
+      .where(and(eq(worklogNettoReale.userId, userId), eq(worklogNettoReale.mese, dto.mese)))
+      .limit(1)
+
+    if (!existing) {
+      // Primo inserimento: calcola la stima del periodo e congela lo snapshot
+      let stimaNettoSnapshot: string | null = null
+      let stimaSnapshot: any = null
+      try {
+        const stimaRes = await resolveStima(userId, dto.mese)
+        if (stimaRes.ok) {
+          stimaNettoSnapshot = String(stimaRes.output.netto)
+          stimaSnapshot = {
+            engineVersion: '1.0',
+            mese: dto.mese,
+            calculatedAt: new Date().toISOString(),
+            netto: stimaRes.output.netto,
+            lordo: stimaRes.output.lordo,
+            inps: stimaRes.output.contributiInps,
+            imponibile: stimaRes.output.imponibileIrpefMensile,
+            irpef: stimaRes.output.irpefNettaMensile,
+            trattenutaSindacale: stimaRes.output.trattenutaSindacale,
+            trattenutaMensa: stimaRes.output.trattenutaMensa,
+            trattenutaAddizionali: stimaRes.output.trattenutaAddizionali,
+          }
+        }
+      } catch {
+        // Fallback resiliente: se la stima non è calcolabile, salva il netto reale
+      }
+
+      await this.db.insert(worklogNettoReale).values({
+        userId,
+        mese: dto.mese,
+        netto: String(dto.netto),
+        stimaNettoSnapshot,
+        stimaSnapshot,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+    } else {
+      // Modifica: lo snapshot immutabile non viene sovrascritto
+      const updateSet: Record<string, unknown> = {
+        netto: String(dto.netto),
+        updatedAt: new Date(),
+      }
+      if (!existing.stimaNettoSnapshot) {
+        try {
+          const stimaRes = await resolveStima(userId, dto.mese)
+          if (stimaRes.ok) {
+            updateSet['stimaNettoSnapshot'] = String(stimaRes.output.netto)
+            updateSet['stimaSnapshot'] = {
+              engineVersion: '1.0',
+              mese: dto.mese,
+              calculatedAt: new Date().toISOString(),
+              netto: stimaRes.output.netto,
+              lordo: stimaRes.output.lordo,
+              inps: stimaRes.output.contributiInps,
+              imponibile: stimaRes.output.imponibileIrpefMensile,
+              irpef: stimaRes.output.irpefNettaMensile,
+              trattenutaSindacale: stimaRes.output.trattenutaSindacale,
+              trattenutaMensa: stimaRes.output.trattenutaMensa,
+              trattenutaAddizionali: stimaRes.output.trattenutaAddizionali,
+            }
+          }
+        } catch {
+          // ignora
+        }
+      }
+
+      await this.db
+        .update(worklogNettoReale)
+        .set(updateSet)
+        .where(and(eq(worklogNettoReale.userId, userId), eq(worklogNettoReale.mese, dto.mese)))
     }
 
+    return this.getNettoReale(userId, dto.mese)
+  }
+
+  async deleteNettoReale(userId: string, mese: string): Promise<boolean> {
     await this.db
-      .insert(worklogNettoReale)
-      .values(values)
-      .onConflictDoUpdate({
-        target: [worklogNettoReale.userId, worklogNettoReale.mese],
-        set: { netto: values.netto, updatedAt: new Date() },
+      .delete(worklogNettoReale)
+      .where(and(eq(worklogNettoReale.userId, userId), eq(worklogNettoReale.mese, mese)))
+    return true
+  }
+
+  async getNettoRealeHistory(userId: string, anno: number) {
+    const prefix = `${anno}-`
+    const rows = await this.db
+      .select()
+      .from(worklogNettoReale)
+      .where(and(eq(worklogNettoReale.userId, userId), like(worklogNettoReale.mese, `${prefix}%`)))
+      .orderBy(asc(worklogNettoReale.mese))
+
+    const rowsMap = new Map(rows.map((r) => [r.mese, r]))
+
+    const mesi: Array<{
+      mese: string
+      nettoReale: number | null
+      nettoStimato: number | null
+      stimaDisponibile: boolean
+      scostamento: ScostamentoResult | null
+      updatedAt: string | null
+    }> = []
+
+    const inputsForMetrics: MeseConfrontoInput[] = []
+
+    for (let m = 1; m <= 12; m++) {
+      const monthStr = `${anno}-${String(m).padStart(2, '0')}`
+      const row = rowsMap.get(monthStr)
+
+      const nettoReale = row ? parseFloat(row.netto) : null
+      const nettoStimato = row?.stimaNettoSnapshot ? parseFloat(row.stimaNettoSnapshot) : null
+      const stimaDisponibile = nettoStimato !== null
+
+      const scostamento =
+        nettoStimato !== null && nettoReale !== null
+          ? valutaScostamento(nettoStimato, nettoReale)
+          : null
+
+      mesi.push({
+        mese: monthStr,
+        nettoReale,
+        nettoStimato,
+        stimaDisponibile,
+        scostamento,
+        updatedAt: row?.updatedAt?.toISOString() ?? null,
       })
 
-    return this.getNettoReale(userId, dto.mese)
+      inputsForMetrics.push({
+        mese: monthStr,
+        nettoStimato,
+        nettoReale,
+      })
+    }
+
+    const metriche = calcolaMetricheConfronto(inputsForMetrics)
+
+    return {
+      anno,
+      mesi,
+      metriche,
+    }
   }
 
   // ── Export ───────────────────────────────────────────────────────────────────

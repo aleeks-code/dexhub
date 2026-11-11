@@ -1,16 +1,30 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertTriangle, ChevronDown, ChevronUp, Info, TrendingDown } from 'lucide-react'
-import { useStima } from '../services/worklog-api'
+import {
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Info,
+  TrendingDown,
+  ChevronRight,
+  Pencil,
+  Trash2,
+  X,
+  Plus,
+} from 'lucide-react'
+import { Button } from '@dexhub/ui'
+import { useStima, useUpdateNettoReale, useDeleteNettoReale } from '../services/worklog-api'
 import type { StimaBlocker, StimaWarningCode } from '../services/worklog-api'
 import type { WorklogTranslations } from '../i18n'
 import { blockerMessage } from '../lib/blockers'
 import { ConguaglioSection } from './conguaglio-section'
+import { StoricoBustePagaModal } from './storico-buste-paga-modal'
 
 interface Props {
   month: string // 'YYYY-MM'
   t: WorklogTranslations
+  onSelectMonth?: (month: string) => void
 }
 
 // ─── Currency formatting ──────────────────────────────────────────────────────
@@ -105,15 +119,30 @@ function InfoNote({ text }: { text: string }) {
 
 const DETAILS_STORAGE_KEY = 'dexhub-stima-details-open'
 
-export function StimaCard({ month, t }: Props) {
+export function StimaCard({ month, t, onSelectMonth }: Props) {
   const { data, isLoading } = useStima(month)
+  const updateNetto = useUpdateNettoReale()
+  const deleteNetto = useDeleteNettoReale()
   const locale = t.locale
 
   // Preferenza di sola UI (no DB) — quale livello di dettaglio l'utente ha scelto l'ultima volta.
   const [detailsOpen, setDetailsOpen] = useState(false)
+  const [historyModalOpen, setHistoryModalOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [inputMonth, setInputMonth] = useState(month)
+  const [inputNetto, setInputNetto] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [saving, setSaving] = useState(false)
+
   useEffect(() => {
     setDetailsOpen(localStorage.getItem(DETAILS_STORAGE_KEY) === 'true')
   }, [])
+
+  useEffect(() => {
+    setInputMonth(month)
+    setIsEditing(false)
+    setConfirmDelete(false)
+  }, [month])
 
   function toggleDetails() {
     setDetailsOpen((v) => {
@@ -121,6 +150,37 @@ export function StimaCard({ month, t }: Props) {
       localStorage.setItem(DETAILS_STORAGE_KEY, String(next))
       return next
     })
+  }
+
+  function startEditing() {
+    setInputMonth(month)
+    const currentNetto = data && 'nettoReale' in data && data.nettoReale != null ? String(data.nettoReale) : ''
+    setInputNetto(currentNetto)
+    setIsEditing(true)
+    setConfirmDelete(false)
+  }
+
+  async function handleSave() {
+    const val = parseFloat(inputNetto)
+    if (isNaN(val) || val < 0) return
+    setSaving(true)
+    try {
+      await updateNetto.mutateAsync({ mese: inputMonth, netto: val })
+      setIsEditing(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete() {
+    setSaving(true)
+    try {
+      await deleteNetto.mutateAsync(month)
+      setConfirmDelete(false)
+      setIsEditing(false)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -184,13 +244,239 @@ export function StimaCard({ month, t }: Props) {
               dividerAbove
               prominent
             />
-            {data.nettoReale !== null && data.scarto !== null && (
-              <ChainRow
-                label={t.stima.nettoReale}
-                value={`${formatEur(data.nettoReale, locale)} · ${t.stima.scarto} ${formatEur(data.scarto, locale)}`}
-                valueClass="text-text-muted"
-              />
-            )}
+            {/* ── Sezione Netto Reale & Confronto Busta Paga ── */}
+            <div className="mt-3 rounded-xl border border-border bg-surface p-3.5 space-y-3">
+              {isEditing ? (
+                /* ── Form Inline di Inserimento/Modifica ── */
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-text">
+                      {data.nettoReale !== null ? t.nettoRealeConfig.edit : t.nettoRealeConfig.compareCta}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="text-text-muted hover:text-text p-1 cursor-pointer"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-text-muted">
+                    {t.nettoRealeConfig.enterAmountPrompt}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-medium uppercase tracking-wider text-text-muted">
+                        {t.nettoRealeConfig.competencePeriod}
+                      </label>
+                      <input
+                        type="month"
+                        value={inputMonth}
+                        onChange={(e) => setInputMonth(e.target.value)}
+                        className="w-full rounded-lg border border-border bg-surface-raised px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-medium uppercase tracking-wider text-text-muted">
+                        {t.nettoRealeConfig.netto} (€)
+                      </label>
+                      <input
+                        type="number"
+                        step={0.01}
+                        min={0}
+                        placeholder="0.00"
+                        value={inputNetto}
+                        onChange={(e) => setInputNetto(e.target.value)}
+                        className="w-full rounded-lg border border-border bg-surface-raised px-2.5 py-1.5 text-xs text-text focus:border-primary focus:outline-none"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-border">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsEditing(false)}
+                      disabled={saving}
+                      className="h-7 text-xs"
+                    >
+                      {t.nettoRealeConfig.cancel}
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleSave}
+                      disabled={saving || inputNetto === ''}
+                      className="h-7 text-xs"
+                    >
+                      {saving ? t.nettoRealeConfig.saving : t.nettoRealeConfig.save}
+                    </Button>
+                  </div>
+                </div>
+              ) : data.nettoReale !== null && data.scarto !== null ? (
+                /* ── Stato Confrontato ── */
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                      {t.nettoRealeConfig.title}
+                    </span>
+                    <span
+                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold border ${
+                        data.valutazione === 'excellent'
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          : data.valutazione === 'moderate'
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                            : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                      }`}
+                    >
+                      {data.valutazione === 'excellent'
+                        ? t.nettoRealeConfig.excellent
+                        : data.valutazione === 'moderate'
+                          ? t.nettoRealeConfig.moderate
+                          : t.nettoRealeConfig.significant}
+                    </span>
+                  </div>
+
+                  {/* Grid 3 Colonne: Netto Stimato, Netto Reale, Scostamento */}
+                  <div className="grid grid-cols-3 gap-2 border-y border-border py-2 text-center">
+                    <div>
+                      <span className="block text-[10px] text-text-muted">{t.nettoRealeConfig.estimate}</span>
+                      <span className="text-xs font-semibold tabular-nums text-text">
+                        {formatEur(data.stimaNettoSnapshot ?? data.stima.netto, locale)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] text-text-muted">{t.nettoRealeConfig.actual}</span>
+                      <span className="text-xs font-bold tabular-nums text-text">
+                        {formatEur(data.nettoReale, locale)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] text-text-muted">{t.nettoRealeConfig.gap}</span>
+                      <span
+                        className={`text-xs font-bold tabular-nums ${
+                          data.scarto > 0 ? 'text-warning' : data.scarto < 0 ? 'text-primary' : 'text-emerald-400'
+                        }`}
+                      >
+                        {data.scarto > 0 ? `+${formatEur(data.scarto, locale)}` : formatEur(data.scarto, locale)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Spiegazione dello scostamento */}
+                  <div className="flex items-baseline justify-between text-xs text-text-muted">
+                    <span className="text-[11px] leading-relaxed">
+                      {data.verso === 'overestimate'
+                        ? t.nettoRealeConfig.overestimatedDesc
+                            .replace('{amount}', formatEur(Math.abs(data.scarto), locale))
+                            .replace('{perc}', String(data.scostamentoPerc ?? 0))
+                        : data.verso === 'underestimate'
+                          ? t.nettoRealeConfig.underestimatedDesc
+                              .replace('{amount}', formatEur(Math.abs(data.scarto), locale))
+                              .replace('{perc}', String(data.scostamentoPerc ?? 0))
+                          : t.nettoRealeConfig.exactDesc}
+                    </span>
+                    {data.scostamentoPerc !== null && (
+                      <span className="ml-2 font-mono font-bold text-text tabular-nums shrink-0">
+                        {data.scostamentoPerc.toFixed(2)}%
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Azioni: Modifica, Elimina, Storico */}
+                  <div className="flex items-center justify-between pt-1">
+                    {confirmDelete ? (
+                      <div className="inline-flex items-center gap-1.5 bg-error/10 border border-error/30 rounded-lg px-2 py-0.5">
+                        <span className="text-[10px] font-bold text-error">Eliminare?</span>
+                        <button
+                          type="button"
+                          onClick={handleDelete}
+                          disabled={saving}
+                          className="text-[10px] font-bold text-error underline hover:opacity-80 cursor-pointer"
+                        >
+                          Sì
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDelete(false)}
+                          className="text-[10px] text-text-muted hover:text-text cursor-pointer"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={startEditing}
+                          className="text-[11px] font-medium text-text-muted hover:text-text flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Pencil size={11} />
+                          <span>{t.nettoRealeConfig.edit}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDelete(true)}
+                          className="text-[11px] font-medium text-text-muted hover:text-error flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Trash2 size={11} />
+                          <span>{t.nettoRealeConfig.delete}</span>
+                        </button>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setHistoryModalOpen(true)}
+                      className="text-[11px] font-medium text-primary hover:text-primary-hover flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <span>{t.nettoRealeConfig.historyCta}</span>
+                      <ChevronRight size={12} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* ── Stato Non Inserito ── */
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                      {t.nettoRealeConfig.title}
+                    </span>
+                    <span className="inline-flex items-center rounded-md border border-border bg-surface-raised px-2 py-0.5 text-[10px] font-medium text-text-muted">
+                      {t.nettoRealeConfig.toVerify}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-medium text-text">{t.nettoRealeConfig.notYetInserted}</p>
+                      <p className="text-[11px] text-text-muted opacity-80">{t.nettoRealeConfig.enterAmountPrompt}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={startEditing}
+                      className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                    >
+                      <Plus size={13} />
+                      <span>{t.nettoRealeConfig.compareCta}</span>
+                    </Button>
+
+                    <button
+                      type="button"
+                      onClick={() => setHistoryModalOpen(true)}
+                      className="text-[11px] font-medium text-text-muted hover:text-primary flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <span>{t.nettoRealeConfig.historyCta}</span>
+                      <ChevronRight size={12} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <button
@@ -296,6 +582,15 @@ export function StimaCard({ month, t }: Props) {
           <span>{t.stima.disclaimer}</span>
         </div>
       )}
+
+      {/* ── Storico Annuale Modal ── */}
+      <StoricoBustePagaModal
+        isOpen={historyModalOpen}
+        onClose={() => setHistoryModalOpen(false)}
+        initialYear={parseInt(month.slice(0, 4), 10) || new Date().getFullYear()}
+        t={t}
+        onSelectMonth={onSelectMonth}
+      />
     </div>
   )
 }

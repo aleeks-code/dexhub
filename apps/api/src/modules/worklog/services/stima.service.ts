@@ -1,10 +1,22 @@
 import { Injectable } from '@nestjs/common'
-import type { StimaOutput } from '@dexhub/worklog-engine'
+import type { StimaOutput, ValutazioneScostamento, VersoScostamento } from '@dexhub/worklog-engine'
 import { resolveStima, type AddizionaliAnnuali, type StimaBlocker, type StimaWarningCode } from './stima.resolver'
 import { resolveConguaglioRaw, type ConguaglioRawOutput, type ConguaglioStatus } from './conguaglio.resolver'
 
 export type StimaResponseData =
-  | { stima: StimaOutput; stimaBlocker: null; stimaWarnings: StimaWarningCode[]; sindacatoNome: string | null; addizionali: AddizionaliAnnuali; nettoReale: number | null; scarto: number | null }
+  | {
+      stima: StimaOutput
+      stimaBlocker: null
+      stimaWarnings: StimaWarningCode[]
+      sindacatoNome: string | null
+      addizionali: AddizionaliAnnuali
+      nettoReale: number | null
+      scarto: number | null
+      stimaNettoSnapshot: number | null
+      scostamentoPerc: number | null
+      valutazione: ValutazioneScostamento | null
+      verso: VersoScostamento | null
+    }
   | { stima: null; stimaBlocker: StimaBlocker; stimaWarnings: StimaWarningCode[] }
 
 export type ConguaglioRawResponseData =
@@ -33,6 +45,10 @@ export class StimaService {
       addizionali: resolution.addizionali,
       nettoReale: resolution.nettoReale,
       scarto: resolution.scarto,
+      stimaNettoSnapshot: resolution.stimaNettoSnapshot,
+      scostamentoPerc: resolution.scostamentoPerc,
+      valutazione: resolution.valutazione,
+      verso: resolution.verso,
     }
   }
 

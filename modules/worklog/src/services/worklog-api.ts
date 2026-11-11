@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { ScaglioneFiscale } from '@dexhub/worklog-engine'
+import type {
+  ScaglioneFiscale,
+  ValutazioneScostamento,
+  VersoScostamento,
+  ScostamentoResult,
+  MetricheConfronto,
+} from '@dexhub/worklog-engine'
 
 const API = process.env['NEXT_PUBLIC_API_URL'] ?? ''
 const BASE = `${API}/api/v1/worklog`
@@ -281,8 +287,27 @@ export interface AddizionaliConfig {
 // ─── Netto reale (per mese, chiave composta userId+mese) — upsert per-mese ─────
 
 export interface NettoRealeConfig {
-  mese: string  // 'YYYY-MM'
+  mese: string // 'YYYY-MM'
   netto: number
+  stimaNettoSnapshot?: number | null
+  stimaSnapshot?: unknown
+  scostamento?: ScostamentoResult | null
+  updatedAt?: string | null
+}
+
+export interface NettoRealeHistoryItem {
+  mese: string
+  nettoReale: number | null
+  nettoStimato: number | null
+  stimaDisponibile: boolean
+  scostamento: ScostamentoResult | null
+  updatedAt: string | null
+}
+
+export interface NettoRealeHistoryResponse {
+  anno: number
+  mesi: NettoRealeHistoryItem[]
+  metriche: MetricheConfronto
 }
 
 // ─── Stima ───────────────────────────────────────────────────────────────────
@@ -332,7 +357,18 @@ export interface StimaOutput {
 }
 
 export type StimaResponse =
-  | { stima: StimaOutput; stimaBlocker: null; stimaWarnings: StimaWarningCode[]; sindacatoNome: string | null; nettoReale: number | null; scarto: number | null }
+  | {
+      stima: StimaOutput
+      stimaBlocker: null
+      stimaWarnings: StimaWarningCode[]
+      sindacatoNome: string | null
+      nettoReale: number | null
+      scarto: number | null
+      stimaNettoSnapshot: number | null
+      scostamentoPerc: number | null
+      valutazione: ValutazioneScostamento | null
+      verso: VersoScostamento | null
+    }
   | { stima: null; stimaBlocker: StimaBlocker; stimaWarnings: StimaWarningCode[] }
 
 // ─── Conguaglio (Fase 3 Passo 2) ──────────────────────────────────────────────
@@ -483,8 +519,14 @@ export const worklogApi = {
   getNettoReale: (mese: string) =>
     request<NettoRealeConfig | null>(`/netto-reale?mese=${mese}`),
 
-  upsertNettoReale: (body: NettoRealeConfig) =>
+  getNettoRealeHistory: (anno: number) =>
+    request<NettoRealeHistoryResponse>(`/netto-reale/history?anno=${anno}`),
+
+  upsertNettoReale: (body: { mese: string; netto: number }) =>
     request<NettoRealeConfig>('/netto-reale', { method: 'PUT', body: JSON.stringify(body) }),
+
+  deleteNettoReale: (mese: string) =>
+    request<void>(`/netto-reale/${mese}`, { method: 'DELETE' }),
 }
 
 // ─── Query Keys ─────────────────────────────────────────────────────────────
@@ -510,6 +552,7 @@ export const worklogKeys = {
   cometaConfig: () => ['worklog', 'cometa-config'] as const,
   addizionaliConfig: () => ['worklog', 'addizionali-config'] as const,
   nettoReale: (mese: string) => ['worklog', 'netto-reale', mese] as const,
+  nettoRealeHistory: (anno: number) => ['worklog', 'netto-reale', 'history', anno] as const,
 }
 
 // ─── Hooks ──────────────────────────────────────────────────────────────────
@@ -862,12 +905,33 @@ export function useNettoReale(mese: string) {
   })
 }
 
+export function useNettoRealeHistory(anno: number) {
+  return useQuery({
+    queryKey: worklogKeys.nettoRealeHistory(anno),
+    queryFn: () => worklogApi.getNettoRealeHistory(anno),
+    staleTime: 5 * 60_000,
+  })
+}
+
 export function useUpdateNettoReale() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: NettoRealeConfig) => worklogApi.upsertNettoReale(body),
+    mutationFn: (body: { mese: string; netto: number }) => worklogApi.upsertNettoReale(body),
     onSuccess: (_, variables) => {
       void qc.invalidateQueries({ queryKey: worklogKeys.nettoReale(variables.mese) })
+      void qc.invalidateQueries({ queryKey: ['worklog', 'netto-reale', 'history'] })
+      void qc.invalidateQueries({ queryKey: ['worklog', 'stima'] })
+    },
+  })
+}
+
+export function useDeleteNettoReale() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (mese: string) => worklogApi.deleteNettoReale(mese),
+    onSuccess: (_, mese) => {
+      void qc.invalidateQueries({ queryKey: worklogKeys.nettoReale(mese) })
+      void qc.invalidateQueries({ queryKey: ['worklog', 'netto-reale', 'history'] })
       void qc.invalidateQueries({ queryKey: ['worklog', 'stima'] })
     },
   })
