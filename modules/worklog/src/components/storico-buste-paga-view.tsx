@@ -314,7 +314,7 @@ export function StoricoBustePagaView({ initialYear, t, onSelectMonth }: Props) {
                     ) : item.nettoReale !== null && item.nettoReale > 0 ? (
                       <span className="text-text-muted text-[11px]">—</span>
                     ) : (
-                      <span className="inline-flex items-center rounded-md border border-border bg-surface-raised/60 px-2 py-0.5 text-[10px] font-medium text-text-muted">
+                      <span className="inline-flex items-center rounded-md border border-border bg-surface-raised/60 px-2 py-0.5 text-[10px] font-medium text-text-muted whitespace-nowrap">
                         {t.nettoRealeConfig.uncommunicated}
                       </span>
                     )}

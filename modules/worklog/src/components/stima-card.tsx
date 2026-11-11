@@ -388,7 +388,7 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                   </div>
 
                   {/* Azioni: Modifica, Elimina, Storico */}
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center justify-between pt-1 border-t border-border/50">
                     {confirmDelete ? (
                       <div className="inline-flex items-center gap-1.5 bg-error/10 border border-error/30 rounded-lg px-2 py-0.5">
                         <span className="text-[10px] font-bold text-error">Eliminare?</span>
@@ -413,7 +413,7 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                         <button
                           type="button"
                           onClick={startEditing}
-                          className="text-[11px] font-medium text-text-muted hover:text-text flex items-center gap-1 cursor-pointer transition-colors"
+                          className="text-[11px] font-medium text-text-muted hover:text-text flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap"
                         >
                           <Pencil size={11} />
                           <span>{t.nettoRealeConfig.edit}</span>
@@ -421,7 +421,7 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                         <button
                           type="button"
                           onClick={() => setConfirmDelete(true)}
-                          className="text-[11px] font-medium text-text-muted hover:text-error flex items-center gap-1 cursor-pointer transition-colors"
+                          className="text-[11px] font-medium text-text-muted hover:text-error flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap"
                         >
                           <Trash2 size={11} />
                           <span>{t.nettoRealeConfig.delete}</span>
@@ -432,7 +432,7 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                     <button
                       type="button"
                       onClick={() => setHistoryModalOpen(true)}
-                      className="text-[11px] font-medium text-primary hover:text-primary-hover flex items-center gap-1 cursor-pointer transition-colors"
+                      className="text-[11px] font-medium text-primary hover:text-primary-hover flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap"
                     >
                       <span>{t.nettoRealeConfig.historyCta}</span>
                       <ChevronRight size={12} />
@@ -441,42 +441,42 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                 </div>
               ) : (
                 /* ── Stato Non Inserito / Netto Non Ancora Comunicato ── */
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
                       {t.nettoRealeConfig.title}
                     </span>
-                    <span className="inline-flex items-center rounded-md border border-border bg-surface-raised px-2 py-0.5 text-[10px] font-medium text-text-muted">
-                      {t.nettoRealeConfig.uncommunicated}
+                    <span className="inline-flex items-center rounded-md border border-border bg-surface-raised px-2 py-0.5 text-[10px] font-medium text-text-muted whitespace-nowrap">
+                      {t.nettoRealeConfig.toVerify}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <p className="text-xs font-medium text-text">{t.nettoRealeConfig.uncommunicated}</p>
-                      <p className="text-[11px] text-text-muted opacity-80">{t.nettoRealeConfig.enterAmountPrompt}</p>
-                    </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-text">{t.nettoRealeConfig.uncommunicated}</p>
+                    <p className="text-[11px] text-text-muted leading-relaxed">{t.nettoRealeConfig.enterAmountPrompt}</p>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="space-y-2 pt-1">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={startEditing}
-                      className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                      className="w-full h-8 text-xs gap-1.5 border-primary/40 text-primary hover:bg-primary/10 font-medium"
                     >
                       <Plus size={13} />
                       <span>{t.nettoRealeConfig.compareCta}</span>
                     </Button>
 
-                    <button
-                      type="button"
-                      onClick={() => setHistoryModalOpen(true)}
-                      className="text-[11px] font-medium text-text-muted hover:text-primary flex items-center gap-1 cursor-pointer transition-colors"
-                    >
-                      <span>{t.nettoRealeConfig.historyCta}</span>
-                      <ChevronRight size={12} />
-                    </button>
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setHistoryModalOpen(true)}
+                        className="text-[11px] font-medium text-text-muted hover:text-primary flex items-center gap-1 cursor-pointer transition-colors whitespace-nowrap"
+                      >
+                        <span>{t.nettoRealeConfig.historyCta}</span>
+                        <ChevronRight size={12} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
