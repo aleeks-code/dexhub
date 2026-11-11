@@ -12,13 +12,26 @@ import {
   desc,
   eq,
   getClient,
+  inArray,
   inviteRequests,
   isNull,
   sql,
   type InviteRequest,
+  users,
+  userInvites,
 } from '@dexhub/db'
 import { AdminUsersService } from '../admin/admin-users.service'
 import { MailService } from '../mail/mail.service'
+
+export interface EnrichedInviteRequest extends InviteRequest {
+  registered: boolean
+  userName: string | null
+  registeredAt: Date | null
+  lastLoginAt: Date | null
+  inviteExpiresAt: Date | null
+  inviteExpired: boolean
+  inviteUsed: boolean
+}
 
 @Injectable()
 export class InviteRequestsService implements OnModuleInit {
@@ -43,13 +56,40 @@ export class InviteRequestsService implements OnModuleInit {
     return getClient()
   }
 
-  private getFrontendUrl(): string {
-    const base =
-      process.env['FRONTEND_URL']?.trim() ||
-      (process.env['DOMAIN'] ? `https://${process.env['DOMAIN'].trim()}` : null) ||
-      process.env['WEBAUTHN_ORIGIN']?.trim() ||
-      'https://dexhub.it'
-    return base.replace(/\/$/, '')
+  private getFrontendUrl(preferredOrigin?: string): string {
+    const isProd = process.env['NODE_ENV'] === 'production'
+
+    if (preferredOrigin) {
+      const clean = preferredOrigin.trim().replace(/\/$/, '')
+      if (!isProd || (!clean.includes('localhost') && !clean.includes('127.0.0.1'))) {
+        return clean.startsWith('http') ? clean : `https://${clean}`
+      }
+    }
+
+    const candidates = [
+      process.env['FRONTEND_URL'],
+      process.env['DOMAIN']
+        ? process.env['DOMAIN'].startsWith('http')
+          ? process.env['DOMAIN']
+          : `https://${process.env['DOMAIN']}`
+        : null,
+      process.env['WEBAUTHN_ORIGIN'],
+      process.env['BETTER_AUTH_URL'],
+    ]
+
+    for (const cand of candidates) {
+      if (!cand) continue
+      const trimmed = cand.trim().replace(/\/$/, '')
+      if (isProd && (trimmed.includes('localhost') || trimmed.includes('127.0.0.1'))) {
+        continue
+      }
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        return trimmed
+      }
+      return `https://${trimmed}`
+    }
+
+    return isProd ? 'https://dexhub.it' : 'http://localhost:3000'
   }
 
   async create(email: string, phone?: string): Promise<void> {
@@ -98,8 +138,75 @@ export class InviteRequestsService implements OnModuleInit {
       })
   }
 
-  async list(): Promise<InviteRequest[]> {
-    return this.db.select().from(inviteRequests).orderBy(desc(inviteRequests.createdAt))
+  async list(): Promise<EnrichedInviteRequest[]> {
+    const requests = await this.db
+      .select()
+      .from(inviteRequests)
+      .orderBy(desc(inviteRequests.createdAt))
+
+    if (requests.length === 0) return []
+
+    const emails = Array.from(new Set(requests.map((r) => r.email.toLowerCase().trim())))
+
+    // Cerca utenti già registrati
+    const registeredUsers = await this.db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        createdAt: users.createdAt,
+        lastLoginAt: users.lastLoginAt,
+      })
+      .from(users)
+      .where(inArray(users.email, emails))
+
+    const userMap = new Map(registeredUsers.map((u) => [u.email.toLowerCase().trim(), u]))
+
+    // Cerca gli ultimi inviti emessi
+    const recentInvites = await this.db
+      .select({
+        email: userInvites.email,
+        expiresAt: userInvites.expiresAt,
+        usedAt: userInvites.usedAt,
+        createdAt: userInvites.createdAt,
+      })
+      .from(userInvites)
+      .where(inArray(userInvites.email, emails))
+      .orderBy(desc(userInvites.createdAt))
+
+    const inviteMap = new Map<string, (typeof recentInvites)[0]>()
+    for (const inv of recentInvites) {
+      if (inv.email) {
+        const key = inv.email.toLowerCase().trim()
+        if (!inviteMap.has(key)) {
+          inviteMap.set(key, inv)
+        }
+      }
+    }
+
+    const now = new Date()
+
+    return requests.map((req) => {
+      const emailKey = req.email.toLowerCase().trim()
+      const registeredUser = userMap.get(emailKey)
+      const lastInvite = inviteMap.get(emailKey)
+
+      const isRegistered = !!registeredUser
+      const inviteExpiresAt = lastInvite?.expiresAt ?? null
+      const isExpired = inviteExpiresAt ? inviteExpiresAt < now : false
+      const inviteUsed = !!lastInvite?.usedAt || isRegistered
+
+      return {
+        ...req,
+        registered: isRegistered,
+        userName: registeredUser?.name ?? null,
+        registeredAt: registeredUser?.createdAt ?? null,
+        lastLoginAt: registeredUser?.lastLoginAt ?? null,
+        inviteExpiresAt,
+        inviteExpired: isExpired,
+        inviteUsed,
+      }
+    })
   }
 
   async updateStatus(id: string, status: 'pending' | 'invited' | 'dismissed'): Promise<void> {
@@ -107,6 +214,93 @@ export class InviteRequestsService implements OnModuleInit {
       .update(inviteRequests)
       .set({ status })
       .where(eq(inviteRequests.id, id))
+  }
+
+  /**
+   * Crea un invito diretto dall'amministrazione (senza passare dalla landing)
+   */
+  async createDirectInvite(
+    email: string,
+    phone: string | undefined,
+    sendEmail: boolean,
+    actorId: string,
+    preferredOrigin?: string,
+  ): Promise<{ id: string; token: string; inviteUrl: string; emailSent: boolean; emailError?: string }> {
+    const cleanEmail = email.toLowerCase().trim()
+    const cleanPhone = phone?.trim() || null
+
+    const existingUser = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, cleanEmail))
+      .limit(1)
+
+    if (existingUser.length > 0) {
+      throw new ConflictException(`L'utente ${cleanEmail} ha già un account registrato su DexHub`)
+    }
+
+    // Controlla se esiste già un record in invite_requests
+    const existingReq = await this.db
+      .select()
+      .from(inviteRequests)
+      .where(eq(inviteRequests.email, cleanEmail))
+      .limit(1)
+      .then((r) => r[0])
+
+    let requestId: string
+
+    if (existingReq) {
+      requestId = existingReq.id
+      await this.db
+        .update(inviteRequests)
+        .set({ status: 'invited', phone: cleanPhone || existingReq.phone, deletedAt: null })
+        .where(eq(inviteRequests.id, requestId))
+    } else {
+      const inserted = await this.db
+        .insert(inviteRequests)
+        .values({
+          email: cleanEmail,
+          phone: cleanPhone,
+          status: 'invited',
+        })
+        .returning({ id: inviteRequests.id })
+      requestId = inserted[0]!.id
+    }
+
+    const { token } = await this.adminUsers.inviteUser(cleanEmail, actorId)
+
+    const frontendUrl = this.getFrontendUrl(preferredOrigin)
+    const inviteUrl = `${frontendUrl}/invite/${token}`
+
+    let emailSent = false
+    let emailError: string | undefined
+
+    if (sendEmail) {
+      const mailResult = await this.mailService.sendInviteAccepted({
+        to: cleanEmail,
+        inviteUrl,
+      })
+      emailSent = mailResult.success
+      emailError = mailResult.error
+    }
+
+    await this.db.insert(auditLogs).values({
+      category: 'ADMIN',
+      action: 'invite_request.direct_created',
+      severity: 'info',
+      outcome: 'success',
+      actorId,
+      actorType: 'user',
+      metadata: { id: requestId, email: cleanEmail, emailSent },
+    })
+
+    return {
+      id: requestId,
+      token,
+      inviteUrl,
+      emailSent,
+      emailError,
+    }
   }
 
   /**
@@ -118,6 +312,7 @@ export class InviteRequestsService implements OnModuleInit {
   async accept(
     id: string,
     actorId: string,
+    preferredOrigin?: string,
   ): Promise<{ token: string; inviteUrl: string; emailSent: boolean; emailError?: string }> {
     const request = await this.db
       .select()
@@ -130,6 +325,17 @@ export class InviteRequestsService implements OnModuleInit {
       throw new NotFoundException('Richiesta di invito non trovata')
     }
 
+    // Controlla se l'utente esiste già
+    const existing = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, request.email.toLowerCase().trim()))
+      .limit(1)
+
+    if (existing.length > 0) {
+      throw new ConflictException(`L'utente ${request.email} ha già un account registrato su DexHub`)
+    }
+
     // Genera l'invito nel database tramite AdminUsersService
     const { token } = await this.adminUsers.inviteUser(request.email, actorId)
 
@@ -139,10 +345,82 @@ export class InviteRequestsService implements OnModuleInit {
       .set({ status: 'invited' })
       .where(eq(inviteRequests.id, id))
 
-    const frontendUrl = this.getFrontendUrl()
+    const frontendUrl = this.getFrontendUrl(preferredOrigin)
     const inviteUrl = `${frontendUrl}/invite/${token}`
 
     // Invia l'email all'utente
+    const mailResult = await this.mailService.sendInviteAccepted({
+      to: request.email,
+      inviteUrl,
+    })
+
+    await this.db.insert(auditLogs).values({
+      category: 'ADMIN',
+      action: 'invite_request.accepted',
+      severity: 'info',
+      outcome: 'success',
+      actorId,
+      actorType: 'user',
+      metadata: { id, email: request.email, emailSent: mailResult.success },
+    })
+
+    return {
+      token,
+      inviteUrl,
+      emailSent: mailResult.success,
+      emailError: mailResult.error,
+    }
+  }
+
+  /**
+   * Reinvia un invito (generando un nuovo token 48h e rispedendo l'email)
+   */
+  async resend(
+    id: string,
+    actorId: string,
+    preferredOrigin?: string,
+  ): Promise<{ token: string; inviteUrl: string; emailSent: boolean; emailError?: string }> {
+    const request = await this.db
+      .select()
+      .from(inviteRequests)
+      .where(eq(inviteRequests.id, id))
+      .limit(1)
+      .then((r) => r[0])
+
+    if (!request) {
+      throw new NotFoundException('Richiesta di invito non trovata')
+    }
+
+    const existing = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, request.email.toLowerCase().trim()))
+      .limit(1)
+
+    if (existing.length > 0) {
+      throw new ConflictException(`L'utente ${request.email} ha già un account registrato su DexHub`)
+    }
+
+    const { token } = await this.adminUsers.inviteUser(request.email, actorId)
+
+    await this.db
+      .update(inviteRequests)
+      .set({ status: 'invited' })
+      .where(eq(inviteRequests.id, id))
+
+    await this.db.insert(auditLogs).values({
+      category: 'ADMIN',
+      action: 'invite_request.resent',
+      severity: 'info',
+      outcome: 'success',
+      actorId,
+      actorType: 'user',
+      metadata: { id, email: request.email },
+    })
+
+    const frontendUrl = this.getFrontendUrl(preferredOrigin)
+    const inviteUrl = `${frontendUrl}/invite/${token}`
+
     const mailResult = await this.mailService.sendInviteAccepted({
       to: request.email,
       inviteUrl,
@@ -210,6 +488,50 @@ export class InviteRequestsService implements OnModuleInit {
       emailSent,
       emailError,
     }
+  }
+
+  async bulkReject(
+    ids: string[],
+    actorId: string,
+    sendEmail = false,
+  ): Promise<{ affected: number }> {
+    if (ids.length === 0) return { affected: 0 }
+
+    const targetRequests = await this.db
+      .select()
+      .from(inviteRequests)
+      .where(inArray(inviteRequests.id, ids))
+
+    await this.db
+      .update(inviteRequests)
+      .set({ status: 'dismissed' })
+      .where(inArray(inviteRequests.id, ids))
+
+    if (sendEmail) {
+      for (const req of targetRequests) {
+        await this.mailService.sendInviteRejected({ to: req.email }).catch(() => {})
+      }
+    }
+
+    await this.db.insert(auditLogs).values({
+      category: 'ADMIN',
+      action: 'invite_request.bulk_rejected',
+      severity: 'info',
+      outcome: 'success',
+      actorId,
+      actorType: 'user',
+      metadata: { count: ids.length, ids },
+    })
+
+    return { affected: targetRequests.length }
+  }
+
+  async bulkDelete(ids: string[]): Promise<void> {
+    if (ids.length === 0) return
+    await this.db
+      .update(inviteRequests)
+      .set({ deletedAt: new Date() })
+      .where(inArray(inviteRequests.id, ids))
   }
 
   async delete(id: string): Promise<void> {

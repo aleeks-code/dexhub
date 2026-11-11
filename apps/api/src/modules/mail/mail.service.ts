@@ -83,12 +83,31 @@ export class MailService {
   }
 
   private getFrontendUrl(): string {
-    const base =
-      process.env['FRONTEND_URL']?.trim() ||
-      (process.env['DOMAIN'] ? `https://${process.env['DOMAIN'].trim()}` : null) ||
-      process.env['WEBAUTHN_ORIGIN']?.trim() ||
-      'https://dexhub.it'
-    return base.replace(/\/$/, '')
+    const isProd = process.env['NODE_ENV'] === 'production'
+    const candidates = [
+      process.env['FRONTEND_URL'],
+      process.env['DOMAIN']
+        ? process.env['DOMAIN'].startsWith('http')
+          ? process.env['DOMAIN']
+          : `https://${process.env['DOMAIN']}`
+        : null,
+      process.env['WEBAUTHN_ORIGIN'],
+      process.env['BETTER_AUTH_URL'],
+    ]
+
+    for (const cand of candidates) {
+      if (!cand) continue
+      const trimmed = cand.trim().replace(/\/$/, '')
+      if (isProd && (trimmed.includes('localhost') || trimmed.includes('127.0.0.1'))) {
+        continue
+      }
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        return trimmed
+      }
+      return `https://${trimmed}`
+    }
+
+    return isProd ? 'https://dexhub.it' : 'http://localhost:3000'
   }
 
   async sendMail(options: SendMailOptions): Promise<SendResult> {

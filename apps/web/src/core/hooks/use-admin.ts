@@ -137,6 +137,13 @@ export interface InviteRequestItem {
   status: 'pending' | 'invited' | 'dismissed'
   createdAt: string
   deletedAt: string | null
+  registered?: boolean
+  userName?: string | null
+  registeredAt?: string | null
+  lastLoginAt?: string | null
+  inviteExpiresAt?: string | null
+  inviteExpired?: boolean
+  inviteUsed?: boolean
 }
 
 export function useInviteRequests() {
@@ -168,10 +175,79 @@ export function useAcceptInviteRequest() {
     mutationFn: (id) =>
       apiFetch(`/invite-requests/${id}/accept`, {
         method: 'POST',
+        body: JSON.stringify({
+          origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+        }),
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin', 'invite-requests'] })
       qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+    },
+  })
+}
+
+export function useResendInviteRequest() {
+  const qc = useQueryClient()
+  return useMutation<AcceptInviteResponse, Error, string>({
+    mutationFn: (id) =>
+      apiFetch(`/invite-requests/${id}/resend`, {
+        method: 'POST',
+        body: JSON.stringify({
+          origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+        }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'invite-requests'] })
+    },
+  })
+}
+
+export function useDirectInvite() {
+  const qc = useQueryClient()
+  return useMutation<
+    { id: string; token: string; inviteUrl: string; emailSent: boolean; emailError?: string },
+    Error,
+    { email: string; phone?: string; sendEmail?: boolean }
+  >({
+    mutationFn: (data) =>
+      apiFetch('/invite-requests/direct', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...data,
+          origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+        }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'invite-requests'] })
+      qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+    },
+  })
+}
+
+export function useBulkRejectInviteRequests() {
+  const qc = useQueryClient()
+  return useMutation<{ affected: number }, Error, { ids: string[]; sendEmail?: boolean }>({
+    mutationFn: (data) =>
+      apiFetch('/invite-requests/bulk-reject', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'invite-requests'] })
+    },
+  })
+}
+
+export function useBulkDeleteInviteRequests() {
+  const qc = useQueryClient()
+  return useMutation<{ count: number }, Error, string[]>({
+    mutationFn: (ids) =>
+      apiFetch('/invite-requests/bulk-delete', {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin', 'invite-requests'] })
     },
   })
 }
