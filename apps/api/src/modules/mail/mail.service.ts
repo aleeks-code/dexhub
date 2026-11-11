@@ -60,11 +60,14 @@ export class MailService {
   }
 
   private getFromAddress(): string {
-    return (
+    let raw =
       process.env['SMTP_FROM']?.trim() ||
       process.env['MAIL_FROM']?.trim() ||
       '"DexHub" <noreply@dexhub.it>'
-    )
+    if (raw.startsWith("'") && raw.endsWith("'")) {
+      raw = raw.slice(1, -1).trim()
+    }
+    return raw
   }
 
   private getFrontendUrl(): string {
