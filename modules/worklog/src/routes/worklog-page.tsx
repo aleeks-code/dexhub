@@ -464,6 +464,7 @@ export default function WorklogPage() {
           }}
           onOpenSettings={() => setShowSettings(true)}
           contract={contract}
+          summary={summary}
           ccnlId={fiscalData?.config?.ccnlId}
           onWeekFill={handleWeekFill}
           weekFillPending={upsertDay.isPending}

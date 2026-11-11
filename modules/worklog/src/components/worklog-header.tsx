@@ -23,7 +23,7 @@ import { Button } from '@dexhub/ui'
 import { IconTooltip } from './icon-tooltip'
 import { MonthYearPicker } from './month-year-picker'
 import type { WorklogTranslations } from '../i18n'
-import type { ContractConfig } from '../services/worklog-api'
+import type { ContractConfig, MonthlySummary } from '../services/worklog-api'
 
 export type ToolbarPanel = 'templates' | 'trash'
 
@@ -90,6 +90,7 @@ interface WorklogHeaderProps {
   onToday: () => void
   onOpenSettings: () => void
   contract?: ContractConfig | null
+  summary?: MonthlySummary | null
   ccnlId?: string | null
 
   // Toolbar actions
@@ -125,6 +126,7 @@ export function WorklogHeader({
   onToday,
   onOpenSettings,
   contract,
+  summary,
   ccnlId,
   onWeekFill,
   weekFillPending,
@@ -153,12 +155,16 @@ export function WorklogHeader({
   }
 
   const isPending = weekFillPending || !!monthFillPending
+  const giorniLavorabili = summary?.giorniLavorabiliMese ?? 0
+  const oreStandard = contract?.oreGiornaliereStandard ?? 8
+  const orePreviste = giorniLavorabili * oreStandard
+  const isCurrentMonth = month === todayYYYYMM()
 
   return (
     <header className="mb-6 rounded-2xl border border-border bg-surface/50 backdrop-blur-md p-4 sm:p-5 shadow-sm space-y-4">
-      {/* ── Riga Superiore: Identità, Metadati Contrattuali & Navigatore Mese ── */}
+      {/* ── Riga Superiore: Identità, Metadati Mensili Dinamici & Navigatore Mese ── */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        {/* Sinistra: Icona, Titolo e Badge Contrattuali */}
+        {/* Sinistra: Icona, Titolo e Informazioni Vive del Mese (Opzione 4) */}
         <div className="flex items-center gap-3.5">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/25 via-primary/10 to-primary/5 text-primary border border-primary/30 shadow-md shadow-primary/10">
             <CalendarClock size={22} />
@@ -167,19 +173,41 @@ export function WorklogHeader({
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text leading-tight">
               {t.title}
             </h1>
-            <div className="flex flex-wrap items-center gap-1.5 mt-1">
-              <span className="inline-flex items-center rounded-md border border-border bg-surface-raised px-2 py-0.5 text-[11px] font-medium text-text-muted">
-                {formatCcnlLabel(ccnlId)}
-              </span>
-              <span className="text-text-muted text-[10px]">•</span>
-              <span className="inline-flex items-center rounded-md border border-border bg-surface-raised px-2 py-0.5 text-[11px] font-medium text-text-muted">
-                {contract?.oreLavorativeSettimanali ?? 40}h settimanali
-              </span>
-              <span className="text-text-muted text-[10px] hidden sm:inline">•</span>
-              <span className="hidden sm:inline-flex items-center rounded-md border border-border bg-surface-raised px-2 py-0.5 text-[11px] font-medium text-text-muted">
-                {contract?.oreGiornaliereStandard ?? 8}h standard
-              </span>
-            </div>
+            {summary ? (
+              <p className="text-xs text-text-muted mt-1 flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <span className="font-medium text-text">
+                  {summary.giorniLavorabiliMese} {t.summary.workableDays.toLowerCase()}
+                </span>
+                <span className="text-text-subtle">•</span>
+                <span>
+                  {orePreviste}h {t.locale.startsWith('it') ? 'previste' : 'expected'}
+                </span>
+                <span className="text-text-subtle">•</span>
+                <span
+                  className={
+                    summary.giorniConBuco > 0
+                      ? 'text-warning font-medium'
+                      : isCurrentMonth
+                        ? 'text-primary font-medium'
+                        : 'text-text'
+                  }
+                >
+                  {summary.giorniRegistrati} {t.locale.startsWith('it') ? 'di' : 'of'} {summary.giorniLavorabiliMese} {t.locale.startsWith('it') ? 'registrati' : 'logged'}
+                </span>
+                {isCurrentMonth && (
+                  <>
+                    <span className="text-text-subtle hidden sm:inline">•</span>
+                    <span className="hidden sm:inline-flex items-center rounded-full bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 text-[10px] font-semibold">
+                      {t.locale.startsWith('it') ? 'Mese in corso' : 'Current month'}
+                    </span>
+                  </>
+                )}
+              </p>
+            ) : (
+              <p className="text-xs text-text-muted mt-1">
+                {t.subtitle}
+              </p>
+            )}
           </div>
         </div>
 
