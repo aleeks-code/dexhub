@@ -45,6 +45,18 @@ export async function runMigrations(): Promise<void> {
   } finally {
     try {
       await sql`ALTER TABLE IF EXISTS "invite_requests" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp with time zone;`
+      await sql`
+        CREATE TABLE IF NOT EXISTS "feedbacks" (
+          "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+          "user_id" text NOT NULL,
+          "type" text NOT NULL,
+          "title" text NOT NULL,
+          "message" text NOT NULL,
+          "status" text DEFAULT 'open' NOT NULL,
+          "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+          "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+        );
+      `
     } catch (e) {
       process.stderr.write(`[Migrate] Schema sync note: ${e}\n`)
     }

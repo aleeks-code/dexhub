@@ -23,6 +23,27 @@ export class MailService {
     this.initTransporter()
   }
 
+  private createTransporter(
+    host: string,
+    port: number,
+    secure: boolean,
+    user: string,
+    pass: string,
+  ): Transporter {
+    return nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: {
+        user,
+        pass,
+      },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 7000,
+    })
+  }
+
   private initTransporter(): void {
     const host = process.env['SMTP_HOST']?.trim()
     const portRaw = process.env['SMTP_PORT']?.trim()
@@ -40,21 +61,12 @@ export class MailService {
     }
 
     try {
-      this.transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure,
-        auth: {
-          user,
-          pass,
-        },
-        connectionTimeout: 8000,
-        greetingTimeout: 8000,
-        socketTimeout: 10000,
-      })
-      this.logger.log(`Transporter SMTP configurato con successo su ${host}:${port}`)
+      this.transporter = this.createTransporter(host, port, secure, user, pass)
+      this.logger.log(
+        `Transporter SMTP configurato con successo su ${host}:${port} (secure: ${secure})`,
+      )
     } catch (err) {
-      this.logger.error('Errore durante l\'inizializzazione di nodemailer', err)
+      this.logger.error("Errore durante l'inizializzazione di nodemailer", err)
       this.transporter = null
     }
   }
@@ -107,6 +119,47 @@ export class MailService {
       return { success: true }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
+      this.logger.warn(`Invio SMTP primario non riuscito per ${to}: ${msg}`)
+
+      const host = process.env['SMTP_HOST']?.trim()
+      const user = process.env['SMTP_USER']?.trim()
+      const pass = process.env['SMTP_PASS']?.trim()
+      const currentPort = Number(process.env['SMTP_PORT'] ?? '587')
+
+      // Fallback automatico su altre porte se la porta corrente va in timeout o rifiutata (frequente sui cloud hosting)
+      if (host && user && pass && /timeout|refused|econn|etimedout/i.test(msg)) {
+        const fallbacks: Array<{ port: number; secure: boolean }> = [
+          { port: 465, secure: true },
+          { port: 2525, secure: false },
+          { port: 587, secure: false },
+        ].filter((f) => f.port !== currentPort)
+
+        for (const fb of fallbacks) {
+          try {
+            this.logger.log(
+              `Tentativo fallback SMTP su ${host}:${fb.port} (secure: ${fb.secure})...`,
+            )
+            const fbTransporter = this.createTransporter(host, fb.port, fb.secure, user, pass)
+            await fbTransporter.sendMail({
+              from,
+              to,
+              subject: options.subject,
+              text: options.text,
+              html: options.html,
+            })
+            this.transporter = fbTransporter
+            this.logger.log(
+              `Email inviata con successo a ${to} tramite fallback su porta ${fb.port}!`,
+            )
+            return { success: true }
+          } catch (fbErr: any) {
+            this.logger.warn(
+              `Fallback su porta ${fb.port} non riuscito: ${fbErr?.message || fbErr}`,
+            )
+          }
+        }
+      }
+
       this.logger.error(`Impossibile inviare email a ${to}: ${msg}`, err)
       return { success: false, error: msg }
     }

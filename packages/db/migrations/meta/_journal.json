@@ -197,6 +197,13 @@
       "when": 1794356000000,
       "tag": "0027_invite_requests_deleted_at",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794357000000,
+      "tag": "0028_feedbacks_table",
+      "breakpoints": true
     }
   ]
 }

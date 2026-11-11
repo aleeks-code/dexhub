@@ -297,6 +297,14 @@ export class SpacesService {
   }
 
   async assertMember(spaceId: string, userId: string) {
+    if (
+      !spaceId ||
+      spaceId === '__none__' ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(spaceId)
+    ) {
+      throw new ForbiddenException('Invalid workspace identifier')
+    }
+
     const member = await this.db
       .select()
       .from(taskSpaceMembers)

@@ -7,9 +7,11 @@ export const tasksKey = (filters: TaskFilters) => ['tasks', 'list', filters]
 const taskKey = (id: string) => ['tasks', 'task', id]
 
 export function useTasks(filters: TaskFilters) {
+  const isValid = !!filters.spaceId && filters.spaceId !== '__none__'
   return useQuery({
     queryKey: tasksKey(filters),
-    queryFn: () => tasksApi.list(filters),
+    queryFn: () => (isValid ? tasksApi.list(filters) : Promise.resolve([])),
+    enabled: isValid,
   })
 }
 
