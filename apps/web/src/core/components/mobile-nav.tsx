@@ -24,6 +24,7 @@ import { useAppStore } from '@/core/store/app.store'
 import { useVisibleModules } from '@/core/hooks/use-modules'
 import { resolveModuleIcon } from '@/core/utils/module-icons'
 import { useMe } from '@/core/hooks/use-me'
+import { useInviteRequests } from '@/core/hooks/use-admin'
 import { useT } from '@/i18n'
 
 const API = process.env['NEXT_PUBLIC_API_URL'] ?? ''
@@ -35,8 +36,13 @@ export function MobileNav() {
   const { openCommandPalette } = useAppStore()
   const { data: modules = [] } = useVisibleModules()
   const { data: me } = useMe()
+  const { data: inviteRequests } = useInviteRequests()
   const queryClient = useQueryClient()
   const [drawerOpen, setDrawerOpen] = useState(false)
+
+  const pendingInvitesCount = me?.isAdmin
+    ? (inviteRequests?.filter((r) => r.status === 'pending' && !r.deletedAt).length ?? 0)
+    : 0
 
   const activeModules = modules.filter((m) => m.enabled && !m.maintenance)
 
@@ -65,7 +71,7 @@ export function MobileNav() {
           />
 
           {/* Drawer Panel */}
-          <div className="fixed inset-x-0 bottom-0 z-50 max-h-[82vh] overflow-y-auto rounded-t-3xl border-t border-border bg-surface p-5 shadow-2xl">
+          <div className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-3xl border-t border-border bg-surface p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-2xl">
             {/* Pull handle */}
             <div className="mx-auto -mt-1 mb-4 h-1 w-10 rounded-full bg-border-strong" />
 
@@ -170,10 +176,17 @@ export function MobileNav() {
                   <Link
                     href="/settings/administration"
                     onClick={() => setDrawerOpen(false)}
-                    className="flex items-center gap-2.5 rounded-xl border border-border bg-surface-raised/50 p-2.5 text-xs text-text hover:bg-surface transition-colors col-span-2"
+                    className="flex items-center justify-between rounded-xl border border-border bg-surface-raised/50 p-2.5 text-xs text-text hover:bg-surface transition-colors col-span-2"
                   >
-                    <Users className="h-4 w-4 text-primary" />
-                    <span>Pannello Amministrazione</span>
+                    <div className="flex items-center gap-2.5">
+                      <Users className="h-4 w-4 text-primary" />
+                      <span>Pannello Amministrazione</span>
+                    </div>
+                    {pendingInvitesCount > 0 && (
+                      <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                        {pendingInvitesCount}
+                      </span>
+                    )}
                   </Link>
                 )}
               </div>
@@ -184,7 +197,7 @@ export function MobileNav() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-error/30 bg-error/10 py-2.5 text-xs font-semibold text-error hover:bg-error/20 transition-colors"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-error/30 bg-error/10 py-2.5 text-xs font-semibold text-error hover:bg-error/20 transition-colors cursor-pointer"
               >
                 <LogOut className="h-4 w-4" />
                 <span>{t.sidebar.logout}</span>
@@ -195,7 +208,7 @@ export function MobileNav() {
       )}
 
       {/* Main 5-Slot Bottom Navigation Bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-sticky flex h-14 items-center justify-around border-t border-border bg-surface/95 backdrop-blur-md px-1 md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-sticky flex items-center justify-around border-t border-border bg-surface/95 backdrop-blur-md px-1 md:hidden pb-[env(safe-area-inset-bottom)] h-[calc(3.5rem+env(safe-area-inset-bottom))]">
         {/* 1. Home */}
         <Link
           href="/home"

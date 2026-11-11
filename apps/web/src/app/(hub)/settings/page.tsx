@@ -339,9 +339,19 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-7 pb-12">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-text">{t.settings.title}</h1>
-        <p className="mt-1 text-sm text-text-muted">{t.settings.subtitle}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-text">{t.settings.title}</h1>
+          <p className="mt-1 text-sm text-text-muted">{t.settings.subtitle}</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="self-start sm:self-auto inline-flex items-center gap-1.5 rounded-xl border border-error/30 bg-error/10 px-3.5 py-1.5 text-xs font-semibold text-error hover:bg-error/20 transition-colors cursor-pointer"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          <span>{t.sidebar.logout}</span>
+        </button>
       </div>
 
       {/* Minimal Underline Tabs Bar (Stile GitHub / Threads) */}
