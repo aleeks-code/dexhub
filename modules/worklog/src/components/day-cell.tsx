@@ -117,11 +117,11 @@ export function DayCell({
   let textDateClass = 'text-text'
 
   if (isHoliday) {
-    // Festività: evidenziazione dedicata con tonalità arancione/warm
+    // Festività: evidenziazione dedicata con tonalità soft rose
     surfaceClass = hasEntries
-      ? 'bg-amber-500/[0.08] border-amber-500/30'
-      : 'bg-amber-500/[0.04] border-amber-500/20'
-    textDateClass = 'text-amber-400 font-bold'
+      ? 'bg-rose-500/[0.08] border-rose-500/30'
+      : 'bg-rose-500/[0.04] border-rose-500/20'
+    textDateClass = 'text-rose-400 font-bold'
   } else if (jsDay === 7) {
     // Domenica: superficie leggermente più scura e data più attenuata
     surfaceClass = hasEntries
@@ -183,7 +183,7 @@ export function DayCell({
           </span>
         ) : isHoliday ? (
           <span
-            className="truncate text-[9px] font-semibold text-amber-400 max-w-[85px]"
+            className="truncate text-[9px] font-semibold text-rose-400 max-w-[85px]"
             title={getItalianHolidayName(date) ?? undefined}
           >
             {getItalianHolidayName(date)}

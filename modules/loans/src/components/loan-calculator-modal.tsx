@@ -163,7 +163,7 @@ export function LoanCalculatorModal({ isOpen, onClose }: LoanCalculatorModalProp
               </div>
               <div className="rounded-xl bg-surface p-2.5 border border-border/40">
                 <span className="text-[9px] uppercase font-semibold text-text-muted">Interessi Totali</span>
-                <p className="text-xs font-bold text-amber-500">{totalInterest.toLocaleString('it-IT')} €</p>
+                <p className="text-xs font-bold text-text">{totalInterest.toLocaleString('it-IT')} €</p>
               </div>
               <div className="rounded-xl bg-surface p-2.5 border border-border/40">
                 <span className="text-[9px] uppercase font-semibold text-text-muted">Spese Incasso Tot.</span>

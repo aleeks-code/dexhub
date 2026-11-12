@@ -31,7 +31,7 @@ import {
 const CATEGORY_COLORS: Record<string, string> = {
   AUTH: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
   SECURITY: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-  ADMIN: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  ADMIN: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
   MODULE: 'bg-primary/10 text-primary border-primary/20',
   DATA: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
   PERMISSION: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
@@ -39,7 +39,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const SEVERITY_BADGES: Record<string, { label: string; class: string }> = {
   info: { label: 'Info', class: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  warning: { label: 'Warn', class: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+  warning: { label: 'Warn', class: 'bg-yellow-500/10 text-yellow-300 border-yellow-500/25' },
   critical: { label: 'Critico', class: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
 }
 
@@ -120,7 +120,7 @@ export default function AuditLogsPage() {
           </div>
           <div className="rounded-xl border border-border bg-surface p-3.5">
             <span className="text-xs text-text-muted">{ta.warningEvents}</span>
-            <p className="mt-1 font-mono text-xl font-bold text-amber-400">{summary.warning}</p>
+            <p className="mt-1 font-mono text-xl font-bold text-yellow-400">{summary.warning}</p>
           </div>
           <div className="rounded-xl border border-border bg-surface p-3.5">
             <span className="text-xs text-text-muted">{ta.failures}</span>

@@ -79,7 +79,7 @@ function StatusBadge({
   if (item.status === 'invited') {
     if (item.inviteExpired) {
       return (
-        <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-400 inline-flex items-center gap-1 border border-amber-500/20">
+        <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-medium text-rose-400 inline-flex items-center gap-1 border border-rose-500/20">
           <Clock className="h-3 w-3" />
           Scaduto (48h)
         </span>
@@ -103,7 +103,7 @@ function StatusBadge({
   }
 
   return (
-    <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-300 inline-flex items-center gap-1 border border-amber-500/20">
+    <span className="rounded-full bg-surface-raised px-2.5 py-0.5 text-xs font-medium text-text-subtle inline-flex items-center gap-1 border border-border">
       <Clock className="h-3 w-3" />
       {t.statusPending}
     </span>
@@ -150,15 +150,15 @@ function InviteResultView({
           </div>
         </div>
       ) : (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3.5 text-amber-400">
+        <div className="flex items-start gap-3 rounded-xl border border-yellow-500/25 bg-yellow-500/10 p-3.5 text-yellow-400">
           <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
           <div className="text-xs space-y-1">
-            <p className="font-semibold text-amber-300">
+            <p className="font-semibold text-yellow-300">
               {emailError === 'SMTP not configured'
                 ? 'Invito generato (SMTP non configurato)'
                 : 'Invito generato (email non recapitata)'}
             </p>
-            <p className="text-amber-400/90 leading-relaxed">
+            <p className="text-yellow-400/90 leading-relaxed">
               {emailError && emailError !== 'SMTP not configured'
                 ? `Dettaglio errore: ${emailError}. `
                 : "L'invito è attivo sul database. "}
@@ -751,14 +751,17 @@ export default function InviteRequestsPage() {
         <div className="rounded-2xl border border-border bg-surface p-4 relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-text-muted">In Attesa</span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+            <div className={cn(
+              "flex h-7 w-7 items-center justify-center rounded-lg",
+              counts.pending > 0 ? "bg-yellow-500/10 text-yellow-400" : "bg-surface-raised text-text-subtle"
+            )}>
               <Clock className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-bold text-text">{counts.pending}</span>
             {counts.pending > 0 && (
-              <span className="text-[11px] font-medium text-amber-400">da revisionare</span>
+              <span className="text-[11px] font-medium text-yellow-400">da revisionare</span>
             )}
           </div>
         </div>

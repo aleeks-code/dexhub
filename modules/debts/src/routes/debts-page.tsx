@@ -688,7 +688,7 @@ export default function DebtsPage() {
               className={cn(
                 'gap-1.5 text-xs transition-colors',
                 undoStack.length > 0
-                  ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10'
+                  ? 'border-border text-text hover:bg-surface-raised'
                   : 'opacity-40 cursor-not-allowed text-text-subtle',
               )}
               title={
@@ -700,7 +700,7 @@ export default function DebtsPage() {
               <RotateCcw className="h-3.5 w-3.5" />
               <span>Torna indietro</span>
               {undoStack.length > 0 && (
-                <span className="ml-0.5 rounded-full bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                <span className="ml-0.5 rounded-full bg-surface-raised px-1.5 py-0.2 text-[10px] font-bold text-text-subtle border border-border">
                   {undoStack.length}
                 </span>
               )}
@@ -1895,7 +1895,7 @@ export default function DebtsPage() {
                       className={cn(
                         'flex items-center justify-between rounded-lg border p-2.5 text-xs transition-colors',
                         isLatest
-                          ? 'border-amber-500/40 bg-amber-500/5'
+                          ? 'border-border-strong bg-surface-raised'
                           : 'border-border bg-surface-raised/40',
                       )}
                     >
@@ -1904,7 +1904,7 @@ export default function DebtsPage() {
                         <div className="text-[10px] text-text-subtle">
                           {new Date(step.timestamp).toLocaleTimeString()}
                           {isLatest && (
-                            <span className="ml-2 font-semibold text-amber-600 dark:text-amber-400">
+                            <span className="ml-2 font-semibold text-text-muted">
                               (Prossima da annullare)
                             </span>
                           )}
@@ -1917,7 +1917,7 @@ export default function DebtsPage() {
                           onClick={async () => {
                             await handleUndo()
                           }}
-                          className="flex items-center gap-1 rounded bg-amber-500/15 hover:bg-amber-500/25 px-2 py-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400 shrink-0 transition-colors"
+                          className="flex items-center gap-1 rounded bg-surface hover:bg-surface-overlay border border-border px-2 py-1 text-[11px] font-semibold text-text shrink-0 transition-colors"
                         >
                           <RotateCcw className="h-3 w-3" /> Annulla
                         </button>
@@ -1953,7 +1953,7 @@ export default function DebtsPage() {
         <div className="fixed bottom-6 right-6 z-[80] flex max-w-md items-center gap-3 rounded-xl border border-border bg-surface-raised/95 px-4 py-3 shadow-2xl backdrop-blur-md transition-all animate-in fade-in slide-in-from-bottom-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
             {toast.actionType === 'redo' ? (
-              <RotateCcw className="h-4 w-4 text-amber-500" />
+              <RotateCcw className="h-4 w-4 text-text-subtle" />
             ) : (
               <CheckCircle2 className="h-4 w-4 text-primary" />
             )}
@@ -1965,7 +1965,7 @@ export default function DebtsPage() {
           {toast.actionType === 'undo' && undoStack.length > 0 && (
             <button
               onClick={handleUndo}
-              className="flex shrink-0 items-center gap-1 rounded-md bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 px-2.5 py-1 text-xs font-semibold transition-colors"
+              className="flex shrink-0 items-center gap-1 rounded-md bg-surface hover:bg-surface-overlay border border-border text-text px-2.5 py-1 text-xs font-semibold transition-colors"
             >
               <RotateCcw className="h-3 w-3" />
               Torna indietro

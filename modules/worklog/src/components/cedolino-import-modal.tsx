@@ -955,7 +955,7 @@ export function CedolinoImportModal({
                           }}
                           className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 ${
                             tipoTurnoMaggiorato === 'pomeridiano'
-                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                              ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40'
                               : 'bg-surface border border-border text-text-muted hover:text-text'
                           }`}
                         >
@@ -1021,7 +1021,7 @@ export function CedolinoImportModal({
                     {/* Permessi / PAR */}
                     <div className="rounded-xl border border-border bg-surface-raised/30 p-2.5 space-y-1">
                       <span className="text-[11px] text-text-muted flex items-center gap-1">
-                        <Clock size={12} className="text-amber-400" /> Permessi / PAR
+                        <Clock size={12} className="text-sky-400" /> Permessi / PAR
                       </span>
                       <div className="flex items-center gap-1">
                         <input
@@ -1070,10 +1070,10 @@ export function CedolinoImportModal({
                     </div>
 
                     {/* Pomeridiano */}
-                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 space-y-1">
-                      <span className="text-[11px] text-amber-400 font-medium flex items-center justify-between">
+                    <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-2.5 space-y-1">
+                      <span className="text-[11px] text-sky-400 font-medium flex items-center justify-between">
                         <span className="flex items-center gap-1">
-                          <Sunset size={12} className="text-amber-400" /> Magg. Pomeriggio
+                          <Sunset size={12} className="text-sky-400" /> Magg. Pomeriggio
                         </span>
                         <span className="text-[10px] text-text-muted">4h/gg</span>
                       </span>
@@ -1086,7 +1086,7 @@ export function CedolinoImportModal({
                             setOrePomeridiano(e.target.value)
                             setTipoTurnoMaggiorato('pomeridiano')
                           }}
-                          className="w-full h-7 rounded border border-border bg-surface px-2 text-xs font-semibold text-text focus:border-amber-400 focus:outline-none"
+                          className="w-full h-7 rounded border border-border bg-surface px-2 text-xs font-semibold text-text focus:border-sky-400 focus:outline-none"
                         />
                         <span className="text-xs text-text-muted">h</span>
                       </div>
@@ -1149,7 +1149,7 @@ export function CedolinoImportModal({
                     <div className="flex items-center gap-4 text-xs">
                       {residui.ferie !== null && (
                         <span>
-                          Ferie: <strong className={residui.ferie < 0 ? 'text-amber-400' : 'text-text'}>{residui.ferie.toFixed(2)} h</strong>
+                          Ferie: <strong className={residui.ferie < 0 ? 'text-yellow-400' : 'text-text'}>{residui.ferie.toFixed(2)} h</strong>
                         </span>
                       )}
                       {residui.permessi !== null && (
@@ -1255,7 +1255,7 @@ export function CedolinoImportModal({
                                   d.kind === 'vacation'
                                     ? 'bg-emerald-500/15 text-emerald-400'
                                     : d.kind === 'leave'
-                                      ? 'bg-amber-500/15 text-amber-400'
+                                      ? 'bg-sky-500/15 text-sky-400'
                                       : d.kind === 'sick'
                                         ? 'bg-red-500/15 text-red-400'
                                         : d.kind === 'cig'
@@ -1267,7 +1267,7 @@ export function CedolinoImportModal({
                               </span>
                               {d.pomeridiano && (
                                 <span title="Turno Pomeridiano (4h maggiorazione)" className="inline-flex">
-                                  <Sunset size={11} className="text-amber-400" />
+                                  <Sunset size={11} className="text-sky-400" />
                                 </span>
                               )}
                               {d.notturno && (
@@ -1277,7 +1277,7 @@ export function CedolinoImportModal({
                               )}
                               {d.meal && (
                                 <span title="Mensa" className="inline-flex">
-                                  <Utensils size={11} className="text-orange-400" />
+                                  <Utensils size={11} className="text-primary" />
                                 </span>
                               )}
                             </div>

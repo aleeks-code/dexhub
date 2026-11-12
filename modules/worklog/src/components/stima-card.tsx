@@ -332,7 +332,7 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                         data.valutazione === 'excellent'
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                           : data.valutazione === 'moderate'
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                            ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'
                             : data.valutazione === 'significant'
                               ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
                               : 'bg-surface-raised text-text-muted border-border'

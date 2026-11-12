@@ -147,14 +147,20 @@ export default function LoansWidget() {
                 <div
                   className={cn(
                     'text-[9px] font-semibold whitespace-nowrap',
-                    summary.nextPayment.daysUntil <= 3 ? 'text-amber-500' : 'text-emerald-500',
+                    summary.nextPayment.daysUntil < 0
+                      ? 'text-rose-400'
+                      : summary.nextPayment.daysUntil <= 3
+                        ? 'text-yellow-400'
+                        : 'text-text-subtle',
                   )}
                 >
-                  {summary.nextPayment.daysUntil === 0
-                    ? 'Oggi!'
-                    : summary.nextPayment.daysUntil === 1
-                      ? 'Domani'
-                      : `tra ${summary.nextPayment.daysUntil} gg`}
+                  {summary.nextPayment.daysUntil < 0
+                    ? `Scaduta da ${Math.abs(summary.nextPayment.daysUntil)} gg`
+                    : summary.nextPayment.daysUntil === 0
+                      ? 'Oggi!'
+                      : summary.nextPayment.daysUntil === 1
+                        ? 'Domani'
+                        : `tra ${summary.nextPayment.daysUntil} gg`}
                 </div>
               </div>
             </div>

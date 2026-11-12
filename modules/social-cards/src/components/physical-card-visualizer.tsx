@@ -126,7 +126,7 @@ export function PhysicalCardVisualizer({ card, onEditCredentials }: Props) {
 
             {/* Chip & Contactless */}
             <div className="mt-4 flex items-center gap-3">
-              <div className="h-7 w-9 rounded-md bg-gradient-to-br from-amber-200 to-amber-500 border border-amber-600/50 shadow-inner" />
+              <div className="h-7 w-9 rounded-md bg-gradient-to-br from-[#f3ead2] via-[#e2d4ae] to-[#baa36d] border border-[#a89058]/50 shadow-inner" />
               <div className="flex flex-col gap-0.5 text-zinc-500">
                 <div className="h-1.5 w-3 rounded-full bg-zinc-600" />
                 <div className="h-1.5 w-4 rounded-full bg-zinc-500" />

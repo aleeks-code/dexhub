@@ -102,18 +102,20 @@ export default function SubscriptionsWidget() {
                 </span>
                 <div
                   className={`text-[9px] font-semibold ${
-                    summary.nextRenewal.daysUntil <= 3
-                      ? 'text-rose-500'
-                      : summary.nextRenewal.daysUntil <= 7
-                        ? 'text-amber-500'
-                        : 'text-violet-500'
+                    summary.nextRenewal.daysUntil < 0
+                      ? 'text-rose-400'
+                      : summary.nextRenewal.daysUntil <= 3
+                        ? 'text-yellow-400'
+                        : 'text-text-subtle'
                   }`}
                 >
-                  {summary.nextRenewal.daysUntil === 0
-                    ? 'Oggi!'
-                    : summary.nextRenewal.daysUntil === 1
-                      ? 'Domani'
-                      : `tra ${summary.nextRenewal.daysUntil} gg`}
+                  {summary.nextRenewal.daysUntil < 0
+                    ? `Scaduto (${Math.abs(summary.nextRenewal.daysUntil)} gg fa)`
+                    : summary.nextRenewal.daysUntil === 0
+                      ? 'Oggi!'
+                      : summary.nextRenewal.daysUntil === 1
+                        ? 'Domani'
+                        : `tra ${summary.nextRenewal.daysUntil} gg`}
                 </div>
               </div>
             </div>

@@ -26,7 +26,7 @@ import {
 
 const LEVEL_COLORS: Record<string, { label: string; text: string; bg: string }> = {
   info: { label: 'INFO', text: 'text-sky-400', bg: 'bg-sky-500/10' },
-  warn: { label: 'WARN', text: 'text-amber-400', bg: 'bg-amber-500/10' },
+  warn: { label: 'WARN', text: 'text-yellow-300', bg: 'bg-yellow-500/10' },
   error: { label: 'ERR', text: 'text-rose-400', bg: 'bg-rose-500/10' },
   fatal: { label: 'FATAL', text: 'text-rose-500', bg: 'bg-rose-500/20' },
   debug: { label: 'DEBUG', text: 'text-purple-400', bg: 'bg-purple-500/10' },
@@ -136,7 +136,7 @@ export default function LogsPage() {
         <div className="flex items-center justify-between border-b border-border/40 bg-[#161b22] px-4 py-2.5">
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-rose-500/80 inline-block" />
-            <span className="h-3 w-3 rounded-full bg-amber-500/80 inline-block" />
+            <span className="h-3 w-3 rounded-full bg-yellow-500/80 inline-block" />
             <span className="h-3 w-3 rounded-full bg-emerald-500/80 inline-block" />
             <span className="ml-2 font-mono text-xs text-text-muted">dexhub-api • live logs</span>
           </div>

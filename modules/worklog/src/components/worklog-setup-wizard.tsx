@@ -288,7 +288,7 @@ export function WorklogSetupWizard({
                             {c.nome}
                           </span>
                           {isMetal && (
-                            <span className="shrink-0 inline-flex items-center gap-1 rounded bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 text-[10px] font-semibold text-amber-400">
+                            <span className="shrink-0 inline-flex items-center gap-1 rounded bg-primary/15 border border-primary/30 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
                               <Award size={10} /> Consigliato
                             </span>
                           )}

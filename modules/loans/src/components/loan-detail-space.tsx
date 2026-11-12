@@ -426,16 +426,20 @@ export function LoanDetailSpace({
               <span
                 className={cn(
                   'text-[10px] font-bold px-1.5 py-0.5 rounded',
-                  stats.daysUntilNext <= 3
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-emerald-500/20 text-emerald-500',
+                  stats.daysUntilNext < 0
+                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                    : stats.daysUntilNext <= 3
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                      : 'bg-surface-raised text-text-subtle border border-border',
                 )}
               >
-                {stats.daysUntilNext === 0
-                  ? 'Oggi!'
-                  : stats.daysUntilNext === 1
-                    ? 'Domani'
-                    : `Tra ${stats.daysUntilNext} gg`}
+                {stats.daysUntilNext < 0
+                  ? `Scaduta da ${Math.abs(stats.daysUntilNext)} gg`
+                  : stats.daysUntilNext === 0
+                    ? 'Oggi!'
+                    : stats.daysUntilNext === 1
+                      ? 'Domani'
+                      : `Tra ${stats.daysUntilNext} gg`}
               </span>
             )}
           </div>
@@ -709,7 +713,7 @@ export function LoanDetailSpace({
                         key={inst.number}
                         className={cn(
                           'hover:bg-surface-subtle/40 transition-colors',
-                          isInDue && 'bg-amber-500/5 dark:bg-amber-500/10 font-medium',
+                          isInDue && 'bg-yellow-500/5 dark:bg-yellow-500/10 font-medium',
                           isPaid && 'opacity-80',
                         )}
                       >
@@ -738,7 +742,7 @@ export function LoanDetailSpace({
                         </td>
 
                         {/* Interest Quota */}
-                        <td className="py-2.5 px-4 text-right text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                        <td className="py-2.5 px-4 text-right text-text-muted whitespace-nowrap">
                           {inst.interestAmount.toFixed(2)} €
                         </td>
 
@@ -775,7 +779,7 @@ export function LoanDetailSpace({
                               isPaid
                                 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                                 : isInDue
-                                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                                  ? 'bg-yellow-500/15 text-yellow-500 dark:text-yellow-400 border border-yellow-500/30'
                                   : 'bg-surface-subtle text-text-muted border border-border/60',
                             )}
                           >

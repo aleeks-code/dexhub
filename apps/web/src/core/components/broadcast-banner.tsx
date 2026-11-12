@@ -14,14 +14,14 @@ const ICONS = {
 
 const STYLES = {
   info: 'bg-primary/10 border-primary/20 text-text border-b',
-  warning: 'bg-amber-500/15 border-amber-500/30 text-amber-200 border-b',
+  warning: 'bg-yellow-500/15 border-yellow-500/30 text-yellow-200 border-b',
   alert: 'bg-rose-500/15 border-rose-500/30 text-rose-200 border-b',
   success: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-200 border-b',
 }
 
 const ICON_STYLES = {
   info: 'text-primary',
-  warning: 'text-amber-400',
+  warning: 'text-yellow-400',
   alert: 'text-rose-400',
   success: 'text-emerald-400',
 }

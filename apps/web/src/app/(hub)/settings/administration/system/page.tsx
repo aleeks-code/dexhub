@@ -121,7 +121,7 @@ export default function SystemPage() {
               disabled={pingDb.isPending}
               className="flex items-center gap-1.5 text-xs"
             >
-              <Zap className="h-3.5 w-3.5 text-amber-400" />
+              <Zap className="h-3.5 w-3.5 text-sky-400" />
               {pingDb.isPending ? 'Ping…' : ts.testPing}
               {lastPing !== null && (
                 <span className="ml-1 rounded bg-surface-raised px-1 py-0.5 font-mono text-[10px] text-primary">
@@ -178,7 +178,7 @@ export default function SystemPage() {
 
         <div className="rounded-xl border border-border bg-surface p-4">
           <div className="flex items-center gap-2 text-text-muted">
-            <Layers className="h-4 w-4 text-amber-400" />
+            <Layers className="h-4 w-4 text-sky-400" />
             <span className="text-xs font-medium">{ts.dbSize}</span>
           </div>
           <p className="mt-2 text-lg sm:text-xl font-bold font-mono text-text">

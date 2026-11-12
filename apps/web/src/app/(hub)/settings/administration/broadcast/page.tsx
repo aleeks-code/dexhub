@@ -23,7 +23,7 @@ import {
 
 const PREVIEW_STYLES = {
   info: 'bg-primary/10 border-primary/20 text-text border',
-  warning: 'bg-amber-500/15 border-amber-500/30 text-amber-200 border',
+  warning: 'bg-yellow-500/15 border-yellow-500/30 text-yellow-200 border',
   alert: 'bg-rose-500/15 border-rose-500/30 text-rose-200 border',
   success: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-200 border',
 }
@@ -176,7 +176,7 @@ export default function BroadcastPage() {
               className={cn(
                 'rounded-lg border p-2.5 text-xs font-medium transition-colors text-center',
                 type === 'warning'
-                  ? 'border-amber-500 bg-amber-500/10 text-amber-300'
+                  ? 'border-yellow-500 bg-yellow-500/10 text-yellow-300'
                   : 'border-border bg-surface-raised text-text-muted hover:text-text',
               )}
             >

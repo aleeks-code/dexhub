@@ -156,7 +156,7 @@ export function ReconciliationModal({ isOpen, onClose, summary, onSave }: Props)
                       ? 'text-emerald-400'
                       : delta > 0
                       ? 'text-sky-400'
-                      : 'text-amber-400'
+                      : 'text-yellow-400'
                   )}
                 >
                   {delta === 0 ? '✓ Pareggio perfetto (0,00 €)' : `${delta > 0 ? '+' : ''}${formatEuro(delta)}`}

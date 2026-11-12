@@ -261,16 +261,20 @@ export default function LoansPage() {
               <span
                 className={cn(
                   'text-[9px] font-bold px-1.5 py-0.5 rounded',
-                  globalSummary.nextPayment.daysUntil <= 3
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-emerald-500/20 text-emerald-500',
+                  globalSummary.nextPayment.daysUntil < 0
+                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                    : globalSummary.nextPayment.daysUntil <= 3
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                      : 'bg-surface-raised text-text-subtle border border-border',
                 )}
               >
-                {globalSummary.nextPayment.daysUntil === 0
-                  ? 'Oggi!'
-                  : globalSummary.nextPayment.daysUntil === 1
-                    ? 'Domani'
-                    : `Tra ${globalSummary.nextPayment.daysUntil} gg`}
+                {globalSummary.nextPayment.daysUntil < 0
+                  ? `Scaduta da ${Math.abs(globalSummary.nextPayment.daysUntil)} gg`
+                  : globalSummary.nextPayment.daysUntil === 0
+                    ? 'Oggi!'
+                    : globalSummary.nextPayment.daysUntil === 1
+                      ? 'Domani'
+                      : `Tra ${globalSummary.nextPayment.daysUntil} gg`}
               </span>
             )}
           </div>
@@ -516,12 +520,14 @@ export default function LoansPage() {
                         <span
                           className={cn(
                             'text-[9px] font-bold px-1 rounded',
-                            stats.daysUntilNext <= 3
-                              ? 'bg-amber-500/20 text-amber-500'
-                              : 'text-text-muted',
+                            stats.daysUntilNext < 0
+                              ? 'bg-rose-500/20 text-rose-400'
+                              : stats.daysUntilNext <= 3
+                                ? 'bg-yellow-500/20 text-yellow-400'
+                                : 'text-text-muted',
                           )}
                         >
-                          ({stats.daysUntilNext === 0 ? 'Oggi' : `${stats.daysUntilNext} gg`})
+                          ({stats.daysUntilNext < 0 ? `Scaduta (${stats.daysUntilNext} gg)` : stats.daysUntilNext === 0 ? 'Oggi' : `${stats.daysUntilNext} gg`})
                         </span>
                       )}
                     </div>

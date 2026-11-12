@@ -243,12 +243,22 @@ export default function SubscriptionsPage() {
               <p className="font-semibold text-base text-text mt-1 truncate">
                 {summary.nextRenewal.subscription.name}
               </p>
-              <p className="text-[11px] font-medium text-amber-500">
-                {summary.nextRenewal.daysUntil === 0
-                  ? 'Oggi!'
-                  : summary.nextRenewal.daysUntil === 1
-                    ? 'Domani'
-                    : `tra ${summary.nextRenewal.daysUntil} giorni`}{' '}
+              <p
+                className={`text-[11px] font-medium ${
+                  summary.nextRenewal.daysUntil < 0
+                    ? 'text-rose-400'
+                    : summary.nextRenewal.daysUntil <= 3
+                      ? 'text-yellow-400'
+                      : 'text-text-subtle'
+                }`}
+              >
+                {summary.nextRenewal.daysUntil < 0
+                  ? `Scaduto (${Math.abs(summary.nextRenewal.daysUntil)} gg fa)`
+                  : summary.nextRenewal.daysUntil === 0
+                    ? 'Oggi!'
+                    : summary.nextRenewal.daysUntil === 1
+                      ? 'Domani'
+                      : `tra ${summary.nextRenewal.daysUntil} giorni`}{' '}
                 ({summary.nextRenewal.subscription.cost.toFixed(2)} €)
               </p>
             </div>
@@ -370,11 +380,13 @@ export default function SubscriptionsPage() {
                       </span>
                       <span
                         className={`font-medium ${
-                          daysUntil <= 3 && !isPaused
-                            ? 'text-rose-500 font-bold'
-                            : daysUntil <= 7 && !isPaused
-                              ? 'text-amber-500'
-                              : 'text-text'
+                          isPaused
+                            ? 'text-text-muted'
+                            : daysUntil < 0
+                              ? 'text-rose-400 font-bold'
+                              : daysUntil <= 3
+                                ? 'text-yellow-400 font-bold'
+                                : 'text-text-subtle'
                         }`}
                       >
                         {new Date(sub.nextRenewalDate).toLocaleDateString('it-IT', {
@@ -383,7 +395,7 @@ export default function SubscriptionsPage() {
                           year: 'numeric',
                         })}{' '}
                         {!isPaused &&
-                          `(${daysUntil === 0 ? 'Oggi' : daysUntil === 1 ? 'Domani' : `${daysUntil} gg`})`}
+                          `(${daysUntil < 0 ? `Scaduto (${daysUntil} gg)` : daysUntil === 0 ? 'Oggi' : daysUntil === 1 ? 'Domani' : `${daysUntil} gg`})`}
                       </span>
                     </div>
 
@@ -412,7 +424,7 @@ export default function SubscriptionsPage() {
                       </>
                     ) : (
                       <>
-                        <PauseCircle className="h-3.5 w-3.5 text-amber-500" />
+                        <PauseCircle className="h-3.5 w-3.5 text-text-subtle" />
                         <span>Pausa</span>
                       </>
                     )}

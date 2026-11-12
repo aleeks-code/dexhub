@@ -844,16 +844,16 @@ export default function WorklogPage() {
           </thead>
           <tbody>
             {printDays.map((d) => (
-              <tr key={d.dateStr} className={`border-b border-gray-200 ${d.isHol ? 'bg-amber-50/50' : ''}`}>
+              <tr key={d.dateStr} className={`border-b border-gray-200 ${d.isHol ? 'bg-rose-50/50' : ''}`}>
                 <td className="border border-gray-300 p-1 text-center tabular-nums font-medium">{d.dayNum}</td>
                 <td className="border border-gray-300 p-1 capitalize text-gray-600">{d.dow}</td>
                 <td className="border border-gray-300 p-1">
                   {d.isHol && !d.kinds.length ? (
-                    <span className="text-amber-700 font-medium">{d.holName ?? 'Festivo'}</span>
+                    <span className="text-rose-700 font-medium">{d.holName ?? 'Festivo'}</span>
                   ) : d.kinds.length > 0 ? (
                     <span>
                       {d.kinds.map((k) => t.kind[k] ?? k).join(', ')}
-                      {d.isHol && d.holName && <span className="text-amber-700 ml-1">({d.holName})</span>}
+                      {d.isHol && d.holName && <span className="text-rose-700 ml-1">({d.holName})</span>}
                     </span>
                   ) : (
                     <span className="text-gray-400">—</span>

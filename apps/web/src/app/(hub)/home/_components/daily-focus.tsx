@@ -44,7 +44,7 @@ export function DailyFocus() {
         <div className="flex items-center gap-2">
           <span
             className={`h-2 w-2 rounded-full ${
-              totalAlertsCount > 0 ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
+              totalAlertsCount > 0 ? 'bg-yellow-400' : 'bg-emerald-500'
             }`}
           />
           <h2
@@ -119,7 +119,7 @@ export function DailyFocus() {
           {alerts.map((alert) => {
             const Icon = getAlertIcon(alert.moduleId)
             const isRed = alert.badgeVariant === 'red' || alert.type === 'urgent'
-            const isAmber = alert.badgeVariant === 'amber' || alert.type === 'warning'
+            const isYellow = alert.badgeVariant === 'amber' || alert.type === 'warning'
             const isCyan = alert.badgeVariant === 'cyan'
             const isEmerald = alert.badgeVariant === 'emerald'
 
@@ -132,8 +132,8 @@ export function DailyFocus() {
                   background: 'var(--home-card-bg)',
                   borderColor: isRed
                     ? 'rgba(239, 68, 68, 0.25)'
-                    : isAmber
-                      ? 'rgba(245, 158, 11, 0.22)'
+                    : isYellow
+                      ? 'rgba(250, 204, 21, 0.25)'
                       : 'rgb(var(--home-line) / .07)',
                   padding: '14px 16px',
                   textDecoration: 'none',
@@ -145,8 +145,8 @@ export function DailyFocus() {
                       className={`flex h-7 w-7 items-center justify-center rounded-lg ${
                         isRed
                           ? 'bg-rose-500/15 text-rose-500'
-                          : isAmber
-                            ? 'bg-amber-500/15 text-amber-500'
+                          : isYellow
+                            ? 'bg-yellow-500/15 text-yellow-400'
                             : isEmerald
                               ? 'bg-emerald-500/15 text-emerald-500'
                               : 'bg-primary/15 text-primary'
@@ -171,8 +171,8 @@ export function DailyFocus() {
                       className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${
                         isRed
                           ? 'bg-rose-500/15 text-rose-500'
-                          : isAmber
-                            ? 'bg-amber-500/15 text-amber-500'
+                          : isYellow
+                            ? 'bg-yellow-500/15 text-yellow-400'
                             : isEmerald
                               ? 'bg-emerald-500/15 text-emerald-500'
                               : 'bg-primary/15 text-primary'
