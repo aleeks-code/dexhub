@@ -43,12 +43,14 @@ import {
   Pizza,
   Wallet,
   Landmark,
+  CreditCard,
 } from 'lucide-react'
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Box,
   Wallet,
   Landmark,
+  CreditCard,
   Pizza,
   FileText,
   CheckSquare,

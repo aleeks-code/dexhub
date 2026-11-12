@@ -119,7 +119,11 @@ export async function registerCard(input: {
   profileId?: string
   editionId?: string
   customName?: string
+  cardNumber?: string
   cardNumberLast4?: string
+  expiryDate?: string
+  cvv?: string
+  pin?: string
   initialAtmBalance?: number
   notes?: string
 }): Promise<SocialBenefitCard> {
@@ -129,12 +133,19 @@ export async function registerCard(input: {
   const profileId = input.profileId ?? DEDICATA_A_TE_PROFILE.id
   const editionId = input.editionId ?? EDITION_2026_2027.editionId
 
+  const rawNum = input.cardNumber?.replace(/\s/g, '') || undefined
+  const last4 = input.cardNumberLast4?.trim() || (rawNum ? rawNum.slice(-4) : undefined)
+
   const newCard: SocialBenefitCard = {
     id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     profileId,
     editionId,
     customName: input.customName?.trim() || 'Carta Dedicata a Te (2026–2027)',
-    cardNumberLast4: input.cardNumberLast4?.trim() || undefined,
+    cardNumber: rawNum,
+    cardNumberLast4: last4,
+    expiryDate: input.expiryDate?.trim() || undefined,
+    cvv: input.cvv?.trim() || undefined,
+    pin: input.pin?.trim() || undefined,
     createdAt: nowIso,
     updatedAt: nowIso,
   }
@@ -163,6 +174,31 @@ export async function registerCard(input: {
 
   await saveState(state)
   return newCard
+}
+
+export async function updateCard(
+  cardId: string,
+  input: Partial<Omit<SocialBenefitCard, 'id' | 'createdAt'>>
+): Promise<SocialBenefitCard | null> {
+  const state = await loadState()
+  const idx = state.cards.findIndex((c) => c.id === cardId)
+  if (idx === -1) return null
+
+  const existing = state.cards[idx]!
+  const rawNum = input.cardNumber !== undefined ? input.cardNumber.replace(/\s/g, '') : existing.cardNumber
+  const last4 = input.cardNumberLast4 ?? (rawNum ? rawNum.slice(-4) : existing.cardNumberLast4)
+
+  const updated: SocialBenefitCard = {
+    ...existing,
+    ...input,
+    cardNumber: rawNum,
+    cardNumberLast4: last4,
+    updatedAt: new Date().toISOString(),
+  }
+
+  state.cards[idx] = updated
+  await saveState(state)
+  return updated
 }
 
 export async function deleteCard(cardId: string): Promise<boolean> {

@@ -144,8 +144,8 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
   ).slice(0, 6)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-      <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl animate-in fade-in-50 zoom-in-95">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 overflow-y-auto">
+      <div className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in fade-in-50 zoom-in-95 my-6">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border/60 pb-3">
           <div className="flex items-center gap-2">
@@ -153,13 +153,13 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
               <Store className="h-4 w-4" />
             </div>
             <h3 className="text-base font-bold text-text">
-              {initialExpense ? 'Modifica Spesa' : 'Nuova Spesa Spesa'}
+              {initialExpense ? 'Modifica Spesa' : 'Nuova Spesa'}
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-text-subtle hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="rounded-lg p-1 text-text-subtle hover:bg-surface-raised transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -184,14 +184,14 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
                 onChange={(e) => handleMerchantChange(e.target.value)}
                 onFocus={() => setShowMerchantSuggestions(true)}
                 placeholder="es. Conad, Coop, Esselunga..."
-                className="w-full rounded-lg border border-border bg-zinc-900/60 px-3 py-2 text-sm text-text placeholder:text-zinc-600 focus:outline-hidden focus:border-emerald-500"
+                className="w-full rounded-lg border border-border bg-surface-raised px-3 py-2 text-sm text-text placeholder:text-zinc-600 focus:outline-hidden focus:border-emerald-500"
                 required
               />
             </div>
 
             {/* Suggerimenti preset */}
             {showMerchantSuggestions && filteredPresets.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1 z-10 rounded-xl border border-border bg-zinc-900 p-1 shadow-lg">
+              <div className="absolute left-0 right-0 top-full mt-1 z-10 rounded-xl border border-border bg-surface-raised p-1 shadow-2xl">
                 <span className="block px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-text-subtle">
                   Esercizi Convenzionati (-15%)
                 </span>
@@ -200,7 +200,7 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
                     key={p.name}
                     type="button"
                     onClick={() => handleSelectPresetMerchant(p.name)}
-                    className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-text hover:bg-zinc-800 transition-colors text-left"
+                    className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-text hover:bg-surface transition-colors text-left cursor-pointer"
                   >
                     <span>{p.name}</span>
                     <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded">
@@ -225,7 +225,7 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
                 placeholder="0.00"
-                className="w-full rounded-lg border border-border bg-zinc-900/60 px-3 py-2 text-base font-semibold font-mono text-emerald-400 placeholder:text-zinc-600 focus:outline-hidden focus:border-emerald-500"
+                className="w-full rounded-lg border border-border bg-surface-raised px-3 py-2 text-base font-semibold font-mono text-emerald-400 placeholder:text-zinc-600 focus:outline-hidden focus:border-emerald-500"
                 required
               />
             </div>
@@ -235,7 +235,7 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
           </div>
 
           {/* Switch Sconto Convenzione 15% */}
-          <div className="rounded-xl border border-border bg-zinc-900/40 p-3">
+          <div className="rounded-xl border border-border bg-surface-raised p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Percent className="h-4 w-4 text-emerald-400" />
@@ -272,7 +272,7 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
                       setUserOverrodeDiscount(true)
                       setDiscountSavedStr(e.target.value)
                     }}
-                    className="w-20 rounded border border-border bg-zinc-900 px-2 py-0.5 text-xs text-right font-mono text-emerald-400 focus:outline-hidden"
+                    className="w-20 rounded border border-border bg-surface px-2 py-0.5 text-xs text-right font-mono text-emerald-400 focus:outline-hidden"
                   />
                   <span className="text-xs text-text-subtle">€</span>
                 </div>
@@ -290,7 +290,7 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
                 type="date"
                 value={spentAtDate}
                 onChange={(e) => setSpentAtDate(e.target.value)}
-                className="w-full rounded-lg border border-border bg-zinc-900/60 px-3 py-2 text-xs text-text focus:outline-hidden"
+                className="w-full rounded-lg border border-border bg-surface-raised px-3 py-2 text-xs text-text focus:outline-hidden"
                 required
               />
             </div>
@@ -302,7 +302,7 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
                 type="time"
                 value={spentAtTime}
                 onChange={(e) => setSpentAtTime(e.target.value)}
-                className="w-full rounded-lg border border-border bg-zinc-900/60 px-3 py-2 text-xs text-text focus:outline-hidden"
+                className="w-full rounded-lg border border-border bg-surface-raised px-3 py-2 text-xs text-text focus:outline-hidden"
               />
             </div>
           </div>
@@ -316,8 +316,8 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="es. Spesa settimanale generi alimentari"
-              className="w-full rounded-lg border border-border bg-zinc-900/60 px-3 py-2 text-xs text-text placeholder:text-zinc-600 focus:outline-hidden"
+              placeholder="es. Spesa generi alimentari"
+              className="w-full rounded-lg border border-border bg-surface-raised px-3 py-2 text-xs text-text placeholder:text-zinc-600 focus:outline-hidden"
             />
           </div>
 
@@ -326,7 +326,7 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-border px-3.5 py-2 text-xs text-text-subtle hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="rounded-lg border border-border px-3.5 py-2 text-xs text-text-subtle hover:bg-surface-raised transition-colors cursor-pointer"
             >
               Annulla
             </button>

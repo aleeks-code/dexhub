@@ -41,7 +41,11 @@ export interface SocialBenefitCard {
   profileId: string // 'dedicata-a-te'
   editionId: string // '2026-2027'
   customName?: string
-  cardNumberLast4?: string
+  cardNumber?: string // 16 cifre complete (es. 5333 1712 3456 7890)
+  cardNumberLast4?: string // Ultime 4 cifre per identificazione rapida
+  expiryDate?: string // Scadenza MM/AA
+  cvv?: string // CVV a 3 cifre
+  pin?: string // PIN a 5 cifre per prelievi e Postamat ATM
   createdAt: string // ISO timestamp
   updatedAt: string // ISO timestamp
 }

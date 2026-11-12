@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Wallet, ArrowRight, Clock, CheckCircle2, Store, Plus } from 'lucide-react'
+import { CreditCard, ArrowRight, Clock, CheckCircle2, Store, Plus } from 'lucide-react'
 import { cn } from '@dexhub/ui'
 import { getCards, getCardSummary } from '../services/social-cards-service'
 import type { CardBalanceSummary } from '../types'
@@ -39,7 +39,7 @@ export default function SocialCardsWidget() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center p-3 text-xs text-text-subtle">
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
       </div>
     )
   }
@@ -50,12 +50,12 @@ export default function SocialCardsWidget() {
       <div className="flex h-full flex-col justify-between gap-2 p-1">
         <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
           <div className="flex items-center gap-1.5">
-            <Wallet className="h-4 w-4 text-emerald-400" />
+            <CreditCard className="h-4 w-4 text-sky-400" />
             <span className="text-xs font-semibold text-text">Dedicata a Te</span>
           </div>
           <Link
             href="/social-cards"
-            className="flex items-center gap-0.5 text-[11px] text-text-subtle hover:text-emerald-400 transition-colors"
+            className="flex items-center gap-0.5 text-[11px] text-text-subtle hover:text-sky-400 transition-colors"
           >
             Apri <ArrowRight className="h-3 w-3" />
           </Link>
@@ -73,7 +73,7 @@ export default function SocialCardsWidget() {
         <div className="border-t border-border/40 pt-1.5 text-center">
           <Link
             href="/social-cards"
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300"
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-400 hover:text-sky-300"
           >
             <Plus className="h-3 w-3" /> Registra Carta
           </Link>
@@ -101,12 +101,12 @@ export default function SocialCardsWidget() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
         <div className="flex items-center gap-1.5">
-          <Wallet className="h-4 w-4 text-emerald-400" />
+          <CreditCard className="h-4 w-4 text-sky-400" />
           <span className="text-xs font-semibold text-text">Dedicata a Te</span>
         </div>
         <Link
           href="/social-cards"
-          className="flex items-center gap-0.5 text-[11px] text-text-subtle hover:text-emerald-400 transition-colors"
+          className="flex items-center gap-0.5 text-[11px] text-text-subtle hover:text-sky-400 transition-colors"
         >
           Apri <ArrowRight className="h-3 w-3" />
         </Link>
@@ -123,15 +123,15 @@ export default function SocialCardsWidget() {
               <CheckCircle2 className="h-3 w-3" /> Attiva
             </span>
           ) : (
-            <span className="flex items-center gap-1 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">
-              <Clock className="h-3 w-3 animate-pulse" /> {daysToFirstPurchaseDeadline ?? 0}gg al 16 Dic
+            <span className="flex items-center gap-1 rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-bold text-sky-200">
+              <Clock className="h-3 w-3" /> {daysToFirstPurchaseDeadline ?? 0}gg al 16 Dic
             </span>
           )}
         </div>
 
         {/* Progress bar */}
         <div className="mt-2">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-raised border border-border/40">
             <div
               className="h-full bg-emerald-500 transition-all duration-300"
               style={{ width: `${spentPercent}%` }}

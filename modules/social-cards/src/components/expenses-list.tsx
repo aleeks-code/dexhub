@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Store, Percent, Trash2, Edit2, Search, ShoppingBag, ArrowDownLeft } from 'lucide-react'
+import { Store, Percent, Trash2, Edit2, Search, ShoppingBag } from 'lucide-react'
 import { cn } from '@dexhub/ui'
 import type { SocialCardExpense } from '../types'
 
@@ -54,7 +54,7 @@ export function ExpensesList({ expenses, onEdit, onDelete }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+    <div className="rounded-2xl border border-border bg-surface p-6 shadow-xs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-4">
         <div>
           <h3 className="text-base font-bold text-text">Registro Spese</h3>
@@ -72,7 +72,7 @@ export function ExpensesList({ expenses, onEdit, onDelete }: Props) {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Cerca supermercato o nota..."
-              className="w-full rounded-lg border border-border bg-zinc-900/60 pl-8 pr-3 py-1.5 text-xs text-text placeholder:text-zinc-600 focus:outline-hidden focus:border-emerald-500"
+              className="w-full rounded-lg border border-border bg-surface-raised pl-8 pr-3 py-1.5 text-xs text-text placeholder:text-zinc-600 focus:outline-hidden focus:border-emerald-500"
             />
           </div>
         )}
@@ -80,7 +80,7 @@ export function ExpensesList({ expenses, onEdit, onDelete }: Props) {
 
       {filtered.length === 0 ? (
         <div className="py-12 text-center">
-          <div className="mx-auto rounded-full bg-zinc-800/80 p-3 w-fit text-zinc-500 mb-3">
+          <div className="mx-auto rounded-full bg-surface-raised p-3 w-fit text-zinc-500 mb-3 border border-border/40">
             <ShoppingBag className="h-6 w-6" />
           </div>
           <p className="text-sm font-semibold text-text">
@@ -97,10 +97,10 @@ export function ExpensesList({ expenses, onEdit, onDelete }: Props) {
           {filtered.map((exp) => (
             <div
               key={exp.id}
-              className="flex items-center justify-between py-3.5 px-2 hover:bg-zinc-900/40 rounded-xl transition-colors gap-3"
+              className="flex items-center justify-between py-3.5 px-2 hover:bg-surface-raised rounded-xl transition-colors gap-3"
             >
               <div className="flex items-start gap-3">
-                <div className="rounded-lg bg-zinc-800 p-2 text-zinc-400 shrink-0 mt-0.5">
+                <div className="rounded-lg bg-surface-raised border border-border/40 p-2 text-zinc-400 shrink-0 mt-0.5">
                   <Store className="h-4 w-4" />
                 </div>
                 <div>
@@ -109,7 +109,7 @@ export function ExpensesList({ expenses, onEdit, onDelete }: Props) {
                       {exp.merchant}
                     </span>
                     {exp.isPartnerMerchant && (
-                      <span className="flex items-center gap-1 rounded bg-emerald-500/10 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-400">
+                      <span className="flex items-center gap-1 rounded bg-emerald-500/10 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">
                         <Percent className="h-2.5 w-2.5" /> Convenzione 15%
                       </span>
                     )}
@@ -147,7 +147,7 @@ export function ExpensesList({ expenses, onEdit, onDelete }: Props) {
                   <button
                     type="button"
                     onClick={() => onEdit(exp)}
-                    className="rounded-lg p-1.5 text-zinc-400 hover:text-text hover:bg-zinc-800 transition-colors cursor-pointer"
+                    className="rounded-lg p-1.5 text-zinc-400 hover:text-text hover:bg-surface-raised transition-colors cursor-pointer"
                     title="Modifica spesa"
                   >
                     <Edit2 className="h-3.5 w-3.5" />

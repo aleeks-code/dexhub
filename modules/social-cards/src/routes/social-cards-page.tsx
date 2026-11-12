@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import {
-  Wallet,
+  CreditCard,
   Plus,
   Landmark,
   Info,
@@ -11,13 +11,13 @@ import {
   Sparkles,
   ShoppingBag,
   Trash2,
-  CreditCard,
 } from 'lucide-react'
 import {
   loadState,
   getCards,
   getCardSummary,
   registerCard,
+  updateCard,
   deleteCard,
   addExpense,
   updateExpense,
@@ -32,6 +32,8 @@ import type {
 } from '../types'
 import { ActivationBanner } from '../components/activation-banner'
 import { CardHeroBalance } from '../components/card-hero-balance'
+import { PhysicalCardVisualizer } from '../components/physical-card-visualizer'
+import { CardCredentialsModal } from '../components/card-credentials-modal'
 import { ExpensesList } from '../components/expenses-list'
 import { ExpenseModal } from '../components/expense-modal'
 import { ReconciliationModal } from '../components/reconciliation-modal'
@@ -48,6 +50,7 @@ export default function SocialCardsPage() {
 
   // Modals state
   const [registerModalOpen, setRegisterModalOpen] = useState(false)
+  const [credentialsModalOpen, setCredentialsModalOpen] = useState(false)
   const [expenseModalOpen, setExpenseModalOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState<SocialCardExpense | null>(null)
   const [reconcileModalOpen, setReconcileModalOpen] = useState(false)
@@ -97,12 +100,29 @@ export default function SocialCardsPage() {
     profileId: string
     editionId: string
     customName: string
+    cardNumber?: string
     cardNumberLast4?: string
+    expiryDate?: string
+    cvv?: string
+    pin?: string
     initialAtmBalance?: number
     notes?: string
   }) => {
     const newCard = await registerCard(data)
     await reloadData(newCard.id)
+  }
+
+  // Card Credentials Update Handler
+  const handleSaveCredentials = async (data: {
+    customName?: string
+    cardNumber?: string
+    expiryDate?: string
+    cvv?: string
+    pin?: string
+  }) => {
+    if (!activeCardId) return
+    await updateCard(activeCardId, data)
+    await reloadData(activeCardId)
   }
 
   // Card Delete Handler
@@ -171,7 +191,7 @@ export default function SocialCardsPage() {
       <div className="flex h-96 items-center justify-center">
         <div className="flex flex-col items-center gap-2 text-text-subtle text-xs">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
-          <span>Caricamento Carte & Bonus Sociali...</span>
+          <span>Caricamento Carta Dedicata a Te...</span>
         </div>
       </div>
     )
@@ -185,13 +205,13 @@ export default function SocialCardsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-text flex items-center gap-2.5">
-            <span className="p-1.5 rounded-xl bg-emerald-500/15 text-emerald-400">
-              <Wallet className="h-6 w-6" />
+            <span className="p-1.5 rounded-xl bg-sky-500/15 text-sky-400">
+              <CreditCard className="h-6 w-6" />
             </span>
-            Carte & Bonus Sociali
+            Carta Dedicata a Te
           </h1>
           <p className="text-xs text-text-subtle mt-1">
-            Monitoraggio personalizzato della Carta Dedicata a Te con saldo stimato, gestione tranche FIFO e scadenze ministeriali.
+            Monitoraggio della carta alimentare ministeriale: saldo stimato, credenziali e PIN protetti, gestione tranche FIFO e scontrini Postamat.
           </p>
         </div>
 
@@ -200,19 +220,19 @@ export default function SocialCardsPage() {
           <button
             type="button"
             onClick={() => setCategoriesModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl border border-border bg-card hover:bg-card-hover px-3.5 py-2 text-xs font-medium text-text transition-colors cursor-pointer shadow-sm"
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-surface hover:bg-surface-raised px-3.5 py-2 text-xs font-medium text-text transition-colors cursor-pointer shadow-xs"
           >
-            <Info className="h-4 w-4 text-emerald-400" />
+            <Info className="h-4 w-4 text-sky-400" />
             <span>Beni Ammessi & Convenzioni</span>
           </button>
 
           <button
             type="button"
             onClick={() => setRegisterModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black px-3.5 py-2 text-xs font-semibold transition-colors cursor-pointer shadow-sm"
+            className="flex items-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black px-3.5 py-2 text-xs font-semibold transition-colors cursor-pointer shadow-xs"
           >
             <Plus className="h-4 w-4" />
-            <span>Registra Carta</span>
+            <span>{cards.length === 0 ? 'Registra Carta' : 'Aggiungi Altra Carta'}</span>
           </button>
         </div>
       </div>
@@ -232,8 +252,8 @@ export default function SocialCardsPage() {
                   onClick={() => handleSelectCard(c.id)}
                   className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
                     c.id === activeCardId
-                      ? 'bg-emerald-500 text-black font-semibold'
-                      : 'border border-border bg-card text-text-subtle hover:text-text'
+                      ? 'bg-sky-500 text-black font-semibold'
+                      : 'border border-border bg-surface text-text-subtle hover:text-text'
                   }`}
                 >
                   <CreditCard className="h-3.5 w-3.5" />
@@ -248,20 +268,26 @@ export default function SocialCardsPage() {
             </div>
           )}
 
-          {/* 1. Banner Pre-Attivazione Adattivo (16 Dicembre 2026) */}
+          {/* 1. Banner Pre-Attivazione Adattivo (Scadenza 16 Dicembre 2026 - Palette Sky) */}
           <ActivationBanner
             summary={summary}
             onNewExpenseClick={handleOpenAddExpense}
           />
 
-          {/* 2. Hero Card Saldo Stimato & Checkpoint Postamat */}
+          {/* 2. Hero Card Saldo Stimato (con maschera di riservatezza) */}
           <CardHeroBalance
             summary={summary}
             onAddExpense={handleOpenAddExpense}
             onReconcile={() => setReconcileModalOpen(true)}
           />
 
-          {/* 3. Registro Spese */}
+          {/* 3. Visualizzatore Carta Fisica & PIN Protetti */}
+          <PhysicalCardVisualizer
+            card={activeCard}
+            onEditCredentials={() => setCredentialsModalOpen(true)}
+          />
+
+          {/* 4. Registro Spese */}
           <ExpensesList
             expenses={state?.expenses.filter((e) => e.cardId === activeCard.id) ?? []}
             onEdit={handleEditExpense}
@@ -288,6 +314,15 @@ export default function SocialCardsPage() {
         onClose={() => setRegisterModalOpen(false)}
         onRegister={handleRegisterCard}
       />
+
+      {activeCard && (
+        <CardCredentialsModal
+          isOpen={credentialsModalOpen}
+          onClose={() => setCredentialsModalOpen(false)}
+          card={activeCard}
+          onSave={handleSaveCredentials}
+        />
+      )}
 
       <ExpenseModal
         isOpen={expenseModalOpen}

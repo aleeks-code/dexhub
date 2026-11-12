@@ -77,12 +77,12 @@ export function ReconciliationModal({ isOpen, onClose, summary, onSave }: Props)
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-      <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl animate-in fade-in-50 zoom-in-95">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 overflow-y-auto">
+      <div className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-in fade-in-50 zoom-in-95 my-6">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border/60 pb-3">
           <div className="flex items-center gap-2">
-            <div className="rounded-lg bg-emerald-500/15 p-1.5 text-emerald-400">
+            <div className="rounded-lg bg-sky-500/15 p-1.5 text-sky-400">
               <Landmark className="h-4 w-4" />
             </div>
             <div>
@@ -97,7 +97,7 @@ export function ReconciliationModal({ isOpen, onClose, summary, onSave }: Props)
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-text-subtle hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="rounded-lg p-1 text-text-subtle hover:bg-surface-raised transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -111,9 +111,9 @@ export function ReconciliationModal({ isOpen, onClose, summary, onSave }: Props)
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* Informazione Metodologia */}
-          <div className="rounded-xl border border-border/80 bg-zinc-900/60 p-3 text-xs text-text-subtle leading-relaxed">
+          <div className="rounded-xl border border-border/80 bg-surface-raised p-3 text-xs text-text-subtle leading-relaxed">
             <div className="flex items-start gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+              <ShieldCheck className="h-4 w-4 text-sky-400 shrink-0 mt-0.5" />
               <span>
                 Inserisci il saldo visualizzato sullo scontrino o schermo del Postamat. Questo valore diventerà il <strong>nuovo ancoraggio assoluto</strong> da cui verranno scalate le spese successive.
               </span>
@@ -121,7 +121,7 @@ export function ReconciliationModal({ isOpen, onClose, summary, onSave }: Props)
           </div>
 
           {/* Saldo Attuale Stimato vs Saldo ATM */}
-          <div className="rounded-xl border border-border bg-zinc-900/40 p-3.5 space-y-3">
+          <div className="rounded-xl border border-border bg-surface-raised p-3.5 space-y-3">
             <div className="flex items-center justify-between text-xs">
               <span className="text-text-subtle">Stima attuale DexHub:</span>
               <span className="font-mono font-bold text-text">
@@ -140,7 +140,7 @@ export function ReconciliationModal({ isOpen, onClose, summary, onSave }: Props)
                 value={atmBalanceStr}
                 onChange={(e) => setAtmBalanceStr(e.target.value)}
                 placeholder="es. 435.00"
-                className="w-full rounded-lg border border-border bg-zinc-900 px-3 py-2 text-base font-mono font-bold text-emerald-400 placeholder:text-zinc-600 focus:outline-hidden focus:border-emerald-500"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-base font-mono font-bold text-emerald-400 placeholder:text-zinc-600 focus:outline-hidden focus:border-emerald-500"
                 required
                 autoFocus
               />
@@ -175,7 +175,7 @@ export function ReconciliationModal({ isOpen, onClose, summary, onSave }: Props)
                 type="date"
                 value={reconciledDate}
                 onChange={(e) => setReconciledDate(e.target.value)}
-                className="w-full rounded-lg border border-border bg-zinc-900/60 px-3 py-2 text-xs text-text focus:outline-hidden"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text focus:outline-hidden"
                 required
               />
             </div>
@@ -187,7 +187,7 @@ export function ReconciliationModal({ isOpen, onClose, summary, onSave }: Props)
                 type="time"
                 value={reconciledTime}
                 onChange={(e) => setReconciledTime(e.target.value)}
-                className="w-full rounded-lg border border-border bg-zinc-900/60 px-3 py-2 text-xs text-text focus:outline-hidden"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text focus:outline-hidden"
               />
             </div>
           </div>
@@ -201,8 +201,8 @@ export function ReconciliationModal({ isOpen, onClose, summary, onSave }: Props)
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="es. ATM Postamat Ufficio Postale Centrale"
-              className="w-full rounded-lg border border-border bg-zinc-900/60 px-3 py-2 text-xs text-text placeholder:text-zinc-600 focus:outline-hidden"
+              placeholder="es. ATM Postamat Ufficio Postale"
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text placeholder:text-zinc-600 focus:outline-hidden"
             />
           </div>
 
@@ -211,7 +211,7 @@ export function ReconciliationModal({ isOpen, onClose, summary, onSave }: Props)
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-border px-3.5 py-2 text-xs text-text-subtle hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="rounded-lg border border-border px-3.5 py-2 text-xs text-text-subtle hover:bg-surface-raised transition-colors cursor-pointer"
             >
               Annulla
             </button>
