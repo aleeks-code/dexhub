@@ -67,7 +67,7 @@ export function MobileQuickAction() {
               className="flex items-center gap-2.5 rounded-full bg-surface-raised border border-border px-3.5 py-2 shadow-lg hover:bg-surface text-text transition-all"
             >
               <span className="text-xs font-semibold">Registra Ore</span>
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-white shadow-sm">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
                 <Briefcase className="h-3.5 w-3.5" />
               </div>
             </button>

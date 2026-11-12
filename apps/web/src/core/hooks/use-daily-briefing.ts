@@ -19,7 +19,7 @@ export interface DailyAlert {
   title: string
   subtitle?: string
   badge?: string
-  badgeVariant?: 'red' | 'amber' | 'emerald' | 'cyan' | 'neutral'
+  badgeVariant?: 'red' | 'yellow' | 'amber' | 'emerald' | 'cyan' | 'neutral'
   href: string
   actionLabel?: string
   createdAt?: string
@@ -165,7 +165,7 @@ export function useDailyBriefing() {
             ? `${pendingInvites[0]!.email} ha richiesto l'accesso a DexHub`
             : `${count} persone in attesa di approvazione`,
         badge: 'Invito',
-        badgeVariant: 'amber',
+        badgeVariant: 'yellow',
         href: '/settings/administration/invite-requests',
         actionLabel: 'Gestisci',
       })
@@ -175,24 +175,27 @@ export function useDailyBriefing() {
     if (loansSummary?.nextPayment) {
       const np = loansSummary.nextPayment
       if (np.daysUntil <= 7) {
+        const isOverdue = np.daysUntil < 0
         const isUrgent = np.daysUntil <= 3
         const loanLabel = formatCleanName(np.lender, np.loanName)
         const dueText =
-          np.daysUntil === 0
-            ? 'Oggi!'
-            : np.daysUntil === 1
-              ? 'Domani'
-              : `tra ${np.daysUntil} giorni`
+          np.daysUntil < 0
+            ? `Scaduta da ${Math.abs(np.daysUntil)} gg`
+            : np.daysUntil === 0
+              ? 'Oggi!'
+              : np.daysUntil === 1
+                ? 'Domani'
+                : `tra ${np.daysUntil} giorni`
 
         list.push({
           id: `loan-due-${np.loanId}`,
           moduleId: 'loans',
           moduleName: 'Finanziamenti',
-          type: isUrgent ? 'urgent' : 'warning',
+          type: isOverdue ? 'urgent' : isUrgent ? 'warning' : 'info',
           title: `Rata ${loanLabel}: ${np.installment.totalAmount.toFixed(2)} €`,
           subtitle: `Scadenza rata: ${dueText} (${new Date(np.installment.dueDate).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })})`,
           badge: dueText,
-          badgeVariant: isUrgent ? 'red' : 'amber',
+          badgeVariant: isOverdue ? 'red' : isUrgent ? 'yellow' : 'neutral',
           href: '/loans',
           actionLabel: 'Visualizza rata',
         })
@@ -227,13 +230,13 @@ export function useDailyBriefing() {
         title: 'Ore di lavoro non ancora registrate',
         subtitle: 'Ricordati di confermare le ore lavorate oggi per aggiornare la stima del mese',
         badge: 'Da inserire',
-        badgeVariant: 'amber',
+        badgeVariant: 'yellow',
         href: '/worklog',
         actionLabel: 'Registra ore',
       })
     }
 
-    // 4. Debts: pending credits
+    // 4. Debts: pending credits and debts
     if (debtsSummary?.globalSummary) {
       const { totalCredit, totalDebt } = debtsSummary.globalSummary
       if (totalCredit > 0.01) {
@@ -249,16 +252,17 @@ export function useDailyBriefing() {
           href: '/debts',
           actionLabel: 'Vedi debiti',
         })
-      } else if (totalDebt > 0.01) {
+      }
+      if (totalDebt > 0.01) {
         list.push({
           id: 'debts-owed',
           moduleId: 'debts',
           moduleName: 'Debiti & Crediti',
-          type: 'warning',
+          type: 'urgent',
           title: `Debiti da saldare: ${totalDebt.toFixed(2)} €`,
           subtitle: 'Hai importi in sospeso da restituire',
           badge: `-${totalDebt.toFixed(2)} €`,
-          badgeVariant: 'amber',
+          badgeVariant: 'red',
           href: '/debts',
           actionLabel: 'Vedi debiti',
         })
@@ -269,23 +273,26 @@ export function useDailyBriefing() {
     if (subsSummary?.nextRenewal) {
       const nr = subsSummary.nextRenewal
       if (nr.daysUntil <= 5) {
+        const isOverdue = nr.daysUntil < 0
         const isUrgent = nr.daysUntil <= 2
         const dueText =
-          nr.daysUntil === 0
-            ? 'Oggi!'
-            : nr.daysUntil === 1
-              ? 'Domani'
-              : `tra ${nr.daysUntil} giorni`
+          nr.daysUntil < 0
+            ? `Scaduto da ${Math.abs(nr.daysUntil)} gg`
+            : nr.daysUntil === 0
+              ? 'Oggi!'
+              : nr.daysUntil === 1
+                ? 'Domani'
+                : `tra ${nr.daysUntil} giorni`
 
         list.push({
           id: `sub-due-${nr.subscription.id}`,
           moduleId: 'subscriptions',
           moduleName: 'Abbonamenti',
-          type: isUrgent ? 'urgent' : 'warning',
+          type: isOverdue ? 'urgent' : isUrgent ? 'warning' : 'info',
           title: `Rinnovo ${nr.subscription.name}: ${nr.subscription.cost.toFixed(2)} €`,
           subtitle: `Rinnovo programmato ${dueText} (${new Date(nr.subscription.nextRenewalDate).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })})`,
           badge: dueText,
-          badgeVariant: isUrgent ? 'red' : 'amber',
+          badgeVariant: isOverdue ? 'red' : isUrgent ? 'yellow' : 'neutral',
           href: '/subscriptions',
           actionLabel: 'Vedi abbonamento',
         })

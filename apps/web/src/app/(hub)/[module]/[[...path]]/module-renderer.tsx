@@ -60,7 +60,7 @@ export function ModuleRenderer({ moduleId, path }: { moduleId: string; path: str
   if (!currentMod || !currentMod.enabled) {
     return (
       <div className="mx-auto max-w-lg mt-16 p-8 rounded-2xl border border-border bg-surface text-center shadow-lg space-y-4">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-yellow-500/10 text-yellow-400 border border-yellow-500/25">
           <ShieldAlert className="h-7 w-7" />
         </div>
         <div>

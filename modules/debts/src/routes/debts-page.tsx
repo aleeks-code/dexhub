@@ -629,7 +629,7 @@ export default function DebtsPage() {
                   globalSummary.netBalance > 0
                     ? 'text-primary'
                     : globalSummary.netBalance < 0
-                      ? 'text-danger'
+                      ? 'text-rose-400'
                       : 'text-text-muted',
                 )}
               >
@@ -751,12 +751,12 @@ export default function DebtsPage() {
           </div>
 
           <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-raised p-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-danger/10 text-danger">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-500/10 text-rose-400">
               <ArrowDownLeft className="h-5 w-5" />
             </div>
             <div>
               <div className="text-[11px] text-text-subtle">Devi restituire in totale</div>
-              <div className="font-mono text-base font-bold text-danger">
+              <div className="font-mono text-base font-bold text-rose-400">
                 -{globalSummary.totalDebt.toFixed(2)} €
               </div>
             </div>
@@ -875,7 +875,7 @@ export default function DebtsPage() {
                               netBalance > 0
                                 ? 'text-primary'
                                 : netBalance < 0
-                                  ? 'text-danger'
+                                  ? 'text-rose-400'
                                   : 'text-text-muted',
                             )}
                           >
@@ -888,7 +888,7 @@ export default function DebtsPage() {
                               netBalance > 0
                                 ? 'bg-primary/10 text-primary'
                                 : netBalance < 0
-                                  ? 'bg-danger/10 text-danger'
+                                  ? 'bg-rose-500/10 text-rose-400'
                                   : 'bg-surface-raised text-text-subtle',
                             )}
                           >
@@ -985,7 +985,7 @@ export default function DebtsPage() {
                   className={cn(
                     'rounded-md px-2.5 py-1 transition-all',
                     txTypeFilter === 'debt'
-                      ? 'bg-surface text-danger font-bold shadow-xs'
+                      ? 'bg-surface text-rose-400 font-bold shadow-xs'
                       : 'text-text-subtle hover:text-text',
                   )}
                 >
@@ -1046,7 +1046,7 @@ export default function DebtsPage() {
                             tx.type === 'lend'
                               ? 'bg-primary/10 text-primary'
                               : tx.type === 'borrow'
-                                ? 'bg-danger/10 text-danger'
+                                ? 'bg-rose-500/10 text-rose-400'
                                 : 'bg-info/10 text-info',
                           )}
                         >
@@ -1083,7 +1083,7 @@ export default function DebtsPage() {
                           <span
                             className={cn(
                               'font-mono text-base font-bold',
-                              isCredit ? 'text-primary' : 'text-danger',
+                              isCredit ? 'text-primary' : 'text-rose-400',
                             )}
                           >
                             {isCredit ? '+' : '-'}
@@ -1126,7 +1126,7 @@ export default function DebtsPage() {
                         <button
                           type="button"
                           onClick={() => handleDeleteTx(tx.id)}
-                          className="text-text-subtle hover:text-danger p-1 rounded transition-colors"
+                          className="text-text-subtle hover:text-rose-400 p-1 rounded transition-colors"
                           title="Elimina transazione"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1434,7 +1434,7 @@ export default function DebtsPage() {
                       <div
                         className={cn(
                           'font-mono text-2xl font-extrabold',
-                          net > 0 ? 'text-primary' : net < 0 ? 'text-danger' : 'text-text-muted',
+                          net > 0 ? 'text-primary' : net < 0 ? 'text-rose-400' : 'text-text-muted',
                         )}
                       >
                         {net > 0 ? '+' : ''}
@@ -1529,7 +1529,7 @@ export default function DebtsPage() {
                                 <span
                                   className={cn(
                                     'font-mono font-bold text-sm',
-                                    isCredit ? 'text-primary' : 'text-danger',
+                                    isCredit ? 'text-primary' : 'text-rose-400',
                                   )}
                                 >
                                   {isCredit ? '+' : '-'}
@@ -1561,7 +1561,7 @@ export default function DebtsPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteTx(tx.id)}
-                                  className="text-text-subtle hover:text-danger p-1 rounded transition-colors"
+                                  className="text-text-subtle hover:text-rose-400 p-1 rounded transition-colors"
                                   title="Elimina"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
@@ -1579,7 +1579,7 @@ export default function DebtsPage() {
                     <button
                       type="button"
                       onClick={() => handleDeletePersonConfirm(detailPerson.id, detailPerson.name)}
-                      className="text-xs text-danger hover:underline flex items-center gap-1"
+                      className="text-xs text-rose-400 hover:underline flex items-center gap-1"
                     >
                       <Trash2 className="h-3.5 w-3.5" /> Elimina persona
                     </button>
@@ -1679,7 +1679,7 @@ export default function DebtsPage() {
                     className={cn(
                       'p-2.5 rounded-lg border text-xs text-left transition-all',
                       txType === 'borrow'
-                        ? 'border-danger bg-danger/10 text-danger font-bold'
+                        ? 'border-rose-500 bg-rose-500/10 text-rose-400 font-bold'
                         : 'border-border bg-surface-raised text-text-muted hover:text-text',
                     )}
                   >
@@ -1936,7 +1936,7 @@ export default function DebtsPage() {
                   setRedoStack([])
                   setHistoryModalOpen(false)
                 }}
-                className="text-xs text-text-subtle hover:text-danger transition-colors"
+                className="text-xs text-text-subtle hover:text-rose-400 transition-colors"
               >
                 Azzera cronologia
               </button>

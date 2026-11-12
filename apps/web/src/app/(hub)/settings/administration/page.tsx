@@ -101,7 +101,7 @@ export default function AdministrationPage() {
             href="/settings/administration/maintenance"
             className="flex items-center gap-4 rounded-xl border border-border bg-surface p-4 transition-colors hover:bg-surface-raised"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-yellow-500/10 text-yellow-400">
               <Wrench className="h-5 w-5" />
             </div>
             <div className="flex-1">

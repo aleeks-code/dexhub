@@ -118,7 +118,7 @@ export function NotificationsMenu({ align = 'left' }: { align?: 'left' | 'right'
                 {alerts.map((alert) => {
                   const Icon = getAlertIcon(alert.moduleId)
                   const isRed = alert.badgeVariant === 'red' || alert.type === 'urgent'
-                  const isAmber = alert.badgeVariant === 'amber' || alert.type === 'warning'
+                  const isYellow = alert.badgeVariant === 'yellow' || alert.badgeVariant === 'amber' || alert.type === 'warning'
                   const isEmerald = alert.badgeVariant === 'emerald'
 
                   return (
@@ -131,11 +131,11 @@ export function NotificationsMenu({ align = 'left' }: { align?: 'left' | 'right'
                       <div
                         className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
                           isRed
-                            ? 'bg-rose-500/15 text-rose-500'
-                            : isAmber
-                              ? 'bg-amber-500/15 text-amber-500'
+                            ? 'bg-rose-500/15 text-rose-400'
+                            : isYellow
+                              ? 'bg-yellow-500/15 text-yellow-400'
                               : isEmerald
-                                ? 'bg-emerald-500/15 text-emerald-500'
+                                ? 'bg-emerald-500/15 text-emerald-400'
                                 : 'bg-primary/15 text-primary'
                         }`}
                       >
@@ -151,11 +151,11 @@ export function NotificationsMenu({ align = 'left' }: { align?: 'left' | 'right'
                             <span
                               className={`shrink-0 rounded-full px-1.5 py-0.2 text-[9px] font-semibold ${
                                 isRed
-                                  ? 'bg-rose-500/15 text-rose-500'
-                                  : isAmber
-                                    ? 'bg-amber-500/15 text-amber-500'
+                                  ? 'bg-rose-500/15 text-rose-400'
+                                  : isYellow
+                                    ? 'bg-yellow-500/15 text-yellow-400'
                                     : isEmerald
-                                      ? 'bg-emerald-500/15 text-emerald-500'
+                                      ? 'bg-emerald-500/15 text-emerald-400'
                                       : 'bg-primary/15 text-primary'
                               }`}
                             >

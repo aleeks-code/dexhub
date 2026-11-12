@@ -75,7 +75,7 @@ export default function DebtsWidget() {
                   globalSummary.netBalance > 0
                     ? 'text-primary'
                     : globalSummary.netBalance < 0
-                      ? 'text-danger'
+                      ? 'text-rose-400'
                       : 'text-text-muted',
                 )}
               >
@@ -114,7 +114,7 @@ export default function DebtsWidget() {
                   <span
                     className={cn(
                       'font-mono text-[11px] font-bold shrink-0 ml-2',
-                      item.netBalance > 0 ? 'text-primary' : 'text-danger',
+                      item.netBalance > 0 ? 'text-primary' : 'text-rose-400',
                     )}
                   >
                     {item.netBalance > 0 ? '+' : ''}

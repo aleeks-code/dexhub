@@ -164,7 +164,7 @@ export function MobileHeader() {
                           <span>Pannello Amministrazione</span>
                         </div>
                         {pendingInvitesCount > 0 ? (
-                          <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-400">
+                          <span className="rounded-full bg-yellow-500/20 px-1.5 py-0.5 text-[10px] font-bold text-yellow-400">
                             {pendingInvitesCount}
                           </span>
                         ) : (

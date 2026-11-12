@@ -119,7 +119,7 @@ export function DailyFocus() {
           {alerts.map((alert) => {
             const Icon = getAlertIcon(alert.moduleId)
             const isRed = alert.badgeVariant === 'red' || alert.type === 'urgent'
-            const isYellow = alert.badgeVariant === 'amber' || alert.type === 'warning'
+            const isYellow = alert.badgeVariant === 'yellow' || alert.badgeVariant === 'amber' || alert.type === 'warning'
             const isCyan = alert.badgeVariant === 'cyan'
             const isEmerald = alert.badgeVariant === 'emerald'
 
@@ -131,7 +131,7 @@ export function DailyFocus() {
                 style={{
                   background: 'var(--home-card-bg)',
                   borderColor: isRed
-                    ? 'rgba(239, 68, 68, 0.25)'
+                    ? 'rgba(244, 63, 94, 0.25)'
                     : isYellow
                       ? 'rgba(250, 204, 21, 0.25)'
                       : 'rgb(var(--home-line) / .07)',
