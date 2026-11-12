@@ -3,8 +3,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
-import { LayoutDashboard, LayoutGrid, Settings, ChevronLeft, ChevronRight, Search, LogOut, Users, MessageSquarePlus, Sparkles, Sun, Moon } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { LayoutDashboard, LayoutGrid, Settings, ChevronLeft, ChevronRight, Search, LogOut, Users, MessageSquarePlus, Sparkles, Sun, Moon, Grip } from 'lucide-react'
 import { cn } from '@dexhub/ui'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAppStore } from '@/core/store/app.store'
@@ -46,12 +46,26 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const t = useT()
-  const { sidebarCollapsed, toggleSidebar, openCommandPalette, theme, setTheme, defaultLandingPage } = useAppStore()
+  const {
+    sidebarCollapsed,
+    toggleSidebar,
+    openCommandPalette,
+    theme,
+    setTheme,
+    defaultLandingPage,
+    moduleNavOrder = [],
+    setModuleNavOrder,
+  } = useAppStore()
   const { data: me } = useMe()
   const queryClient = useQueryClient()
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const accountTriggerRef = useRef<HTMLButtonElement>(null)
   const firstMenuItemRef = useRef<HTMLAnchorElement>(null)
+
+  // Module drag-and-drop reordering state
+  const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [dropPosition, setDropPosition] = useState<'before' | 'after' | null>(null)
 
   async function handleLogout() {
     await fetch(`${API}/api/v1/auth/logout`, { method: 'POST', credentials: 'include' })
@@ -61,6 +75,76 @@ export function Sidebar() {
   }
   const { data: modules, isLoading } = useVisibleModules()
   const visibleModules = (modules ?? []).filter((mod) => mod.enabled)
+
+  // Sort visible modules by user's custom nav order (saved in app store), fallback to manifest navOrder
+  const sortedModules = useMemo(() => {
+    return [...visibleModules].sort((a, b) => {
+      const idxA = moduleNavOrder.indexOf(a.id)
+      const idxB = moduleNavOrder.indexOf(b.id)
+
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB
+      if (idxA !== -1) return -1
+      if (idxB !== -1) return 1
+
+      const ao = (a.manifest['navOrder'] as number | undefined) ?? 100
+      const bo = (b.manifest['navOrder'] as number | undefined) ?? 100
+      return ao - bo
+    })
+  }, [visibleModules, moduleNavOrder])
+
+  function handleDragStart(e: React.DragEvent, id: string) {
+    setDraggedId(id)
+    e.dataTransfer.setData('text/plain', id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLLIElement>, id: string) {
+    e.preventDefault()
+    if (!draggedId || draggedId === id) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const midY = rect.top + rect.height / 2
+    const position = e.clientY < midY ? 'before' : 'after'
+
+    setDragOverId(id)
+    setDropPosition(position)
+  }
+
+  function handleDragLeave(e: React.DragEvent<HTMLLIElement>) {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverId((prev) => (prev === e.currentTarget.dataset['modId'] ? null : prev))
+    }
+  }
+
+  function handleDrop(e: React.DragEvent, targetId: string) {
+    e.preventDefault()
+    if (!draggedId || draggedId === targetId) {
+      setDraggedId(null)
+      setDragOverId(null)
+      setDropPosition(null)
+      return
+    }
+
+    const currentOrder = sortedModules.map((m) => m.id)
+    const newOrder = currentOrder.filter((id) => id !== draggedId)
+    const targetIdx = newOrder.indexOf(targetId)
+
+    if (targetIdx !== -1) {
+      const finalIdx = dropPosition === 'after' ? targetIdx + 1 : targetIdx
+      newOrder.splice(finalIdx, 0, draggedId)
+      setModuleNavOrder(newOrder)
+    }
+
+    setDraggedId(null)
+    setDragOverId(null)
+    setDropPosition(null)
+  }
+
+  function handleDragEnd() {
+    setDraggedId(null)
+    setDragOverId(null)
+    setDropPosition(null)
+  }
   const { data: inviteRequests } = useInviteRequests()
   const pendingInvitesCount = me?.isAdmin
     ? (inviteRequests?.filter((r) => r.status === 'pending' && !r.deletedAt).length ?? 0)
@@ -225,69 +309,131 @@ export function Sidebar() {
           <>
             <div className={cn('my-4 border-t border-border', sidebarCollapsed && 'mx-2')} />
             {!sidebarCollapsed && (
-              <p className="mb-2 px-4 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-text-subtle">
-                {t.sidebar.modules}
-              </p>
+              <div className="mb-2 flex items-center justify-between px-3">
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-text-subtle">
+                  {t.sidebar.modules}
+                </p>
+                {moduleNavOrder.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setModuleNavOrder([])}
+                    className="font-mono text-[9px] text-text-subtle/70 hover:text-primary transition-colors cursor-pointer"
+                    title="Ripristina ordine predefinito dei moduli"
+                  >
+                    Ripristina
+                  </button>
+                )}
+              </div>
             )}
             <ul className="space-y-0.5 px-2">
               {isLoading
                 ? Array.from({ length: 2 }).map((_, i) => (
                     <li key={i} className="h-8 animate-pulse rounded-md bg-surface-raised" />
                   ))
-                : [...visibleModules]
-                    .sort((a, b) => {
-                      const ao = (a.manifest['navOrder'] as number | undefined) ?? 100
-                      const bo = (b.manifest['navOrder'] as number | undefined) ?? 100
-                      return ao - bo
-                    })
-                    .map((mod) => {
-                      const href = `/${mod.id}`
-                      const active = pathname === href || pathname.startsWith(href + '/')
-                      const ModIcon = resolveModuleIcon(mod.manifest['icon'] as string | undefined)
+                : sortedModules.map((mod) => {
+                    const href = `/${mod.id}`
+                    const active = pathname === href || pathname.startsWith(href + '/')
+                    const ModIcon = resolveModuleIcon(mod.manifest['icon'] as string | undefined)
+                    const isDragging = draggedId === mod.id
+                    const isDragOver = dragOverId === mod.id
 
-                      if (mod.maintenance) {
-                        return (
-                          <li key={mod.id}>
-                            <span
-                              aria-disabled="true"
-                              title={sidebarCollapsed ? mod.name : undefined}
-                              className={cn(
-                                'flex cursor-not-allowed items-center gap-3 rounded-md px-2 py-2 text-sm font-medium text-text-muted opacity-60',
-                                sidebarCollapsed && 'justify-center px-0',
-                              )}
-                            >
-                              {!sidebarCollapsed && <NavDot active={false} warning />}
+                    if (mod.maintenance) {
+                      return (
+                        <li
+                          key={mod.id}
+                          data-mod-id={mod.id}
+                          draggable={!sidebarCollapsed}
+                          onDragStart={(e) => handleDragStart(e, mod.id)}
+                          onDragOver={(e) => handleDragOver(e, mod.id)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, mod.id)}
+                          onDragEnd={handleDragEnd}
+                          className={cn(
+                            'group relative rounded-md transition-all select-none',
+                            isDragging && 'opacity-30 scale-[0.98]',
+                            isDragOver && dropPosition === 'before' && 'before:absolute before:-top-0.5 before:left-1 before:right-1 before:h-0.5 before:bg-primary before:rounded-full before:z-20',
+                            isDragOver && dropPosition === 'after' && 'after:absolute after:-bottom-0.5 after:left-1 after:right-1 after:h-0.5 after:bg-primary after:rounded-full after:z-20',
+                          )}
+                        >
+                          <div
+                            aria-disabled="true"
+                            title={sidebarCollapsed ? mod.name : undefined}
+                            className={cn(
+                              'flex cursor-not-allowed items-center rounded-md text-sm font-medium text-text-muted opacity-60',
+                              sidebarCollapsed && 'justify-center p-2',
+                            )}
+                          >
+                            {!sidebarCollapsed && (
+                              <div
+                                className="flex items-center justify-center pl-1.5 pr-1 py-2 text-text-subtle/40 group-hover:text-text-subtle cursor-grab active:cursor-grabbing hover:text-primary transition-colors shrink-0"
+                                title="Trascina per riordinare"
+                              >
+                                <Grip className="h-3.5 w-3.5" />
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2.5 flex-1 min-w-0 py-2 pr-2">
                               <ModIcon className="h-4 w-4 shrink-0" />
                               {!sidebarCollapsed && (
                                 <span className="truncate">{mod.name}</span>
                               )}
-                            </span>
-                          </li>
-                        )
-                      }
+                            </div>
+                          </div>
+                        </li>
+                      )
+                    }
 
-                      return (
-                        <li key={mod.id}>
+                    return (
+                      <li
+                        key={mod.id}
+                        data-mod-id={mod.id}
+                        draggable={!sidebarCollapsed}
+                        onDragStart={(e) => handleDragStart(e, mod.id)}
+                        onDragOver={(e) => handleDragOver(e, mod.id)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, mod.id)}
+                        onDragEnd={handleDragEnd}
+                        className={cn(
+                          'group relative rounded-md transition-all select-none',
+                          isDragging && 'opacity-30 scale-[0.98]',
+                          isDragOver && dropPosition === 'before' && 'before:absolute before:-top-0.5 before:left-1 before:right-1 before:h-0.5 before:bg-primary before:rounded-full before:z-20',
+                          isDragOver && dropPosition === 'after' && 'after:absolute after:-bottom-0.5 after:left-1 after:right-1 after:h-0.5 after:bg-primary after:rounded-full after:z-20',
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'flex items-center rounded-md text-sm font-medium transition-colors',
+                            active
+                              ? 'bg-primary-muted text-primary'
+                              : 'text-text-muted hover:bg-surface-raised hover:text-text',
+                            sidebarCollapsed && 'justify-center',
+                          )}
+                        >
+                          {!sidebarCollapsed && (
+                            <div
+                              className="flex items-center justify-center pl-1.5 pr-1 py-2 text-text-subtle/40 group-hover:text-text-subtle cursor-grab active:cursor-grabbing hover:text-primary transition-colors shrink-0"
+                              title="Trascina per riordinare modulo"
+                            >
+                              <Grip className="h-3.5 w-3.5" />
+                            </div>
+                          )}
                           <Link
                             href={href}
+                            draggable={false}
                             className={cn(
-                              'flex items-center gap-3 rounded-md px-2 py-2 text-sm font-medium transition-colors',
-                              active
-                                ? 'bg-primary-muted text-primary'
-                                : 'text-text-muted hover:bg-surface-raised hover:text-text',
-                              sidebarCollapsed && 'justify-center px-0',
+                              'flex items-center gap-2.5 flex-1 min-w-0 py-2 pr-2 text-sm font-medium',
+                              sidebarCollapsed ? 'justify-center p-2' : 'pl-0.5',
                             )}
                             title={sidebarCollapsed ? mod.name : undefined}
                           >
-                            {!sidebarCollapsed && <NavDot active={active} />}
                             <ModIcon className="h-4 w-4 shrink-0" />
                             {!sidebarCollapsed && (
                               <span className="truncate">{mod.name}</span>
                             )}
                           </Link>
-                        </li>
-                      )
-                    })}
+                        </div>
+                      </li>
+                    )
+                  })}
             </ul>
           </>
         )}

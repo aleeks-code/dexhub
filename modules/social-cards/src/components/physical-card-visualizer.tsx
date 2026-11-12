@@ -116,8 +116,8 @@ function PinSecurityConfirmModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl space-y-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto">
+      <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-2xl space-y-4 my-auto">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -278,26 +278,6 @@ export function PhysicalCardVisualizer({ card, onEditCredentials }: Props) {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Toggle Dati Carta (Numero, Scadenza, CVV) */}
-          <button
-            type="button"
-            onClick={() => setShowCardDetails((prev) => !prev)}
-            className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-raised hover:bg-surface px-2.5 py-1 text-xs text-text transition-colors cursor-pointer"
-            title={showCardDetails ? 'Nascondi numero e dati carta' : 'Mostra numero e dati carta'}
-          >
-            {showCardDetails ? (
-              <>
-                <EyeOff className="h-3.5 w-3.5 text-zinc-400" />
-                <span>Nascondi Dati</span>
-              </>
-            ) : (
-              <>
-                <Eye className="h-3.5 w-3.5 text-zinc-400" />
-                <span>Mostra Dati</span>
-              </>
-            )}
-          </button>
-
           <button
             type="button"
             onClick={onEditCredentials}
@@ -314,7 +294,7 @@ export function PhysicalCardVisualizer({ card, onEditCredentials }: Props) {
       <div className="mt-4 grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
         {/* Front of Physical Mastercard (Photorealistic ISO 7810 ID-1) */}
         <div className="md:col-span-7">
-          <div className="relative overflow-hidden rounded-2xl border border-zinc-700/70 bg-gradient-to-br from-[#1c1f24] via-[#14161a] to-[#0d0e11] p-5 text-white shadow-xl aspect-[1.586/1] flex flex-col justify-between">
+          <div className="relative overflow-hidden rounded-2xl border border-zinc-700/70 bg-gradient-to-br from-[#1c1f24] via-[#14161a] to-[#0d0e11] p-4 sm:p-5 text-white shadow-xl aspect-[1.586/1] flex flex-col justify-between">
             {/* Specular Card Shine Effect (simulating laminated plastic texture) */}
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/[0.08] via-transparent to-transparent" />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-white/[0.05]" />
@@ -348,11 +328,11 @@ export function PhysicalCardVisualizer({ card, onEditCredentials }: Props) {
               <ContactlessIcon />
             </div>
 
-            {/* Embossed Card Number Display */}
+            {/* Embossed Card Number Display & Quick Actions */}
             <div className="relative z-10 flex items-center justify-between">
-              <div className="flex items-baseline gap-2">
+              <div className="flex items-baseline gap-2 min-w-0">
                 <span
-                  className="font-mono text-base sm:text-lg tracking-[0.2em] font-bold text-zinc-100 select-all"
+                  className="font-mono text-xs sm:text-base md:text-lg tracking-[0.14em] sm:tracking-[0.2em] font-bold text-zinc-100 select-all truncate"
                   style={{
                     textShadow: '0 1px 1px rgba(255,255,255,0.35), 0 -1px 1px rgba(0,0,0,0.85)',
                   }}
@@ -361,16 +341,34 @@ export function PhysicalCardVisualizer({ card, onEditCredentials }: Props) {
                 </span>
               </div>
 
-              {card.cardNumber && (
+              <div className="flex items-center gap-1 shrink-0 ml-2">
+                {/* Mostra / Nascondi Dati Carta (solo icona occhio) */}
                 <button
                   type="button"
-                  onClick={handleCopyNumber}
+                  onClick={() => setShowCardDetails((prev) => !prev)}
                   className="rounded-md p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-colors cursor-pointer"
-                  title="Copia numero completo"
+                  title={showCardDetails ? 'Nascondi dati carta' : 'Mostra dati carta'}
+                  aria-label={showCardDetails ? 'Nascondi dati carta' : 'Mostra dati carta'}
                 >
-                  {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                  {showCardDetails ? (
+                    <EyeOff className="h-4 w-4 text-zinc-300" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-zinc-300" />
+                  )}
                 </button>
-              )}
+
+                {card.cardNumber && (
+                  <button
+                    type="button"
+                    onClick={handleCopyNumber}
+                    className="rounded-md p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-colors cursor-pointer"
+                    title="Copia numero completo"
+                    aria-label="Copia numero completo"
+                  >
+                    {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Bottom Row: Holder Name, Expiry/CVV & Official Mastercard Logo */}

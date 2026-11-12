@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -33,7 +33,7 @@ export function MobileNav() {
   const pathname = usePathname()
   const router = useRouter()
   const t = useT()
-  const { openCommandPalette } = useAppStore()
+  const { openCommandPalette, moduleNavOrder = [] } = useAppStore()
   const { data: modules = [] } = useVisibleModules()
   const { data: me } = useMe()
   const { data: inviteRequests } = useInviteRequests()
@@ -44,7 +44,18 @@ export function MobileNav() {
     ? (inviteRequests?.filter((r) => r.status === 'pending' && !r.deletedAt).length ?? 0)
     : 0
 
-  const activeModules = modules.filter((m) => m.enabled && !m.maintenance)
+  const activeModules = useMemo(() => {
+    const list = modules.filter((m) => m.enabled && !m.maintenance)
+    if (!moduleNavOrder || moduleNavOrder.length === 0) return list
+    return [...list].sort((a, b) => {
+      const idxA = moduleNavOrder.indexOf(a.id)
+      const idxB = moduleNavOrder.indexOf(b.id)
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB
+      if (idxA !== -1) return -1
+      if (idxB !== -1) return 1
+      return 0
+    })
+  }, [modules, moduleNavOrder])
 
   async function handleLogout() {
     setDrawerOpen(false)

@@ -81,6 +81,7 @@ interface AppState {
   currency: CurrencyFormat
   dateFormat: DateFormat
   commandPaletteOpen: boolean
+  moduleNavOrder: string[]
 
   toggleSidebar: () => void
   setSidebarCollapsed: (collapsed: boolean) => void
@@ -94,6 +95,7 @@ interface AppState {
   setDateFormat: (format: DateFormat) => void
   openCommandPalette: () => void
   closeCommandPalette: () => void
+  setModuleNavOrder: (order: string[]) => void
 }
 
 export const useAppStore = create<AppState>()(
@@ -109,6 +111,7 @@ export const useAppStore = create<AppState>()(
       currency: 'EUR',
       dateFormat: 'DD/MM/YYYY',
       commandPaletteOpen: false,
+      moduleNavOrder: [],
 
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
@@ -125,6 +128,7 @@ export const useAppStore = create<AppState>()(
       setDateFormat: (dateFormat) => set({ dateFormat }),
       openCommandPalette: () => set({ commandPaletteOpen: true }),
       closeCommandPalette: () => set({ commandPaletteOpen: false }),
+      setModuleNavOrder: (moduleNavOrder) => set({ moduleNavOrder }),
     }),
     {
       name: 'dexhub-app-store',
@@ -138,6 +142,7 @@ export const useAppStore = create<AppState>()(
         reduceMotion: state.reduceMotion,
         currency: state.currency,
         dateFormat: state.dateFormat,
+        moduleNavOrder: state.moduleNavOrder,
       }),
     },
   ),
