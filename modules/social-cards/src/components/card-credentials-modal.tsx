@@ -191,6 +191,12 @@ export function CardCredentialsModal({ isOpen, onClose, card, onSave }: Props) {
             </span>
           </div>
 
+          {/* Encryption security assurance */}
+          <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2.5 py-1.5">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+            <span>I dati inseriti vengono cifrati con algoritmo AES-256-GCM prima di essere salvati sul server.</span>
+          </div>
+
           {/* Buttons */}
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
             <button

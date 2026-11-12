@@ -144,4 +144,51 @@ describe('SocialCardsService', () => {
     const summary = await getCardSummary(card.id)
     expect(summary).toBeNull()
   })
+
+  it('cifra i dati sensibili della carta a riposo (cardNumber, cvv, pin) con AES-256-GCM', async () => {
+    let savedKvState: any = null
+    const mockCtx: any = {
+      kv: {
+        get: async (key: string) => savedKvState,
+        set: async (key: string, val: any) => {
+          savedKvState = val
+        },
+      },
+    }
+
+    const { initSocialCardsService } = await import('./social-cards-service')
+    initSocialCardsService(mockCtx)
+
+    const card = await registerCard({
+      customName: 'Carta con Credenziali Segrete',
+      cardNumber: '5333 1234 5678 9012',
+      cvv: '918',
+      pin: '77412',
+      expiryDate: '11/28',
+    })
+
+    // In memoria il servizio fornisce i dati decifrati per la sessione corrente
+    expect(card.cardNumber).toBe('5333123456789012')
+    expect(card.cardNumberLast4).toBe('9012')
+    expect(card.cvv).toBe('918')
+    expect(card.pin).toBe('77412')
+
+    // Nel supporto di memorizzazione persistente (KV) i dati sono cifrati con AES-256-GCM
+    expect(savedKvState).toBeDefined()
+    const storedCard = savedKvState.cards[0]
+    expect(storedCard.cardNumber).not.toContain('5333123456789012')
+    expect(storedCard.cardNumber.startsWith('enc:v1:')).toBe(true)
+    expect(storedCard.cvv.startsWith('enc:v1:')).toBe(true)
+    expect(storedCard.pin.startsWith('enc:v1:')).toBe(true)
+    expect(storedCard.cardNumberLast4).toBe('9012') // Last4 conservato per PCI-DSS
+
+    // Ricaricando lo stato da zero, i campi vengono decifrati correttamente
+    _clearStateForTesting()
+    const reloadedCards = await getCards()
+    expect(reloadedCards.length).toBe(1)
+    expect(reloadedCards[0]?.cardNumber).toBe('5333123456789012')
+    expect(reloadedCards[0]?.cardNumberLast4).toBe('9012')
+    expect(reloadedCards[0]?.cvv).toBe('918')
+    expect(reloadedCards[0]?.pin).toBe('77412')
+  })
 })

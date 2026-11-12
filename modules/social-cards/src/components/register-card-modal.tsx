@@ -225,6 +225,12 @@ export function RegisterCardModal({ isOpen, onClose, onRegister }: Props) {
                 />
               </div>
             </div>
+
+            {/* Encryption security assurance */}
+            <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2.5 py-1.5 mt-2">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+              <span>I dati della carta sono protetti e crittografati con standard AES-256-GCM.</span>
+            </div>
           </div>
 
           {/* Stato iniziale della carta */}

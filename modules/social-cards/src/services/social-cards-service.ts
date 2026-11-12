@@ -9,6 +9,7 @@ import type {
 import { calculateCardBalance } from '../engine/balance'
 import { calculateDiscountSavings } from '../engine/discount'
 import { DEDICATA_A_TE_PROFILE, EDITION_2026_2027, getEditionConfig } from '../config/dedicata-a-te'
+import { encryptSensitiveField, decryptSensitiveField } from '../utils/card-crypto'
 
 const STORAGE_KEY = 'dexhub:social-cards:state'
 const KV_KEY = 'social_cards_state'
@@ -40,6 +41,30 @@ function getDefaultState(): SocialCardsStorageState {
   }
 }
 
+async function encryptCardsForStorage(cards: SocialBenefitCard[]): Promise<SocialBenefitCard[]> {
+  return Promise.all(
+    cards.map(async (c) => ({
+      ...c,
+      cardNumber: await encryptSensitiveField(c.cardNumber),
+      expiryDate: await encryptSensitiveField(c.expiryDate),
+      cvv: await encryptSensitiveField(c.cvv),
+      pin: await encryptSensitiveField(c.pin),
+    }))
+  )
+}
+
+async function decryptCardsFromStorage(cards: SocialBenefitCard[]): Promise<SocialBenefitCard[]> {
+  return Promise.all(
+    cards.map(async (c) => ({
+      ...c,
+      cardNumber: await decryptSensitiveField(c.cardNumber),
+      expiryDate: await decryptSensitiveField(c.expiryDate),
+      cvv: await decryptSensitiveField(c.cvv),
+      pin: await decryptSensitiveField(c.pin),
+    }))
+  )
+}
+
 export async function loadState(): Promise<SocialCardsStorageState> {
   // 1. Memory cache
   if (_memoryState) return _memoryState
@@ -49,8 +74,12 @@ export async function loadState(): Promise<SocialCardsStorageState> {
     try {
       const remote = await _ctx.kv.get<SocialCardsStorageState>(KV_KEY)
       if (remote && remote.schemaVersion === 1) {
-        _memoryState = remote
-        return remote
+        const decryptedCards = await decryptCardsFromStorage(remote.cards)
+        _memoryState = {
+          ...remote,
+          cards: decryptedCards,
+        }
+        return _memoryState
       }
     } catch (err) {
       console.warn('[SocialCardsService] Failed to read from KV adapter:', err)
@@ -64,8 +93,12 @@ export async function loadState(): Promise<SocialCardsStorageState> {
       if (raw) {
         const parsed = JSON.parse(raw) as SocialCardsStorageState
         if (parsed.schemaVersion === 1) {
-          _memoryState = parsed
-          return parsed
+          const decryptedCards = await decryptCardsFromStorage(parsed.cards)
+          _memoryState = {
+            ...parsed,
+            cards: decryptedCards,
+          }
+          return _memoryState
         }
       }
     } catch (err) {
@@ -82,10 +115,17 @@ export async function loadState(): Promise<SocialCardsStorageState> {
 export async function saveState(state: SocialCardsStorageState): Promise<void> {
   _memoryState = state
 
+  // Encrypt sensitive payment credentials at rest before persisting to disk / KV DB
+  const encryptedCards = await encryptCardsForStorage(state.cards)
+  const persistentState: SocialCardsStorageState = {
+    ...state,
+    cards: encryptedCards,
+  }
+
   // LocalStorage
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(persistentState))
     } catch (err) {
       console.warn('[SocialCardsService] LocalStorage save failed:', err)
     }
@@ -94,7 +134,7 @@ export async function saveState(state: SocialCardsStorageState): Promise<void> {
   // KV Adapter
   if (_ctx?.kv) {
     try {
-      await _ctx.kv.set(KV_KEY, state)
+      await _ctx.kv.set(KV_KEY, persistentState)
     } catch (err) {
       console.warn('[SocialCardsService] KV set failed:', err)
     }
