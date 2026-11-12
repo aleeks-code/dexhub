@@ -110,10 +110,13 @@ export function Sidebar() {
     setDropPosition(position)
   }
 
-  function handleDragLeave(e: React.DragEvent<HTMLLIElement>) {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setDragOverId((prev) => (prev === e.currentTarget.dataset['modId'] ? null : prev))
+  function handleDragLeave(e: React.DragEvent<HTMLLIElement>, id: string) {
+    const current = e.currentTarget
+    const related = e.relatedTarget as Node | null
+    if (current && related && current.contains(related)) {
+      return
     }
+    setDragOverId((prev) => (prev === id ? null : prev))
   }
 
   function handleDrop(e: React.DragEvent, targetId: string) {
@@ -345,7 +348,7 @@ export function Sidebar() {
                           draggable={!sidebarCollapsed}
                           onDragStart={(e) => handleDragStart(e, mod.id)}
                           onDragOver={(e) => handleDragOver(e, mod.id)}
-                          onDragLeave={handleDragLeave}
+                          onDragLeave={(e) => handleDragLeave(e, mod.id)}
                           onDrop={(e) => handleDrop(e, mod.id)}
                           onDragEnd={handleDragEnd}
                           className={cn(
@@ -389,7 +392,7 @@ export function Sidebar() {
                         draggable={!sidebarCollapsed}
                         onDragStart={(e) => handleDragStart(e, mod.id)}
                         onDragOver={(e) => handleDragOver(e, mod.id)}
-                        onDragLeave={handleDragLeave}
+                        onDragLeave={(e) => handleDragLeave(e, mod.id)}
                         onDrop={(e) => handleDrop(e, mod.id)}
                         onDragEnd={handleDragEnd}
                         className={cn(
