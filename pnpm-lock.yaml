@@ -112,6 +112,9 @@ importers:
       '@dexhub/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
+      '@dexhub/social-cards':
+        specifier: workspace:*
+        version: link:../../modules/social-cards
       '@dexhub/subscriptions':
         specifier: workspace:*
         version: link:../../modules/subscriptions
@@ -277,6 +280,40 @@ importers:
         version: 5.9.3
 
   modules/pizza:
+    dependencies:
+      '@dexhub/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      '@dexhub/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      lucide-react:
+        specifier: ^0.474.0
+        version: 0.474.0(react@19.2.7)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.7
+    devDependencies:
+      '@dexhub/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@types/node':
+        specifier: ^22.10.6
+        version: 22.20.0
+      '@types/react':
+        specifier: ^19.0.7
+        version: 19.2.17
+      next:
+        specifier: ^15.1.6
+        version: 15.5.19(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.6(@types/node@22.20.0)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)
+
+  modules/social-cards:
     dependencies:
       '@dexhub/sdk':
         specifier: workspace:*

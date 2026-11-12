@@ -16,6 +16,7 @@ const MODULE_FACTORIES: ModuleFactory[] = [
   () => import('@dexhub/debts'),
   () => import('@dexhub/loans'),
   () => import('@dexhub/subscriptions'),
+  () => import('@dexhub/social-cards'),
 ]
 
 async function installInApi(manifest: unknown): Promise<boolean> {

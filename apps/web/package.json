@@ -15,6 +15,7 @@
     "@dexhub/notes": "workspace:*",
     "@dexhub/pizza": "workspace:*",
     "@dexhub/sdk": "workspace:*",
+    "@dexhub/social-cards": "workspace:*",
     "@dexhub/subscriptions": "workspace:*",
     "@dexhub/tasks": "workspace:*",
     "@dexhub/ui": "workspace:*",
