@@ -7,6 +7,7 @@ export interface GenerateDaysFromCedolinoInput {
   ore: CedolinoHoursBreakdown
   pastiMensa: number
   standardDailyHours?: number
+  standardAfternoonMarkupHours?: number // Ore di maggiorazione per giornata di turno pomeridiano (default 4h dalle 18 alle 22)
   workdays?: number[] // 1=Mon .. 5=Fri, 7=Sun
   existingDays?: WorklogDay[]
   overwriteExisting?: boolean
@@ -55,6 +56,7 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
     ore,
     pastiMensa,
     standardDailyHours = 8,
+    standardAfternoonMarkupHours = 4,
     workdays = [1, 2, 3, 4, 5],
     existingDays = [],
     overwriteExisting = true,
@@ -105,11 +107,17 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
     }
   }
 
-  // Night and afternoon shift days
+  // Night and afternoon shift days:
+  // Nel turno notturno (22:00-06:00), tutte le ore lavorate (std, es. 8h) hanno la maggiorazione notte.
+  // Nel turno pomeridiano (14:00-22:00), solo le 4 ore dopo le 18:00 (18:00-22:00) hanno la maggiorazione turno pomeridiano/notturno.
+  // Pertanto, ogni giornata intera di turno pomeridiano matura 4h di maggiorazione (standardAfternoonMarkupHours).
   const nNotturnoDays = ore.notturno > 0 ? Math.min(nWorkDays, Math.ceil(ore.notturno / std)) : 0
   const nPomeridianoDays =
     ore.pomeridiano > 0
-      ? Math.min(Math.max(0, nWorkDays - nNotturnoDays), Math.ceil(ore.pomeridiano / std))
+      ? Math.min(
+          Math.max(0, nWorkDays - nNotturnoDays),
+          Math.ceil(ore.pomeridiano / (standardAfternoonMarkupHours || 4)),
+        )
       : 0
 
   // 3. Plan schedule across workingDates
@@ -235,28 +243,53 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
   // 1st priority: worked days ('work')
   // 2nd priority: permessi / PAR days (often taken as partial day presence with lunch)
   // 3rd priority: any other scheduled day in the plan
-  let mealsRemaining = pastiMensa
+  const existingMap = new Map(existingDays.map((d) => [d.date, d]))
+
+  const isCandidateDay = (idx: number) => {
+    const item = plan[idx]!
+    if (!overwriteExisting && existingMap.has(item.date)) {
+      const existing = existingMap.get(item.date)!
+      if (existing.entries && existing.entries.length > 0) {
+        return false // Giorno già presente e non sovrascritto
+      }
+    }
+    return true
+  }
+
+  let existingMealsPreserved = 0
+  if (!overwriteExisting) {
+    for (const item of plan) {
+      if (existingMap.has(item.date)) {
+        const existing = existingMap.get(item.date)!
+        if (existing.entries && existing.entries.length > 0 && existing.mealOverride === true) {
+          existingMealsPreserved++
+        }
+      }
+    }
+  }
+
+  let mealsRemaining = Math.max(0, pastiMensa - existingMealsPreserved)
   const mealIndices = new Set<number>()
 
-  // Priority 1: Work days
+  // Priority 1: Work days (solo sui giorni effettivamente da salvare)
   for (let i = 0; i < plan.length && mealsRemaining > 0; i++) {
-    if (plan[i]!.kind === 'work') {
+    if (plan[i]!.kind === 'work' && isCandidateDay(i)) {
       mealIndices.add(i)
       mealsRemaining--
     }
   }
 
-  // Priority 2: Permessi / ROL / PAR days
+  // Priority 2: Permessi / ROL / PAR days (solo sui giorni da salvare)
   for (let i = 0; i < plan.length && mealsRemaining > 0; i++) {
-    if (plan[i]!.kind === 'permessi' && !mealIndices.has(i)) {
+    if (plan[i]!.kind === 'permessi' && isCandidateDay(i) && !mealIndices.has(i)) {
       mealIndices.add(i)
       mealsRemaining--
     }
   }
 
-  // Priority 3: Any other scheduled day
+  // Priority 3: Altri giorni candidati pianificati
   for (let i = 0; i < plan.length && mealsRemaining > 0; i++) {
-    if (!mealIndices.has(i)) {
+    if (isCandidateDay(i) && !mealIndices.has(i)) {
       mealIndices.add(i)
       mealsRemaining--
     }
@@ -265,8 +298,6 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
   const daysToSave: UpsertDayInput[] = []
   const previewDays: CedolinoDayPreview[] = []
 
-  const existingMap = new Map(existingDays.map((d) => [d.date, d]))
-
   let countLavoro = 0
   let countFerie = 0
   let countPermesso = 0
@@ -274,7 +305,7 @@ export function generateDaysFromCedolino(input: GenerateDaysFromCedolinoInput): 
   let countCig = 0
   let countCongedo = 0
   let totOre = 0
-  let countPasti = 0
+  let countPasti = existingMealsPreserved
 
   let countCongedo80 = 0
   let countCongedo30 = 0

@@ -139,5 +139,74 @@ describe('cedolino-parser', () => {
       )
       expect(workDaysWithNight.length).toBe(3)
     })
+
+    const octPdfPath = 'C:/Users/am28/Desktop/Cedolino 10-2026.pdf'
+    const octPdfExists = fs.existsSync(octPdfPath)
+
+    it.runIf(octPdfExists)('extracts data and handles afternoon shift correctly from Cedolino 10-2026.pdf', async () => {
+      const buffer = fs.readFileSync(octPdfPath)
+      const data = await extractCedolinoFromPdfBuffer(buffer)
+
+      expect(data.mese).toBe('2026-10')
+      expect(data.netto).toBe(1671.6)
+
+      // Ore
+      expect(data.ore.ordinarie).toBe(125)
+      expect(data.ore.ferie).toBe(8)
+      expect(data.ore.permessi).toBe(16)
+      expect(data.ore.cig).toBe(16)
+      expect(data.ore.congedo80).toBe(8)
+      expect(data.ore.pomeridiano).toBe(32)
+      expect(data.pastiMensa).toBe(17)
+
+      // Dettaglio CIG e Solidarietà (tasso effettivo reale vs 80%)
+      expect(data.cigDettaglio).not.toBeNull()
+      expect(data.cigDettaglio?.ore).toBe(16)
+      expect(data.cigDettaglio?.storno).toBe(208.78)
+      expect(data.cigDettaglio?.integrazioneNetta).toBe(121.87)
+      expect(data.cigDettaglio?.coefficienteEffettivo).toBe(0.5837)
+
+      // Maggiorazione Turno
+      expect(data.maggiorazioniTurno?.ore).toBe(32)
+      expect(data.maggiorazioniTurno?.percentuale).toBe(0.2)
+      expect(data.maggiorazioniTurno?.tipoSuggerito).toBe('pomeridiano')
+
+      // Generazione giorni cartellino con 32h di maggiorazione pomeridiana (4h/gg -> 8 gg)
+      const result = generateDaysFromCedolino({
+        month: '2026-10',
+        ore: {
+          ordinarie: 125,
+          ferie: 8,
+          permessi: 16,
+          congedo: 8,
+          congedo80: 8,
+          congedo30: 0,
+          malattia: 0,
+          cig: 16,
+          straordinario: 0,
+          notturno: 0,
+          pomeridiano: 32,
+          altreAssenze: 1.25,
+        },
+        pastiMensa: 17,
+        standardDailyHours: 8,
+      })
+
+      expect(result.daysToSave.length).toBe(22)
+      expect(result.stats.giorniLavorati).toBe(16)
+      expect(result.stats.giorniCig).toBe(2)
+      expect(result.stats.giorniCongedo80).toBe(1)
+      expect(result.stats.pastiAssegnati).toBe(17)
+
+      // Verifica 8 giorni pomeridiani (4h di maggiorazione ciascuno) e 0 giorni notturni
+      const pomDays = result.daysToSave.filter(
+        (d) => d.entries[0]?.kind === 'work' && d.entries[0]?.modifiers?.pomeridiano,
+      )
+      const nottDays = result.daysToSave.filter(
+        (d) => d.entries[0]?.kind === 'work' && d.entries[0]?.modifiers?.notturno,
+      )
+      expect(pomDays.length).toBe(8)
+      expect(nottDays.length).toBe(0)
+    })
   })
 })

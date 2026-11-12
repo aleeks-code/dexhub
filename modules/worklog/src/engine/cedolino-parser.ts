@@ -69,6 +69,30 @@ export interface CedolinoCongedoRilevato {
   giorni: number | null
 }
 
+export interface CedolinoCigDettaglio {
+  ore: number
+  storno: number
+  integrazioneNetta: number
+  coefficienteEffettivo: number
+}
+
+export interface CedolinoMaggiorazioneTurno {
+  ore: number
+  tariffa: number | null
+  importo: number | null
+  percentuale: number
+  tipoSuggerito: 'pomeridiano' | 'notturno'
+}
+
+export interface CedolinoPremiRisultato {
+  totalePremi: number
+  totaleImpostaSostitutiva: number
+  imponibile5?: number
+  imposta5?: number
+  imponibile15?: number
+  imposta15?: number
+}
+
 export interface CedolinoParsedData {
   mese: string | null       // 'YYYY-MM'
   meseNome?: string         // e.g. 'Settembre 2026'
@@ -88,6 +112,9 @@ export interface CedolinoParsedData {
   trattenute: CedolinoTrattenuteRilevate
   fiscale: CedolinoFiscaleRilevato
   congedo: CedolinoCongedoRilevato
+  cigDettaglio?: CedolinoCigDettaglio | null
+  maggiorazioniTurno?: CedolinoMaggiorazioneTurno | null
+  premiRisultato?: CedolinoPremiRisultato | null
   rawRows: Array<{ code?: string; desc: string; qty: number; value?: number }>
 }
 
@@ -244,6 +271,17 @@ export async function extractCedolinoFromPdfBuffer(
   let pastiMensa = 0
   let altreAssenze = 0
 
+  let stornoCigTotale = 0
+  let integrazioneSolidarietaTotale = 0
+  let oreCigEffettive = 0
+
+  let premioAssog5Imponibile = 0
+  let premioAssog5Imposta = 0
+  let premioAssog15Imponibile = 0
+  let premioAssog15Imposta = 0
+
+  let rilevataMaggiorazione: CedolinoMaggiorazioneTurno | null = null
+
   for (const line of lines) {
     const rowMatch = line.match(/^\s*(\d{1,5})\s+([a-zA-Z0-9\.\'\/\-\s%]+?)\s+([0-9]+,[0-9]{2,5})\b/)
     if (!rowMatch) continue
@@ -253,13 +291,42 @@ export async function extractCedolinoFromPdfBuffer(
     const desc = rawDesc.toUpperCase()
     const qty = parseItalianNumber(rowMatch[3]!) ?? 0
 
-    rawRows.push({ code, desc: rawDesc, qty })
+    // Estrae tutti i token numerici della riga per recuperare l'eventuale controvalore in euro
+    const numTokens = line.match(/-?[0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2,5}-?|-?[0-9]+,[0-9]{2,5}-?/g)
+    let lineValue: number | undefined = undefined
+    if (numTokens && numTokens.length > 1) {
+      const lastToken = numTokens[numTokens.length - 1]!
+      lineValue = parseItalianNumber(lastToken) ?? undefined
+    }
+
+    rawRows.push({ code, desc: rawDesc, qty, value: lineValue })
 
     // Categorization
     if (desc.includes('NOTT')) {
       notturno += qty
+      const perc = desc.includes('20%') ? 0.20 : desc.includes('25%') ? 0.25 : desc.includes('30%') ? 0.30 : 0.20
+      const tariffa = numTokens && numTokens.length >= 3 ? parseItalianNumber(numTokens[1]!) : null
+      rilevataMaggiorazione = {
+        ore: qty,
+        tariffa,
+        importo: lineValue ?? null,
+        percentuale: perc,
+        // Nel CCNL Metalmeccanico (es. Bondioli & Pavesi), 20% serale 18-22 è turno pomeridiano (4h magg/giorno)
+        tipoSuggerito: perc === 0.20 ? 'pomeridiano' : 'notturno',
+      }
+      if (perc === 0.20) {
+        pomeridiano += qty
+      }
     } else if (desc.includes('POMERID')) {
       pomeridiano += qty
+      const tariffa = numTokens && numTokens.length >= 3 ? parseItalianNumber(numTokens[1]!) : null
+      rilevataMaggiorazione = {
+        ore: qty,
+        tariffa,
+        importo: lineValue ?? null,
+        percentuale: 0.20,
+        tipoSuggerito: 'pomeridiano',
+      }
     } else if (desc.includes('STRAORDINAR') || desc.includes('ORE STR')) {
       straordinario += qty
     } else if (desc.includes('FERIE') && !desc.includes('RES') && !desc.includes('A.P.') && !desc.includes('MAT.')) {
@@ -268,8 +335,21 @@ export async function extractCedolinoFromPdfBuffer(
       permessi += qty
     } else if (desc.includes('MALATTIA')) {
       malattia += qty
-    } else if (desc.includes('CIG') || desc.includes('CASSA INT') || desc.includes('SOLIDARIETA')) {
+    } else if (desc.includes('RECUPERO') && (desc.includes('CIG') || desc.includes('C.I.G.'))) {
+      // Storno/recupero ore CIG aziendale
       cig += qty
+      oreCigEffettive += qty
+      if (lineValue !== undefined) {
+        stornoCigTotale = Math.round((stornoCigTotale + Math.abs(lineValue)) * 100) / 100
+      }
+    } else if (desc.includes('SOLIDARIETA')) {
+      // Integrazione netta Solidarietà erogata per conto INPS (voce 9294)
+      if (lineValue !== undefined) {
+        integrazioneSolidarietaTotale = Math.round((integrazioneSolidarietaTotale + Math.abs(lineValue)) * 100) / 100
+      }
+    } else if (desc.includes('CIG') || desc.includes('CASSA INT')) {
+      cig += qty
+      oreCigEffettive += qty
     } else if (desc.includes('CONG') || desc.includes('MATERN') || desc.includes('PATERN')) {
       // In Italian payslips (like TeamSystem 9814 CONG.PARENTALE), qty is usually in days (1.00, 2.00)
       const is30 = desc.includes('30%') || desc.includes(' 30')
@@ -294,6 +374,19 @@ export async function extractCedolinoFromPdfBuffer(
       altreAssenze += qty
     } else if (desc.includes('ORE LAV') && !desc.includes('STR')) {
       ordinarie += qty
+    }
+
+    // Premi di risultato L.199/25 detassati
+    if (desc.includes('L.199/25') || desc.includes('L. 199/25')) {
+      if (desc.includes('ASSOG.5%') || desc.includes('IMPONIBILE 5%')) {
+        premioAssog5Imponibile = lineValue ?? qty
+      } else if (desc.includes('IMPOSTA SOST. 5%') || desc.includes('IMPOSTA SOST.5%')) {
+        premioAssog5Imposta = lineValue ?? qty
+      } else if (desc.includes('ASSOG. 15%') || desc.includes('ASSOG.15%') || desc.includes('IMPONIBILE 15%')) {
+        premioAssog15Imponibile = lineValue ?? qty
+      } else if (desc.includes('IMPOSTA SOST. 15%') || desc.includes('IMPOSTA SOST.15%')) {
+        premioAssog15Imposta = lineValue ?? qty
+      }
     }
   }
 
@@ -470,28 +563,53 @@ export async function extractCedolinoFromPdfBuffer(
     // Previdenza line: es. "2.042,21 2.042,00 193,79 193,79"
     const prevMatch = line.match(/^\s*([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s*$/)
     if (prevMatch) {
-      lordoRilevato = parseItalianNumber(prevMatch[1]!)
-      imponibileInpsRilevato = parseItalianNumber(prevMatch[2]!)
-      contributiInpsRilevati = parseItalianNumber(prevMatch[3]!)
+      const l = parseItalianNumber(prevMatch[1]!)
+      const inps = parseItalianNumber(prevMatch[2]!)
+      const c = parseItalianNumber(prevMatch[3]!)
+      const cTot = parseItalianNumber(prevMatch[4]!)
+      // Verifica di integrità: lordo e imponibile congrui e aliquota INPS realistica (7% - 15%)
+      if (l !== null && inps !== null && c !== null && cTot !== null && l > 100 && inps > 100) {
+        const rate = c / inps
+        if (rate >= 0.07 && rate <= 0.15 && Math.abs(c - cTot) < 0.05) {
+          lordoRilevato = l
+          imponibileInpsRilevato = inps
+          contributiInpsRilevati = c
+        }
+      }
     }
 
     // Fiscale line: es. "68,79 2.040,09 469,22 166,38 302,84"
     const fiscMatch = line.match(/^\s*([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s*$/)
     if (fiscMatch) {
-      imponibileIrpefRilevato = parseItalianNumber(fiscMatch[2]!)
-      irpefLordaRilevata = parseItalianNumber(fiscMatch[3]!)
-      detrazioniLavoroRilevate = parseItalianNumber(fiscMatch[4]!)
-      irpefNettaRilevata = parseItalianNumber(fiscMatch[5]!)
+      const imp = parseItalianNumber(fiscMatch[2]!)
+      const lorda = parseItalianNumber(fiscMatch[3]!)
+      const detr = parseItalianNumber(fiscMatch[4]!)
+      const netta = parseItalianNumber(fiscMatch[5]!)
+      // Validazione matematica quadratura fiscale italiana: irpefLorda - detrazioni = irpefNetta
+      if (imp !== null && lorda !== null && detr !== null && netta !== null && imp > 100) {
+        if (Math.abs(lorda - detr - netta) < 0.05) {
+          imponibileIrpefRilevato = imp
+          irpefLordaRilevata = lorda
+          detrazioniLavoroRilevate = detr
+          irpefNettaRilevata = netta
+        }
+      }
     }
 
     // Sindacato line: es. "20,23 411,42 938,79" (tratt. sindacale, trattenute corpo, totale trattenute)
     const sindMatch = line.match(/^\s*([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s+([0-9\.]+,\d{2})\s*$/)
     if (sindMatch && sindacatoImporto === null) {
       const val = parseItalianNumber(sindMatch[1]!)
-      const tot = parseItalianNumber(sindMatch[3]!)
+      const tratCorpo = parseItalianNumber(sindMatch[2]!)
+      const totTrat = parseItalianNumber(sindMatch[3]!)
       // Distingue dalla riga retribuzione (2.023,27 248,24 25,05): una quota sindacale è < 100 €
-      // e il terzo valore è il totale trattenute (> 200 €)
-      if (val !== null && val > 0 && val < 100 && tot !== null && tot > 200) {
+      // e il terzo valore è il totale trattenute (> 200 €). Verifica inoltre il contesto sindacale nel testo.
+      if (
+        val !== null && val > 0 && val < 100 &&
+        tratCorpo !== null && tratCorpo > 100 &&
+        totTrat !== null && totTrat > 200 &&
+        (fullText.includes('TRATT. SINDACALE') || /(?:SINDAC|CGIL|CISL|UIL|FIM|FIOM)/i.test(fullText))
+      ) {
         sindacatoImporto = val
       }
     }
@@ -569,6 +687,29 @@ export async function extractCedolinoFromPdfBuffer(
       ore: oreCongedoTot > 0 ? oreCongedoTot : null,
       giorni: (congedo80Days + congedo30Days) > 0 ? (congedo80Days + congedo30Days) : null,
     },
+    cigDettaglio:
+      stornoCigTotale > 0 && integrazioneSolidarietaTotale > 0
+        ? {
+            ore: oreCigEffettive,
+            storno: stornoCigTotale,
+            integrazioneNetta: integrazioneSolidarietaTotale,
+            coefficienteEffettivo:
+              Math.round((integrazioneSolidarietaTotale / stornoCigTotale) * 10000) / 10000,
+          }
+        : null,
+    maggiorazioniTurno: rilevataMaggiorazione,
+    premiRisultato:
+      premioAssog5Imponibile > 0 || premioAssog15Imponibile > 0
+        ? {
+            totalePremi: Math.round((premioAssog5Imponibile + premioAssog15Imponibile) * 100) / 100,
+            totaleImpostaSostitutiva:
+              Math.round((premioAssog5Imposta + premioAssog15Imposta) * 100) / 100,
+            imponibile5: premioAssog5Imponibile,
+            imposta5: premioAssog5Imposta,
+            imponibile15: premioAssog15Imponibile,
+            imposta15: premioAssog15Imposta,
+          }
+        : null,
     rawRows,
   }
 }

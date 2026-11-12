@@ -71,14 +71,19 @@ const MensaConfigSchema = z.object({
   importo: z.number().min(0),
 })
 
-const AddizionaliConfigSchema = z.object({
-  attivo: z.boolean(),
-  addizionaleRegionale: z.number().min(0),
-  addizionaleComunale: z.number().min(0),
-  accontoComunale: z.number().min(0),
-  meseInizio: z.number().int().min(1).max(12).optional().default(3),
-  meseFine: z.number().int().min(1).max(12).optional().default(11),
-})
+const AddizionaliConfigSchema = z
+  .object({
+    attivo: z.boolean(),
+    addizionaleRegionale: z.number().min(0),
+    addizionaleComunale: z.number().min(0),
+    accontoComunale: z.number().min(0),
+    meseInizio: z.number().int().min(1).max(12).optional().default(3),
+    meseFine: z.number().int().min(1).max(12).optional().default(11),
+  })
+  .refine((d) => d.meseInizio <= d.meseFine, {
+    message: 'meseInizio must be less than or equal to meseFine',
+    path: ['meseInizio'],
+  })
 
 const CometaConfigSchema = z.object({
   iscritto: z.boolean(),

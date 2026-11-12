@@ -199,6 +199,11 @@ export function AddizionaliConfigPanel({ t }: Props) {
             </select>
           </div>
         </div>
+        {meseInizio > meseFine && (
+          <p className="text-xs text-rose-500 font-medium pt-1">
+            Il mese di inizio deve essere antecedente o uguale al mese di fine.
+          </p>
+        )}
       </div>
 
       <div className="flex justify-end border-t border-border pt-3">

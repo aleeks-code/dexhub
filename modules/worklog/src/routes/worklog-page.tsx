@@ -24,6 +24,7 @@ import {
   useUpsertSindacatoConfig,
   useUpdateCometaConfig,
   useUpdateMensaConfig,
+  useUpsertCigConfig,
   worklogApi,
   type EntryInput,
   type UpsertDayInput,
@@ -174,6 +175,7 @@ export default function WorklogPage() {
   const upsertSindacatoConfig = useUpsertSindacatoConfig()
   const updateCometaConfig = useUpdateCometaConfig()
   const updateMensaConfig = useUpdateMensaConfig()
+  const upsertCigConfig = useUpsertCigConfig()
 
   const defaultHours = contract?.oreGiornaliereStandard ?? 8
   const workdays = contract?.giorniLavorativiSettimana ?? [1, 2, 3, 4, 5]
@@ -463,6 +465,9 @@ export default function WorklogPage() {
       }
       if (calibrations.mensa) {
         await updateMensaConfig.mutateAsync(calibrations.mensa)
+      }
+      if (calibrations.cig) {
+        await upsertCigConfig.mutateAsync(calibrations.cig)
       }
     }
     // 4. Salva il netto reale e lo snapshot storico del cedolino DOPO aver impostato i parametri

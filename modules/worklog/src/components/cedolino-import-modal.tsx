@@ -15,6 +15,7 @@ import {
   Clock,
   Baby,
   Moon,
+  Sunset,
   Utensils,
   ChevronDown,
   Info,
@@ -38,6 +39,7 @@ import {
   useSindacatoConfig,
   useCometaConfig,
   useMensaConfig,
+  useCigConfig,
 } from '../services/worklog-api'
 import {
   extractCedolinoFromPdfBuffer,
@@ -71,6 +73,11 @@ export interface CedolinoCalibrationsToApply {
   mensa?: {
     attivo: boolean
     importo: number
+  } | null
+  cig?: {
+    tipo: 'solidarieta'
+    coefficiente: number
+    massimaleMensile?: number | null
   } | null
 }
 
@@ -119,6 +126,8 @@ export function CedolinoImportModal({
   const [oreMalattia, setOreMalattia] = useState<string>('0')
   const [oreCig, setOreCig] = useState<string>('0')
   const [oreNotturno, setOreNotturno] = useState<string>('0')
+  const [orePomeridiano, setOrePomeridiano] = useState<string>('0')
+  const [tipoTurnoMaggiorato, setTipoTurnoMaggiorato] = useState<'pomeridiano' | 'notturno'>('pomeridiano')
   const [pastiMensa, setPastiMensa] = useState<string>('0')
   const [overwriteExisting, setOverwriteExisting] = useState(true)
   const [residui, setResidui] = useState<CedolinoParsedData['residui']>({
@@ -139,6 +148,7 @@ export function CedolinoImportModal({
   const [applySindacato, setApplySindacato] = useState(false)
   const [applyCometa, setApplyCometa] = useState(false)
   const [applyMensa, setApplyMensa] = useState(false)
+  const [applyCigCoeff, setApplyCigCoeff] = useState(false)
 
   // Active configurations from DB
   const { data: fiscalRes } = useFiscalConfig()
@@ -146,6 +156,7 @@ export function CedolinoImportModal({
   const { data: currentSindacato } = useSindacatoConfig()
   const { data: currentCometa } = useCometaConfig()
   const { data: currentMensa } = useMensaConfig()
+  const { data: currentCig } = useCigConfig()
 
   const suggestedCalibrationsCount = useMemo(() => {
     if (!parsedData) return 0
@@ -155,6 +166,7 @@ export function CedolinoImportModal({
     if (parsedData.trattenute.sindacato) count++
     if (parsedData.trattenute.cometa) count++
     if (parsedData.trattenute.mensaUnitario) count++
+    if (parsedData.cigDettaglio) count++
     return count
   }, [parsedData])
 
@@ -399,6 +411,7 @@ export function CedolinoImportModal({
     const mal = parseFloat(oreMalattia) || 0
     const cig = parseFloat(oreCig) || 0
     const nott = parseFloat(oreNotturno) || 0
+    const pom = parseFloat(orePomeridiano) || 0
     const pasti = parseInt(pastiMensa, 10) || 0
 
     return generateDaysFromCedolino({
@@ -414,7 +427,7 @@ export function CedolinoImportModal({
         cig: cig,
         straordinario: 0,
         notturno: nott,
-        pomeridiano: 0,
+        pomeridiano: pom,
         altreAssenze: 0,
       },
       pastiMensa: pasti,
@@ -433,6 +446,7 @@ export function CedolinoImportModal({
     oreMalattia,
     oreCig,
     oreNotturno,
+    orePomeridiano,
     pastiMensa,
     standardDailyHours,
     workdays,
@@ -459,6 +473,8 @@ export function CedolinoImportModal({
     setOreMalattia('0')
     setOreCig('0')
     setOreNotturno('0')
+    setOrePomeridiano('0')
+    setTipoTurnoMaggiorato('pomeridiano')
     setPastiMensa('0')
     setOverwriteExisting(true)
     setRetribuzione(null)
@@ -470,6 +486,7 @@ export function CedolinoImportModal({
     setApplySindacato(false)
     setApplyCometa(false)
     setApplyMensa(false)
+    setApplyCigCoeff(false)
   }
 
   function handleClose() {
@@ -509,7 +526,32 @@ export function CedolinoImportModal({
       setOreCongedo30(String(parsed.ore.congedo30))
       setOreMalattia(String(parsed.ore.malattia))
       setOreCig(String(parsed.ore.cig))
-      setOreNotturno(String(parsed.ore.notturno))
+
+      // Gestione intelligente dei turni maggiorati (Pomeridiano vs Notturno)
+      if (parsed.maggiorazioniTurno) {
+        if (parsed.maggiorazioniTurno.tipoSuggerito === 'pomeridiano') {
+          setTipoTurnoMaggiorato('pomeridiano')
+          setOrePomeridiano(String(parsed.maggiorazioniTurno.ore))
+          setOreNotturno('0')
+        } else {
+          setTipoTurnoMaggiorato('notturno')
+          setOreNotturno(String(parsed.maggiorazioniTurno.ore))
+          setOrePomeridiano('0')
+        }
+      } else if (parsed.ore.notturno > 0) {
+        // Nel CCNL Metalmeccanico per turnisti a 2 turni, MAGG. NOTT. 20% corrisponde al turno pomeridiano (18:00-22:00)
+        setTipoTurnoMaggiorato('pomeridiano')
+        setOrePomeridiano(String(parsed.ore.notturno))
+        setOreNotturno('0')
+      } else if (parsed.ore.pomeridiano > 0) {
+        setTipoTurnoMaggiorato('pomeridiano')
+        setOrePomeridiano(String(parsed.ore.pomeridiano))
+        setOreNotturno('0')
+      } else {
+        setOrePomeridiano('0')
+        setOreNotturno('0')
+      }
+
       setPastiMensa(String(parsed.pastiMensa))
       setResidui(parsed.residui)
       setDatiDipendente(parsed.datiDipendente)
@@ -521,6 +563,7 @@ export function CedolinoImportModal({
       setApplySindacato(parsed.trattenute.sindacato !== null)
       setApplyCometa(parsed.trattenute.cometa !== null)
       setApplyMensa(parsed.trattenute.mensaUnitario !== null)
+      setApplyCigCoeff(parsed.cigDettaglio !== null && parsed.cigDettaglio !== undefined)
 
       setStep('review')
     } catch (err: unknown) {
@@ -559,6 +602,7 @@ export function CedolinoImportModal({
               malattia: parseFloat(oreMalattia) || 0,
               cig: parseFloat(oreCig) || 0,
               notturno: parseFloat(oreNotturno) || 0,
+              pomeridiano: parseFloat(orePomeridiano) || 0,
             },
             pastiMensa: parseInt(pastiMensa, 10) || 0,
             importedAt: new Date().toISOString(),
@@ -569,27 +613,49 @@ export function CedolinoImportModal({
       if (applyInpsRate && parsedData?.previdenza.aliquotaInpsCalcolata) {
         calibrations.inpsRate = parsedData.previdenza.aliquotaInpsCalcolata
       }
+      if (applyCigCoeff && parsedData?.cigDettaglio) {
+        calibrations.cig = {
+          tipo: 'solidarieta',
+          coefficiente: parsedData.cigDettaglio.coefficienteEffettivo,
+          massimaleMensile: currentCig?.massimaleMensile ?? null,
+        }
+      }
       if (applyAddizionali && parsedData?.addizionali && parsedData.addizionali.totale > 0) {
         calibrations.addizionali = {
           attivo: true,
           addizionaleRegionale: parsedData.addizionali.rataRegionale,
           addizionaleComunale: parsedData.addizionali.rataComunale,
           accontoComunale: parsedData.addizionali.accontoComunale,
-          meseInizio: 3,
-          meseFine: 11,
+          meseInizio: currentAddizionali?.meseInizio ?? 3,
+          meseFine: currentAddizionali?.meseFine ?? 11,
         }
       }
+
+      const baseRetribuzione =
+        parsedData?.retribuzione?.minimoTabellare ??
+        retribuzione?.minimoTabellare ??
+        parsedData?.retribuzione?.importo ??
+        retribuzione?.importo
+
       if (applySindacato && parsedData?.trattenute.sindacato) {
+        let coeff = currentSindacato?.coefficiente ?? 0.01
+        if (baseRetribuzione && baseRetribuzione > 0) {
+          coeff = Math.round((parsedData.trattenute.sindacato / baseRetribuzione) * 1000) / 1000
+        }
         calibrations.sindacato = {
           iscritto: true,
-          coefficiente: 0.01,
+          coefficiente: coeff,
           nome: currentSindacato?.nome ?? 'Sindacato',
         }
       }
       if (applyCometa && parsedData?.trattenute.cometa) {
+        let coeff = currentCometa?.coefficiente ?? 0.012
+        if (baseRetribuzione && baseRetribuzione > 0) {
+          coeff = Math.round((parsedData.trattenute.cometa / baseRetribuzione) * 10000) / 10000
+        }
         calibrations.cometa = {
           iscritto: true,
-          coefficiente: 0.012,
+          coefficiente: coeff,
         }
       }
       if (applyMensa && parsedData?.trattenute.mensaUnitario) {
@@ -853,9 +919,70 @@ export function CedolinoImportModal({
               <div className="space-y-4">
                 {/* Breakdown Ore Rilevate */}
                 <div className="space-y-2">
-                  <span className="text-xs font-semibold text-text uppercase tracking-wider text-text-muted">
-                    Ore e presenze estratte dal cedolino
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-text uppercase tracking-wider text-text-muted">
+                      Ore e presenze estratte dal cedolino
+                    </span>
+                    {(parseFloat(orePomeridiano) > 0 || parseFloat(oreNotturno) > 0) && (
+                      <span className="text-[11px] text-text-muted">
+                        Tipo turno: <strong className="text-text capitalize">{tipoTurnoMaggiorato}</strong>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Selettore rapido tipo turno maggiorato */}
+                  {(parseFloat(orePomeridiano) > 0 || parseFloat(oreNotturno) > 0) && (
+                    <div className="rounded-xl border border-border bg-surface-raised/40 p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <div className="space-y-0.5">
+                        <span className="font-semibold text-text flex items-center gap-1.5">
+                          <Sliders size={13} className="text-primary" /> Attribuzione Turno Maggiorato
+                        </span>
+                        <p className="text-[11px] text-text-muted">
+                          {tipoTurnoMaggiorato === 'pomeridiano'
+                            ? 'Turno pomeridiano (14:00–22:00): le 4 ore dopo le 18:00 maturano maggiorazione 20%.'
+                            : 'Turno notturno (22:00–06:00): tutte le 8 ore maturano maggiorazione notte.'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (parseFloat(orePomeridiano) === 0 && parseFloat(oreNotturno) > 0) {
+                              setOrePomeridiano(oreNotturno)
+                              setOreNotturno('0')
+                            }
+                            setTipoTurnoMaggiorato('pomeridiano')
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 ${
+                            tipoTurnoMaggiorato === 'pomeridiano'
+                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                              : 'bg-surface border border-border text-text-muted hover:text-text'
+                          }`}
+                        >
+                          <Sunset size={12} />
+                          Pomeridiano (4h/gg)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (parseFloat(oreNotturno) === 0 && parseFloat(orePomeridiano) > 0) {
+                              setOreNotturno(orePomeridiano)
+                              setOrePomeridiano('0')
+                            }
+                            setTipoTurnoMaggiorato('notturno')
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 ${
+                            tipoTurnoMaggiorato === 'notturno'
+                              ? 'bg-violet-500/20 text-violet-400 border border-violet-500/40'
+                              : 'bg-surface border border-border text-text-muted hover:text-text'
+                          }`}
+                        >
+                          <Moon size={12} />
+                          Notturno (8h/gg)
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                     {/* Ordinarie */}
                     <div className="rounded-xl border border-border bg-surface-raised/30 p-2.5 space-y-1">
@@ -942,21 +1069,56 @@ export function CedolinoImportModal({
                       </div>
                     </div>
 
+                    {/* Pomeridiano */}
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 space-y-1">
+                      <span className="text-[11px] text-amber-400 font-medium flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <Sunset size={12} className="text-amber-400" /> Magg. Pomeriggio
+                        </span>
+                        <span className="text-[10px] text-text-muted">4h/gg</span>
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          step="1"
+                          value={orePomeridiano}
+                          onChange={(e) => {
+                            setOrePomeridiano(e.target.value)
+                            setTipoTurnoMaggiorato('pomeridiano')
+                          }}
+                          className="w-full h-7 rounded border border-border bg-surface px-2 text-xs font-semibold text-text focus:border-amber-400 focus:outline-none"
+                        />
+                        <span className="text-xs text-text-muted">h</span>
+                      </div>
+                      <span className="text-[10px] text-text-muted block">
+                        = {Math.ceil((parseFloat(orePomeridiano) || 0) / 4)} gg (14:00–22:00)
+                      </span>
+                    </div>
+
                     {/* Notturno */}
-                    <div className="rounded-xl border border-border bg-surface-raised/30 p-2.5 space-y-1">
-                      <span className="text-[11px] text-text-muted flex items-center gap-1">
-                        <Moon size={12} className="text-violet-400" /> Magg. Notturno
+                    <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 p-2.5 space-y-1">
+                      <span className="text-[11px] text-violet-400 font-medium flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <Moon size={12} className="text-violet-400" /> Magg. Notturno
+                        </span>
+                        <span className="text-[10px] text-text-muted">8h/gg</span>
                       </span>
                       <div className="flex items-center gap-1">
                         <input
                           type="number"
                           step="1"
                           value={oreNotturno}
-                          onChange={(e) => setOreNotturno(e.target.value)}
-                          className="w-full h-7 rounded border border-border bg-surface px-2 text-xs font-semibold text-text focus:border-primary focus:outline-none"
+                          onChange={(e) => {
+                            setOreNotturno(e.target.value)
+                            setTipoTurnoMaggiorato('notturno')
+                          }}
+                          className="w-full h-7 rounded border border-border bg-surface px-2 text-xs font-semibold text-text focus:border-violet-400 focus:outline-none"
                         />
                         <span className="text-xs text-text-muted">h</span>
                       </div>
+                      <span className="text-[10px] text-text-muted block">
+                        = {Math.ceil((parseFloat(oreNotturno) || 0) / 8)} gg (22:00–06:00)
+                      </span>
                     </div>
 
                     {/* Pasti Mensa */}
@@ -1103,8 +1265,13 @@ export function CedolinoImportModal({
                               >
                                 {d.label}
                               </span>
+                              {d.pomeridiano && (
+                                <span title="Turno Pomeridiano (4h maggiorazione)" className="inline-flex">
+                                  <Sunset size={11} className="text-amber-400" />
+                                </span>
+                              )}
                               {d.notturno && (
-                                <span title="Notturno" className="inline-flex">
+                                <span title="Turno Notturno (8h maggiorazione)" className="inline-flex">
                                   <Moon size={11} className="text-violet-400" />
                                 </span>
                               )}
@@ -1441,6 +1608,58 @@ export function CedolinoImportModal({
                     </div>
                   </label>
                 )}
+
+                {/* Integrazione Solidarietà / CIG */}
+                {parsedData?.cigDettaglio && (
+                  <label className="flex items-start gap-3 rounded-xl border border-border bg-surface-raised/40 p-3 text-xs cursor-pointer hover:border-primary/40 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={applyCigCoeff}
+                      onChange={(e) => setApplyCigCoeff(e.target.checked)}
+                      className="mt-0.5 accent-primary rounded cursor-pointer"
+                    />
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-text">Coefficiente Integrazione Solidarietà (CIG)</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-text-muted">
+                            Attuale: {currentCig?.coefficiente != null ? `${(currentCig.coefficiente * 100).toFixed(1)}%` : '80.0%'}
+                          </span>
+                          <span>→</span>
+                          <span className="font-bold text-primary">
+                            {(parsedData.cigDettaglio.coefficienteEffettivo * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-text-muted">
+                        Storno stipendio azienda: −{parsedData.cigDettaglio.storno.toFixed(2)} € ({parsedData.cigDettaglio.ore} ore) • Integrazione INPS reale: +{parsedData.cigDettaglio.integrazioneNetta.toFixed(2)} €. L'aliquota effettiva reale è {(parsedData.cigDettaglio.coefficienteEffettivo * 100).toFixed(1)}% a causa del massimale mensile INPS e della ritenuta 5,84% ex art. 26 L. 41/86.
+                      </p>
+                    </div>
+                  </label>
+                )}
+
+                {/* Box Guida Quadratura Voci Cedolino */}
+                <div className="rounded-xl border border-border/80 bg-surface-raised/20 p-3 text-xs space-y-1.5">
+                  <span className="font-semibold text-text flex items-center gap-1.5 text-text-muted uppercase tracking-wider text-[11px]">
+                    <Info size={13} className="text-primary" /> Note di quadratura e conciliazione con la busta paga
+                  </span>
+                  <ul className="space-y-1 text-[11px] text-text-muted list-disc pl-4">
+                    <li>
+                      <strong className="text-text">Turni pomeridiani (14:00–22:00):</strong> le ore serali tra le 18:00 e le 22:00 (4 ore per giornata) sono coperte da maggiorazione +20% (voce 5 MAGG. NOTT. 20%). Non sono 8h piene di notte.
+                    </li>
+                    <li>
+                      <strong className="text-text">Aliquota INPS (9,49%):</strong> include la quota base del 9,19% più lo 0,30% per il fondo CIGS / solidarietà attivo nei mesi con CIG.
+                    </li>
+                    <li>
+                      <strong className="text-text">Premi di risultato (L.199/25):</strong> assoggettati a imposta sostitutiva separata (5% e 15%) e pertanto esclusi dall'imponibile IRPEF ordinario.
+                    </li>
+                    {parsedData?.congedo.indennitaInps != null && (
+                      <li>
+                        <strong className="text-text">Congedo Parentale 80%:</strong> l'indennità a carico INPS (+{parsedData.congedo.indennitaInps.toFixed(2)} €) è calcolata sulla Retribuzione Media Giornaliera (RMGG), mentre l'azienda storna la tariffa oraria CCNL (−{parsedData.congedo.stornoAzienda?.toFixed(2) ?? '—'} €).
+                      </li>
+                    )}
+                  </ul>
+                </div>
               </div>
             )}
 

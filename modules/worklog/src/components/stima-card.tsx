@@ -380,11 +380,11 @@ export function StimaCard({ month, t, onSelectMonth }: Props) {
                       {data.verso === 'overestimate'
                         ? t.nettoRealeConfig.overestimatedDesc
                             .replace('{amount}', formatEur(Math.abs(data.scarto), locale))
-                            .replace('{perc}', String(data.scostamentoPerc ?? 0))
+                            .replace('{perc}', (data.scostamentoPerc ?? 0).toFixed(2))
                         : data.verso === 'underestimate'
                           ? t.nettoRealeConfig.underestimatedDesc
                               .replace('{amount}', formatEur(Math.abs(data.scarto), locale))
-                              .replace('{perc}', String(data.scostamentoPerc ?? 0))
+                              .replace('{perc}', (data.scostamentoPerc ?? 0).toFixed(2))
                           : t.nettoRealeConfig.exactDesc}
                     </span>
                     {data.scostamentoPerc !== null && (

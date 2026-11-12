@@ -1227,7 +1227,20 @@ export class WorklogService {
       const row = rowsMap.get(monthStr)
 
       const nettoReale = row ? parseFloat(row.netto) : null
-      const nettoStimato = row?.stimaNettoSnapshot ? parseFloat(row.stimaNettoSnapshot) : null
+      let nettoStimato = row?.stimaNettoSnapshot ? parseFloat(row.stimaNettoSnapshot) : null
+
+      // Allineamento reattivo: calcola la stima live se il mese è tracciato, fallback su snapshot
+      if (row) {
+        try {
+          const liveRes = await resolveStima(userId, monthStr)
+          if (liveRes.ok) {
+            nettoStimato = liveRes.output.netto
+          }
+        } catch {
+          // Fallback resiliente a stimaNettoSnapshot
+        }
+      }
+
       const stimaDisponibile = nettoStimato !== null
 
       const scostamento =
