@@ -32,19 +32,9 @@ export function _clearStateForTesting(): void {
 }
 
 function getDefaultState(): SocialCardsStorageState {
-  const defaultCard: SocialBenefitCard = {
-    id: 'default-dedicata-a-te-2026',
-    profileId: DEDICATA_A_TE_PROFILE.id,
-    editionId: EDITION_2026_2027.editionId,
-    customName: 'Carta Dedicata a Te (2026–2027)',
-    cardNumberLast4: '',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-
   return {
     schemaVersion: 1,
-    cards: [defaultCard],
+    cards: [],
     expenses: [],
     reconciliations: [],
   }
@@ -112,16 +102,11 @@ export async function saveState(state: SocialCardsStorageState): Promise<void> {
 }
 
 // -----------------------------------------------------------------------------
-// CRUD Operations
+// Card Registration & Management
 // -----------------------------------------------------------------------------
 
 export async function getCards(): Promise<SocialBenefitCard[]> {
   const state = await loadState()
-  if (state.cards.length === 0) {
-    const defaultState = getDefaultState()
-    state.cards = defaultState.cards
-    await saveState(state)
-  }
   return state.cards
 }
 
@@ -129,6 +114,74 @@ export async function getCardById(cardId: string): Promise<SocialBenefitCard | u
   const cards = await getCards()
   return cards.find((c) => c.id === cardId)
 }
+
+export async function registerCard(input: {
+  profileId?: string
+  editionId?: string
+  customName?: string
+  cardNumberLast4?: string
+  initialAtmBalance?: number
+  notes?: string
+}): Promise<SocialBenefitCard> {
+  const state = await loadState()
+  const nowIso = new Date().toISOString()
+
+  const profileId = input.profileId ?? DEDICATA_A_TE_PROFILE.id
+  const editionId = input.editionId ?? EDITION_2026_2027.editionId
+
+  const newCard: SocialBenefitCard = {
+    id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    profileId,
+    editionId,
+    customName: input.customName?.trim() || 'Carta Dedicata a Te (2026–2027)',
+    cardNumberLast4: input.cardNumberLast4?.trim() || undefined,
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  }
+
+  state.cards.push(newCard)
+
+  // Se l'utente ha indicato che la carta è già stata utilizzata e inserisce il saldo attuale:
+  if (input.initialAtmBalance !== undefined && !isNaN(input.initialAtmBalance)) {
+    const edition = getEditionConfig(profileId, editionId) ?? EDITION_2026_2027
+    const initialExpected = edition.tranches[0]?.initialAmount ?? 500.0
+    const atmBalance = Math.round(input.initialAtmBalance * 100) / 100
+    const delta = Math.round((atmBalance - initialExpected) * 100) / 100
+
+    const initialRec: PostamatReconciliation = {
+      id: `rec-${Date.now()}-init`,
+      cardId: newCard.id,
+      reconciledAt: nowIso,
+      atmBalance,
+      estimatedBalanceAtAnchor: initialExpected,
+      delta,
+      notes: input.notes?.trim() || 'Saldo iniziale verificato al momento della registrazione',
+      createdAt: nowIso,
+    }
+    state.reconciliations.push(initialRec)
+  }
+
+  await saveState(state)
+  return newCard
+}
+
+export async function deleteCard(cardId: string): Promise<boolean> {
+  const state = await loadState()
+  const initialCount = state.cards.length
+  state.cards = state.cards.filter((c) => c.id !== cardId)
+  state.expenses = state.expenses.filter((e) => e.cardId !== cardId)
+  state.reconciliations = state.reconciliations.filter((r) => r.cardId !== cardId)
+
+  if (state.cards.length !== initialCount) {
+    await saveState(state)
+    return true
+  }
+  return false
+}
+
+// -----------------------------------------------------------------------------
+// Expenses CRUD
+// -----------------------------------------------------------------------------
 
 export async function addExpense(input: {
   cardId: string
@@ -197,6 +250,10 @@ export async function deleteExpense(id: string): Promise<boolean> {
   }
   return false
 }
+
+// -----------------------------------------------------------------------------
+// Reconciliation CRUD
+// -----------------------------------------------------------------------------
 
 export async function addReconciliation(input: {
   cardId: string

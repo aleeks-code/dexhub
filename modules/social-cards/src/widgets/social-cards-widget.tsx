@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Wallet, ArrowRight, Clock, CheckCircle2, Store } from 'lucide-react'
+import { Wallet, ArrowRight, Clock, CheckCircle2, Store, Plus } from 'lucide-react'
 import { cn } from '@dexhub/ui'
 import { getCards, getCardSummary } from '../services/social-cards-service'
 import type { CardBalanceSummary } from '../types'
@@ -13,15 +13,19 @@ function formatEuro(val: number): string {
 
 export default function SocialCardsWidget() {
   const [summary, setSummary] = useState<CardBalanceSummary | null>(null)
+  const [hasCards, setHasCards] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       try {
         const cards = await getCards()
-        if (cards[0]) {
+        if (cards.length > 0 && cards[0]) {
+          setHasCards(true)
           const sum = await getCardSummary(cards[0].id)
           setSummary(sum)
+        } else {
+          setHasCards(false)
         }
       } catch (err) {
         console.error('[SocialCardsWidget] Failed to load summary:', err)
@@ -32,10 +36,48 @@ export default function SocialCardsWidget() {
     void load()
   }, [])
 
-  if (loading || !summary) {
+  if (loading) {
     return (
       <div className="flex h-full items-center justify-center p-3 text-xs text-text-subtle">
         <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+      </div>
+    )
+  }
+
+  // Nessuna carta registrata
+  if (hasCards === false || !summary) {
+    return (
+      <div className="flex h-full flex-col justify-between gap-2 p-1">
+        <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
+          <div className="flex items-center gap-1.5">
+            <Wallet className="h-4 w-4 text-emerald-400" />
+            <span className="text-xs font-semibold text-text">Dedicata a Te</span>
+          </div>
+          <Link
+            href="/social-cards"
+            className="flex items-center gap-0.5 text-[11px] text-text-subtle hover:text-emerald-400 transition-colors"
+          >
+            Apri <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        <div className="py-2 text-center">
+          <p className="text-xs font-medium text-text">
+            Nessuna carta registrata
+          </p>
+          <p className="text-[10px] text-text-subtle mt-0.5">
+            Registra la tua Carta Dedicata a Te per monitorarla
+          </p>
+        </div>
+
+        <div className="border-t border-border/40 pt-1.5 text-center">
+          <Link
+            href="/social-cards"
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300"
+          >
+            <Plus className="h-3 w-3" /> Registra Carta
+          </Link>
+        </div>
       </div>
     )
   }

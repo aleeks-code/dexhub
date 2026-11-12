@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import {
   _clearStateForTesting,
   getCards,
+  registerCard,
+  deleteCard,
   addExpense,
   addReconciliation,
   getCardSummary,
@@ -13,17 +15,51 @@ describe('SocialCardsService', () => {
     _clearStateForTesting()
   })
 
-  it('inizializza una carta predefinita per la Carta Dedicata a Te se lo stato è vuoto', async () => {
+  it('inizializza uno stato completamente vuoto senza carte automatiche', async () => {
+    const cards = await getCards()
+    expect(cards.length).toBe(0)
+  })
+
+  it('consente di registrare manualmente una nuova Carta Dedicata a Te (500 €)', async () => {
+    const card = await registerCard({
+      customName: 'Mia Dedicata a Te',
+      cardNumberLast4: '4821',
+    })
+
+    expect(card.customName).toBe('Mia Dedicata a Te')
+    expect(card.cardNumberLast4).toBe('4821')
+    expect(card.profileId).toBe('dedicata-a-te')
+
     const cards = await getCards()
     expect(cards.length).toBe(1)
-    expect(cards[0]?.profileId).toBe('dedicata-a-te')
-    expect(cards[0]?.editionId).toBe('2026-2027')
+
+    const summary = await getCardSummary(card.id)
+    expect(summary?.estimatedBalance).toBe(500.0)
+    expect(summary?.totalCreditedToDate).toBe(500.0)
+    expect(summary?.firstPurchaseMet).toBe(false)
+  })
+
+  it('consente di registrare una carta già utilizzata con saldo Postamat iniziale', async () => {
+    const card = await registerCard({
+      customName: 'Carta già usata',
+      cardNumberLast4: '9999',
+      initialAtmBalance: 380.0,
+      notes: 'Saldo verificato all’ATM prima della registrazione',
+    })
+
+    const summary = await getCardSummary(card.id)
+    expect(summary?.estimatedBalance).toBe(380.0)
+    expect(summary?.lastReconciliation?.atmBalance).toBe(380.0)
+    expect(summary?.lastReconciliation?.delta).toBe(-120.0)
   })
 
   it('aggiunge una spesa e aggiorna il riepilogo con sconto convenzione scorporato', async () => {
-    const [card] = await getCards()
+    const card = await registerCard({
+      customName: 'Carta Famiglia',
+    })
+
     const exp = await addExpense({
-      cardId: card!.id,
+      cardId: card.id,
       amount: 42.5,
       merchant: 'Coop',
       isPartnerMerchant: true,
@@ -32,16 +68,19 @@ describe('SocialCardsService', () => {
 
     expect(exp.discountSaved).toBe(7.5) // 42.50 * (0.15 / 0.85) = 7.50 €
 
-    const summary = await getCardSummary(card!.id)
+    const summary = await getCardSummary(card.id)
     expect(summary?.totalSpentToDate).toBe(42.5)
     expect(summary?.estimatedBalance).toBe(457.5)
     expect(summary?.firstPurchaseMet).toBe(true)
   })
 
   it('aggiunge una riconciliazione Postamat a Checkpoint Anchor', async () => {
-    const [card] = await getCards()
+    const card = await registerCard({
+      customName: 'Carta Famiglia',
+    })
+
     await addExpense({
-      cardId: card!.id,
+      cardId: card.id,
       amount: 50.0,
       spentAt: '2026-11-10T09:00:00.000Z',
       merchant: 'Conad',
@@ -50,34 +89,59 @@ describe('SocialCardsService', () => {
 
     // Controllo Postamat
     const rec = await addReconciliation({
-      cardId: card!.id,
+      cardId: card.id,
       reconciledAt: '2026-11-10T12:00:00.000Z',
-      atmBalance: 440.0, // Delta di -10 €
+      atmBalance: 440.0,
     })
 
     expect(rec.atmBalance).toBe(440.0)
     expect(rec.delta).toBe(-10.0)
 
-    const summary = await getCardSummary(card!.id, '2026-11-12T12:00:00.000Z')
+    const summary = await getCardSummary(card.id, '2026-11-12T12:00:00.000Z')
     expect(summary?.estimatedBalance).toBe(440.0)
   })
 
   it('elimina una spesa e riallinea il saldo', async () => {
-    const [card] = await getCards()
+    const card = await registerCard({
+      customName: 'Carta Famiglia',
+    })
+
     const exp = await addExpense({
-      cardId: card!.id,
+      cardId: card.id,
       amount: 100.0,
       merchant: 'Esselunga',
       isPartnerMerchant: false,
     })
 
-    let summary = await getCardSummary(card!.id)
+    let summary = await getCardSummary(card.id)
     expect(summary?.estimatedBalance).toBe(400.0)
 
     const deleted = await deleteExpense(exp.id)
     expect(deleted).toBe(true)
 
-    summary = await getCardSummary(card!.id)
+    summary = await getCardSummary(card.id)
     expect(summary?.estimatedBalance).toBe(500.0)
+  })
+
+  it('elimina una carta e pulisce spese e riconciliazioni collegate', async () => {
+    const card = await registerCard({
+      customName: 'Carta da eliminare',
+    })
+
+    await addExpense({
+      cardId: card.id,
+      amount: 25.0,
+      merchant: 'Lidl',
+      isPartnerMerchant: true,
+    })
+
+    const deleted = await deleteCard(card.id)
+    expect(deleted).toBe(true)
+
+    const cards = await getCards()
+    expect(cards.length).toBe(0)
+
+    const summary = await getCardSummary(card.id)
+    expect(summary).toBeNull()
   })
 })
