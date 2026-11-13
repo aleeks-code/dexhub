@@ -449,6 +449,56 @@ const CHANGELOG_SEED: ChangelogReleaseSeed[] = [
       },
     ],
   },
+  {
+    versione: '0.6.0',
+    titolo: 'Carta Dedicata a Te, Sicurezza Vault & Riordinamento Moduli',
+    descrizione: 'Nuovo modulo Carta Dedicata a Te con crittografia AES-256-GCM, riordinamento drag-and-drop nella sidebar e armonizzazione semantica del design system.',
+    dataPubblicazione: '2026-11-13',
+    changes: [
+      {
+        categoria: 'feature',
+        modulo: 'social-cards',
+        titolo: 'Nuovo Modulo "Carta Dedicata a Te"',
+        descrizione: 'Gestione completa dell\'agevolazione 2026-2027: monitoraggio saldo residuo con riconciliazione checkpoint Postamat ATM, tracciamento tranche con logica FIFO e calcolo automatico dello scorporo sconto 15% presso esercenti convenzionati.',
+      },
+      {
+        categoria: 'security',
+        modulo: 'social-cards',
+        titolo: 'Crittografia Bank-Grade AES-256-GCM a riposo',
+        descrizione: 'Tutti i dati sensibili della carta (PAN a 16 cifre, PIN a 5 cifre, CVV e Scadenza) sono cifrati a riposo tramite Web Crypto API nativa con PBKDF2 (100.000 iterazioni) e AES-256-GCM con IV univoco a 12 byte. Conformità PCI-DSS con soli ultimi 4 caratteri in chiaro.',
+      },
+      {
+        categoria: 'security',
+        modulo: 'social-cards',
+        titolo: 'Procedura a Doppia Conferma per visualizzazione PIN',
+        descrizione: 'Il PIN dello sportello Postamat è protetto da un modal di sicurezza dedicato con presa visione obbligatoria e timer di auto-oscuramento a 30 secondi.',
+      },
+      {
+        categoria: 'feature',
+        modulo: 'social-cards',
+        titolo: 'Design Fotorealistico Tessera Fisica con Circuito Mastercard',
+        descrizione: 'Visualizzazione interattiva conforme allo standard ISO/IEC 7810 ID-1, chip EMV rifinito in Champagne Gold metallico, simbolo Contactless, branding Poste Italiane e logo ufficiale Mastercard con comandi rapidi di copia e visibilità integrati.',
+      },
+      {
+        categoria: 'feature',
+        modulo: 'shell',
+        titolo: 'Riordinamento Moduli con Matrice a 9 Punti (Grip)',
+        descrizione: 'Possibilità di personalizzare l\'ordine dei moduli nella sidebar tramite trascinamento (Drag & Drop nativo) afferrando l\'icona a matrice 3x3, con persistenza locale e sincronizzazione immediata nella navigazione mobile.',
+      },
+      {
+        categoria: 'improvement',
+        modulo: 'shell',
+        titolo: 'Armonizzazione Palette Semantica e Design System',
+        descrizione: 'Nuova convenzione cromatica globale: warning/urgenza riservati a Yellow 300-400, stati in attesa in Slate neutro, scadenze suddivise in tre livelli visivi (neutro, entro 3 giorni e scaduto in Rose 400), ed eliminazione delle tinte arancioni non coordinate.',
+      },
+      {
+        categoria: 'fix',
+        modulo: 'shell',
+        titolo: 'Risoluzione Errore Mixed Content su Manifest PWA e Fix Drag & Drop',
+        descrizione: 'Garantita la corretta erogazione HTTPS di manifest.webmanifest ed eliminato il crash da riferimento nullo su dataset durante il drag-leave nella barra laterale.',
+      },
+    ],
+  },
 ]
 
 async function seedChangelog(db: DB) {
