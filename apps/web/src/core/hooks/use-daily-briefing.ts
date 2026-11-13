@@ -7,7 +7,7 @@ import { getLoans, calculateGlobalLoansSummary } from '@dexhub/loans'
 import { listPeople, listTransactions, computePersonSummaries, computeGlobalSummary } from '@dexhub/debts'
 import { useSpaces, useTasks } from '@dexhub/tasks'
 import { useStima, useWorklogDays } from '@dexhub/worklog'
-import { listSubscriptions, calculateSubscriptionsSummary } from '@dexhub/subscriptions'
+import { listSubscriptions, calculateSubscriptionsSummary, type UpcomingRenewal } from '@dexhub/subscriptions'
 import { useMe } from '@/core/hooks/use-me'
 import { useInviteRequests } from '@/core/hooks/use-admin'
 
@@ -28,6 +28,13 @@ export interface DailyAlert {
 export interface FinancialSynergy {
   stimaStipendio: number | null
   rateFinanziamenti: number
+  spesaAbbonamenti: number
+  activeSubscriptionsCount: number
+  nextSubscriptionRenewal: UpcomingRenewal | null
+  totalUsciteFisse: number
+  loanSharePercent: number
+  subSharePercent: number
+  impegnoFissoPercent: number
   netBalanceDebiti: number
   totalCrediti: number
   totalDebiti: number
@@ -315,19 +322,38 @@ export function useDailyBriefing() {
   const financialSynergy: FinancialSynergy = useMemo(() => {
     const stimaStipendio = stimaData?.stima?.netto ?? null
     const rateFinanziamenti = loansSummary?.totalMonthlyCommitment ?? 0
+    const spesaAbbonamenti = subsSummary?.totalMonthlyCost ?? 0
+    const activeSubscriptionsCount = subsSummary?.activeCount ?? 0
+    const nextSubscriptionRenewal = subsSummary?.nextRenewal ?? null
     const netBalanceDebiti = debtsSummary?.globalSummary?.netBalance ?? 0
     const totalCrediti = debtsSummary?.globalSummary?.totalCredit ?? 0
     const totalDebiti = debtsSummary?.globalSummary?.totalDebt ?? 0
-    const spesaAbbonamenti = subsSummary?.totalMonthlyCost ?? 0
+
+    const totalUsciteFisse = rateFinanziamenti + spesaAbbonamenti
 
     const disponibilitaStimata =
       stimaStipendio !== null
-        ? Math.max(0, stimaStipendio - rateFinanziamenti - spesaAbbonamenti)
+        ? Math.max(0, stimaStipendio - totalUsciteFisse)
         : null
+
+    const income = stimaStipendio ?? 0
+    const loanSharePercent =
+      income > 0 ? Math.min(100, Math.round((rateFinanziamenti / income) * 100)) : 0
+    const subSharePercent =
+      income > 0 ? Math.min(100, Math.round((spesaAbbonamenti / income) * 100)) : 0
+    const impegnoFissoPercent =
+      income > 0 ? Math.min(100, Math.round((totalUsciteFisse / income) * 100)) : 0
 
     return {
       stimaStipendio,
       rateFinanziamenti,
+      spesaAbbonamenti,
+      activeSubscriptionsCount,
+      nextSubscriptionRenewal,
+      totalUsciteFisse,
+      loanSharePercent,
+      subSharePercent,
+      impegnoFissoPercent,
       netBalanceDebiti,
       totalCrediti,
       totalDebiti,
