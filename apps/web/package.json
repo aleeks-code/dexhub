@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dexhub/bdf": "workspace:*",
     "@dexhub/debts": "workspace:*",
     "@dexhub/loans": "workspace:*",
     "@dexhub/notes": "workspace:*",
