@@ -1,19 +1,27 @@
 import { describe, it, expect } from 'vitest'
-import { calculateDiscountSavings, calculateGrossAmount } from './discount'
+import { calculateDiscountSavings, calculateScorporoSavings, calculateGrossAmount } from './discount'
 
-describe('calculateDiscountSavings (formula di scorporo)', () => {
-  it('calcola correttamente lo sconto del 15% su 85 € (risparmio di 15 € con lordo 100 €)', () => {
-    // Se il lordo originario era 100 € e lo sconto 15% è 15 €, l'utente ha pagato 85 €
-    const savings = calculateDiscountSavings(85.0, 0.15)
+describe('calculateDiscountSavings (calcolo cashback/sconto 15%)', () => {
+  it('calcola correttamente il 15% di cashback su 100 € (15,00 €)', () => {
+    const savings = calculateDiscountSavings(100.0, 0.15)
     expect(savings).toBe(15.0)
   })
 
-  it('calcola correttamente lo sconto su importi reali con decimali', () => {
-    // Pagato 42,50 € con sconto 15%
-    // Lordo = 42.50 / 0.85 = 50.00 €
-    // Risparmio = 7.50 €
-    const savings = calculateDiscountSavings(42.5, 0.15)
+  it('calcola correttamente il 15% di cashback su 50 € (7,50 €)', () => {
+    const savings = calculateDiscountSavings(50.0, 0.15)
     expect(savings).toBe(7.5)
+  })
+
+  it('calcola correttamente lo sconto/cashback su importi reali con decimali', () => {
+    // 42,50 € * 0.15 = 6.375 -> 6.38 €
+    const savings = calculateDiscountSavings(42.5, 0.15)
+    expect(savings).toBe(6.38)
+  })
+
+  it('calcola correttamente la formula di scorporo inversa', () => {
+    // Se il netto pagato è 85,00 € e il lordo originario era 100,00 €, lo scorporo restituisce 15,00 €
+    const scorporo = calculateScorporoSavings(85.0, 0.15)
+    expect(scorporo).toBe(15.0)
   })
 
   it('calcola correttamente il lordo originario prima dello sconto', () => {

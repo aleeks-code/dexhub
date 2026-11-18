@@ -212,10 +212,10 @@ export function CardHeroBalance({ summary, onAddExpense, onReconcile }: Props) {
 
         {/* Right: Tranche & Stats Cards */}
         <div className="lg:col-span-5 flex flex-col justify-between gap-3">
-          {/* Stat 1: Risparmio Convenzione 15% */}
+          {/* Stat 1: Risparmio / Cashback (15%) */}
           <div className="rounded-xl border border-border bg-surface-raised p-3.5 flex items-center justify-between">
             <div>
-              <span className="text-xs text-text-subtle">Risparmio Convenzioni (15%)</span>
+              <span className="text-xs text-text-subtle">Risparmio / Cashback (15%)</span>
               <p className="text-lg font-bold text-emerald-400 font-mono mt-0.5">
                 {showBalance ? formatEuro(totalDiscountSaved) : '•••• €'}
               </p>

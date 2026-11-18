@@ -53,24 +53,25 @@ describe('SocialCardsService', () => {
     expect(summary?.lastReconciliation?.delta).toBe(-120.0)
   })
 
-  it('aggiunge una spesa e aggiorna il riepilogo con sconto convenzione scorporato', async () => {
+  it('aggiunge una spesa e aggiorna il riepilogo con sconto convenzione / cashback 15%', async () => {
     const card = await registerCard({
       customName: 'Carta Famiglia',
     })
 
     const exp = await addExpense({
       cardId: card.id,
-      amount: 42.5,
+      amount: 50.0,
       merchant: 'Coop',
       isPartnerMerchant: true,
       category: 'alimentari_prima_necessita',
     })
 
-    expect(exp.discountSaved).toBe(7.5) // 42.50 * (0.15 / 0.85) = 7.50 €
+    expect(exp.discountSaved).toBe(7.5) // 50.00 * 0.15 = 7.50 €
 
     const summary = await getCardSummary(card.id)
-    expect(summary?.totalSpentToDate).toBe(42.5)
-    expect(summary?.estimatedBalance).toBe(457.5)
+    expect(summary?.totalSpentToDate).toBe(50.0)
+    expect(summary?.estimatedBalance).toBe(450.0)
+    expect(summary?.totalDiscountSaved).toBe(7.5)
     expect(summary?.firstPurchaseMet).toBe(true)
   })
 

@@ -110,7 +110,7 @@ export function ExpensesList({ expenses, onEdit, onDelete }: Props) {
                     </span>
                     {exp.isPartnerMerchant && (
                       <span className="flex items-center gap-1 rounded bg-emerald-500/10 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">
-                        <Percent className="h-2.5 w-2.5" /> Convenzione 15%
+                        <Percent className="h-2.5 w-2.5" /> Cashback / Sconto 15%
                       </span>
                     )}
                   </div>
@@ -138,7 +138,7 @@ export function ExpensesList({ expenses, onEdit, onDelete }: Props) {
                   </span>
                   {exp.discountSaved > 0 && (
                     <span className="text-[10px] font-medium text-emerald-400 font-mono block">
-                      +{formatEuro(exp.discountSaved)} risparmiati
+                      +{formatEuro(exp.discountSaved)} cashback / risparmio
                     </span>
                   )}
                 </div>

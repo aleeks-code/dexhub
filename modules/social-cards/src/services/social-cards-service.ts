@@ -273,7 +273,7 @@ export async function addExpense(input: {
   const nowIso = new Date().toISOString()
 
   let discountSaved = input.discountSaved
-  if (discountSaved === undefined && input.isPartnerMerchant) {
+  if ((discountSaved === undefined || (discountSaved === 0 && input.isPartnerMerchant)) && input.isPartnerMerchant) {
     discountSaved = calculateDiscountSavings(input.amount, 0.15)
   }
 

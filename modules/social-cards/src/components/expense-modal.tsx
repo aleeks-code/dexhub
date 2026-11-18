@@ -65,10 +65,13 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
   // Riconoscimento automatico supermercato convenzionato
   const handleMerchantChange = (val: string) => {
     setMerchant(val)
-    const match = PARTNER_SUPERMARKETS.find(
-      (p) => p.name.toLowerCase() === val.trim().toLowerCase()
-    )
-    if (match) {
+    const lower = val.toLowerCase().trim()
+    if (!lower) return
+    const match = PARTNER_SUPERMARKETS.find((p) => {
+      const pLower = p.name.toLowerCase()
+      return lower.includes(pLower) || pLower.includes(lower)
+    })
+    if (match && lower.length >= 3) {
       setIsPartnerMerchant(true)
     }
   }
@@ -79,14 +82,26 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
     setShowMerchantSuggestions(false)
   }
 
-  // Pre-calcolo scorporo 15% quando l'importo o il flag cambiano
+  const handleTogglePartner = (checked: boolean) => {
+    setIsPartnerMerchant(checked)
+    if (checked) {
+      const num = parseFloat(amountStr.replace(',', '.'))
+      if (!isNaN(num) && num > 0) {
+        setDiscountSavedStr(calculateDiscountSavings(num, 0.15).toFixed(2))
+      }
+    } else {
+      setDiscountSavedStr('0')
+    }
+  }
+
+  // Pre-calcolo 15% cashback/risparmio quando l'importo o il flag cambiano
   useEffect(() => {
     if (userOverrodeDiscount) return
 
-    const num = parseFloat(amountStr)
+    const num = parseFloat(amountStr.replace(',', '.'))
     if (!isNaN(num) && num > 0 && isPartnerMerchant) {
       const autoSavings = calculateDiscountSavings(num, 0.15)
-      setDiscountSavedStr(autoSavings.toString())
+      setDiscountSavedStr(autoSavings.toFixed(2))
     } else if (!isPartnerMerchant) {
       setDiscountSavedStr('0')
     }
@@ -109,7 +124,10 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
       return
     }
 
-    const numDiscount = parseFloat(discountSavedStr.replace(',', '.')) || 0
+    let numDiscount = parseFloat(discountSavedStr.replace(',', '.'))
+    if (isNaN(numDiscount) || (numDiscount === 0 && isPartnerMerchant && !userOverrodeDiscount)) {
+      numDiscount = calculateDiscountSavings(numAmount, 0.15)
+    }
 
     // Combina data e ora in ISO
     let spentAtIso: string
@@ -230,28 +248,28 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
               />
             </div>
             <span className="text-[11px] text-text-subtle mt-0.5 block">
-              Inserisci l&apos;importo effettivo pagato alla cassa con la carta.
+              Inserisci l&apos;importo pagato con la carta. Verrà calcolato il 15% di cashback/risparmio convenzione.
             </span>
           </div>
 
-          {/* Switch Sconto Convenzione 15% */}
+          {/* Switch Sconto Convenzione / Cashback 15% */}
           <div className="rounded-xl border border-border bg-surface-raised p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Percent className="h-4 w-4 text-emerald-400" />
                 <div>
                   <span className="text-xs font-semibold text-text">
-                    Sconto Convenzione 15%
+                    Sconto Convenzione / Cashback 15%
                   </span>
                   <span className="block text-[11px] text-text-subtle">
-                    Applicato alla cassa dal supermercato aderente
+                    Applicato alla cassa o come cashback dai supermercati aderenti
                   </span>
                 </div>
               </div>
               <input
                 type="checkbox"
                 checked={isPartnerMerchant}
-                onChange={(e) => setIsPartnerMerchant(e.target.checked)}
+                onChange={(e) => handleTogglePartner(e.target.checked)}
                 className="h-4 w-4 rounded border-border accent-emerald-500 cursor-pointer"
               />
             </div>
@@ -259,7 +277,7 @@ export function ExpenseModal({ isOpen, onClose, onSave, initialExpense }: Props)
             {isPartnerMerchant && (
               <div className="mt-2.5 pt-2.5 border-t border-border/60 flex items-center justify-between">
                 <span className="text-xs text-text-subtle">
-                  Risparmio calcolato:
+                  Risparmio / Cashback (15%):
                 </span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs text-emerald-400 font-medium">+</span>
